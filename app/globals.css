@@ -1,26 +1,391 @@
+@import url("https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&display=swap");
 @import "tailwindcss";
 
+/* Shared tokens — overridden per [data-theme] */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-gradient: radial-gradient(ellipse at 30% 20%, #f5f0e8 0%, #faf8f5 50%, #f0ebe0 100%);
+  --card-bg: #ffffff;
+  --accent: #1a8c8c;
+  --gold: #c8973a;
+  --text-primary: #2d2d3a;
+  --text-secondary: #6b6b80;
+  --border: rgba(200, 151, 58, 0.15);
+  --pattern-color: rgba(200, 151, 58, 0.08);
+  --pattern-opacity: 0.08;
+  --pattern-feed-opacity: 0.03;
+  --mosque-fill-opacity: 0.06;
+  --on-accent-text: #ffffff;
+  --input-bg: #ffffff;
+  --card-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.08),
+    0 1px 0 rgba(200, 151, 58, 0.08) inset;
+
+  /* Legacy aliases used across components */
+  --bg-base: #faf8f5;
+  --bg-card: var(--card-bg);
+  --bg-subtle: #f0edea;
+  --text-arabic: #1c1c2e;
+  --accent-primary: var(--accent);
+  --accent-primary-hover: #147474;
+  --accent-gold: var(--gold);
+  --destructive: #c0444a;
+  --background: var(--bg-base);
+  --foreground: var(--text-primary);
+  --gradient-radial-bg: var(--bg-gradient);
+  --gradient-card-comfort: linear-gradient(160deg, var(--card-bg) 0%, color-mix(in srgb, var(--card-bg) 85%, var(--accent) 15%) 100%);
+  --gradient-card-guidance: linear-gradient(160deg, var(--card-bg) 0%, color-mix(in srgb, var(--card-bg) 88%, var(--accent) 12%) 100%);
+  --gradient-card-grief: linear-gradient(160deg, var(--card-bg) 0%, color-mix(in srgb, var(--card-bg) 90%, #6b4a80 10%) 100%);
+  --gradient-card-default: linear-gradient(160deg, var(--card-bg) 0%, color-mix(in srgb, var(--card-bg) 92%, var(--bg-base) 8%) 100%);
+  --gold-glow: 0 0 40px color-mix(in srgb, var(--gold) 15%, transparent);
+}
+
+/* Al-Abyad — The White Kiswah */
+[data-theme="abyad"] {
+  --bg-gradient: radial-gradient(ellipse at 30% 20%, #f5f0e8 0%, #faf8f5 50%, #f0ebe0 100%);
+  --card-bg: #ffffff;
+  --accent: #1a8c8c;
+  --gold: #c8973a;
+  --text-primary: #2d2d3a;
+  --text-secondary: #6b6b80;
+  --border: rgba(200, 151, 58, 0.15);
+  --pattern-color: rgba(200, 151, 58, 0.08);
+  --pattern-opacity: 0.08;
+  --mosque-fill-opacity: 0.06;
+  --bg-base: #faf8f5;
+  --bg-subtle: #f0ebe0;
+  --text-arabic: #1c1c2e;
+  --accent-primary-hover: #147474;
+  --input-bg: #ffffff;
+  --on-accent-text: #ffffff;
+}
+
+/* Al-Aswad — The Black Kiswah */
+[data-theme="aswad"] {
+  --bg-gradient: linear-gradient(180deg, #0a0a0f 0%, #111118 50%, #0a0a0f 100%);
+  --card-bg: #16141e;
+  --accent: #c8973a;
+  --gold: #e8c97a;
+  --text-primary: #f0ede8;
+  --text-secondary: #9a9080;
+  --border: rgba(200, 151, 58, 0.2);
+  --pattern-color: rgba(200, 151, 58, 0.06);
+  --pattern-opacity: 0.06;
+  --mosque-fill-opacity: 0.04;
+  --bg-base: #0a0a0f;
+  --bg-subtle: #111118;
+  --text-arabic: #f0ede8;
+  --accent-primary-hover: #e8c97a;
+  --input-bg: #16141e;
+  --on-accent-text: #12121f;
+  --card-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.25), 0 8px 24px rgba(0, 0, 0, 0.35),
+    0 1px 0 rgba(200, 151, 58, 0.12) inset;
+  --gold-glow: 0 0 60px rgba(232, 201, 122, 0.12);
+}
+
+/* Al-Ahmar — The Red Kiswah */
+[data-theme="ahmar"] {
+  --bg-gradient: radial-gradient(ellipse at 50% 0%, #2e0a0a 0%, #1e0606 50%, #140404 100%);
+  --card-bg: #280c0c;
+  --accent: #c8973a;
+  --gold: #e8c97a;
+  --text-primary: #f5e8e8;
+  --text-secondary: #b08080;
+  --border: rgba(200, 151, 58, 0.15);
+  --pattern-color: rgba(200, 151, 58, 0.05);
+  --pattern-opacity: 0.05;
+  --mosque-fill-opacity: 0.04;
+  --bg-base: #140404;
+  --bg-subtle: #1e0606;
+  --text-arabic: #f5e8e8;
+  --accent-primary-hover: #e8c97a;
+  --input-bg: #280c0c;
+  --on-accent-text: #12121f;
+  --card-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.25), 0 8px 24px rgba(0, 0, 0, 0.35),
+    0 1px 0 rgba(200, 151, 58, 0.1) inset;
+  --gold-glow: 0 0 50px rgba(232, 201, 122, 0.1);
+}
+
+/* Al-Akhdar — The Green Kiswah */
+[data-theme="akhdar"] {
+  --bg-gradient: radial-gradient(ellipse at 50% 0%, #0a2010 0%, #081808 50%, #060f06 100%);
+  --card-bg: #0c1e0c;
+  --accent: #c8973a;
+  --gold: #e8c97a;
+  --text-primary: #e8f0e8;
+  --text-secondary: #7a9a7a;
+  --border: rgba(200, 151, 58, 0.15);
+  --pattern-color: rgba(200, 151, 58, 0.05);
+  --pattern-opacity: 0.05;
+  --mosque-fill-opacity: 0.04;
+  --bg-base: #060f06;
+  --bg-subtle: #081808;
+  --text-arabic: #e8f0e8;
+  --accent-primary-hover: #e8c97a;
+  --input-bg: #0c1e0c;
+  --on-accent-text: #12121f;
+  --card-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.25), 0 8px 24px rgba(0, 0, 0, 0.35),
+    0 1px 0 rgba(200, 151, 58, 0.1) inset;
+  --gold-glow: 0 0 50px rgba(232, 201, 122, 0.1);
+}
+
+/* Al-Dhahabi — The Golden Kiswah */
+[data-theme="dhahabi"] {
+  --bg-gradient: radial-gradient(ellipse at 40% 20%, #2a1a00 0%, #1e1200 50%, #140e00 100%);
+  --card-bg: #241800;
+  --accent: #e8c97a;
+  --gold: #f0d890;
+  --text-primary: #f5edd0;
+  --text-secondary: #b0a060;
+  --border: rgba(232, 201, 122, 0.2);
+  --pattern-color: rgba(232, 201, 122, 0.06);
+  --pattern-opacity: 0.06;
+  --mosque-fill-opacity: 0.04;
+  --bg-base: #140e00;
+  --bg-subtle: #1e1200;
+  --text-arabic: #f5edd0;
+  --accent-primary-hover: #f0d890;
+  --input-bg: #241800;
+  --on-accent-text: #1e1200;
+  --card-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.25), 0 8px 24px rgba(0, 0, 0, 0.35),
+    0 1px 0 rgba(232, 201, 122, 0.12) inset;
+  --gold-glow: 0 0 55px rgba(240, 216, 144, 0.15);
+}
+
+/* Al-Mukhattam — The Striped Kiswah */
+[data-theme="mukhattam"] {
+  --bg-gradient: radial-gradient(ellipse at 30% 20%, #f5e8e8 0%, #faf0f0 40%, #fff8f8 100%);
+  --card-bg: #ffffff;
+  --accent: #8c1a1a;
+  --gold: #c8973a;
+  --text-primary: #2d1a1a;
+  --text-secondary: #806060;
+  --border: rgba(140, 26, 26, 0.12);
+  --pattern-color: rgba(140, 26, 26, 0.05);
+  --pattern-opacity: 0.05;
+  --mosque-fill-opacity: 0.06;
+  --bg-base: #fff8f8;
+  --bg-subtle: #faf0f0;
+  --text-arabic: #2d1a1a;
+  --accent-primary-hover: #6e1414;
+  --input-bg: #ffffff;
+  --on-accent-text: #ffffff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-nunito);
+  --font-display: var(--font-playfair);
   --font-mono: var(--font-geist-mono);
+  --color-teal-950: #0d5c5c;
+  --color-gold-200: #f0d080;
+  --color-gold-400: #d4a843;
+  --color-parchment: #faf8f5;
+  --color-parchment-dark: #f0ebe3;
+  --color-ink-950: #12121f;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Light themes: dark geometric strokes */
+[data-theme="abyad"] body::before,
+[data-theme="mukhattam"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: var(--pattern-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cdefs%3E%3Cpattern id='ig' x='0' y='0' width='80' height='80' patternUnits='userSpaceOnUse'%3E%3Cpath d='M40 0 L46 14 L60 8 L54 22 L68 28 L54 34 L60 48 L46 42 L40 56 L34 42 L20 48 L26 34 L12 28 L26 22 L20 8 L34 14 Z' fill='none' stroke='%231c1c2e' stroke-width='0.5'/%3E%3Ccircle cx='40' cy='28' r='8' fill='none' stroke='%231c1c2e' stroke-width='0.5'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23ig)'/%3E%3C/svg%3E");
+}
+
+/* Dark themes: light geometric strokes */
+[data-theme="aswad"] body::before,
+[data-theme="ahmar"] body::before,
+[data-theme="akhdar"] body::before,
+[data-theme="dhahabi"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: var(--pattern-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cdefs%3E%3Cpattern id='ig' x='0' y='0' width='80' height='80' patternUnits='userSpaceOnUse'%3E%3Cpath d='M40 0 L46 14 L60 8 L54 22 L68 28 L54 34 L60 48 L46 42 L40 56 L34 42 L20 48 L26 34 L12 28 L26 22 L20 8 L34 14 Z' fill='none' stroke='%23e8e8f0' stroke-width='0.5'/%3E%3Ccircle cx='40' cy='28' r='8' fill='none' stroke='%23e8e8f0' stroke-width='0.5'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23ig)'/%3E%3C/svg%3E");
+}
+
+html {
+  min-height: 100%;
+  background: var(--bg-gradient);
+}
+
+html[data-theme] {
+  --background: var(--bg-base);
+  --foreground: var(--text-primary);
+  --accent-primary: var(--accent);
+  --accent-gold: var(--gold);
+  --bg-card: var(--card-bg);
+  --gradient-radial-bg: var(--bg-gradient);
 }
 
 body {
-  background: var(--background);
+  background: transparent;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-nunito), Arial, Helvetica, sans-serif;
+}
+
+.font-scheherazade {
+  font-family: "Scheherazade New", serif;
+}
+
+.font-playfair {
+  font-family: var(--font-playfair), serif;
+}
+
+.font-nunito {
+  font-family: var(--font-nunito), Arial, Helvetica, sans-serif;
+}
+
+.arabic-display {
+  font-family: "Scheherazade New", serif;
+  direction: rtl;
+  line-height: 2.2;
+  letter-spacing: 0.02em;
+}
+
+.arabic-xl {
+  font-size: 2.25rem;
+}
+
+.arabic-2xl {
+  font-size: 2.75rem;
+}
+
+.arabic-3xl {
+  font-size: 3.25rem;
+}
+
+.translation-text {
+  font-family: var(--font-playfair), serif;
+  font-style: italic;
+  line-height: 1.8;
+}
+
+.gold-rule {
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 24px auto;
+  border: none;
+}
+
+.gold-rule-animate {
+  animation: gold-rule-fade 400ms ease-out 400ms both;
+}
+
+@keyframes gold-rule-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-card-enter {
+  animation: card-enter 300ms ease-out both;
+}
+
+.card-elevated {
+  box-shadow: var(--card-shadow);
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+}
+
+/* Onboarding screen 1 — NurSalam atmospheric splash */
+.onboarding-splash {
+  background: linear-gradient(180deg, #0d3d3d 0%, #1a8c8c 40%, #0d2e2e 100%);
+}
+
+.onboarding-splash-pill {
+  background: rgba(255, 255, 255, 0.1);
+  color: #faf0e4;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.onboarding-splash-text {
+  color: #faf8f5;
+}
+
+.onboarding-splash-muted {
+  color: rgba(250, 248, 245, 0.75);
+}
+
+.onboarding-splash-btn {
+  background: #c8973a;
+  color: #1c1c2e;
+}
+
+/* Feed-only geometric veil */
+.feed-geo-veil {
+  opacity: var(--pattern-feed-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cdefs%3E%3Cpattern id='ig' x='0' y='0' width='80' height='80' patternUnits='userSpaceOnUse'%3E%3Cpath d='M40 0 L46 14 L60 8 L54 22 L68 28 L54 34 L60 48 L46 42 L40 56 L34 42 L20 48 L26 34 L12 28 L26 22 L20 8 L34 14 Z' fill='none' stroke='%231c1c2e' stroke-width='0.5'/%3E%3Ccircle cx='40' cy='28' r='8' fill='none' stroke='%231c1c2e' stroke-width='0.5'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23ig)'/%3E%3C/svg%3E");
+}
+
+[data-theme="aswad"] .feed-geo-veil,
+[data-theme="ahmar"] .feed-geo-veil,
+[data-theme="akhdar"] .feed-geo-veil,
+[data-theme="dhahabi"] .feed-geo-veil {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cdefs%3E%3Cpattern id='ig' x='0' y='0' width='80' height='80' patternUnits='userSpaceOnUse'%3E%3Cpath d='M40 0 L46 14 L60 8 L54 22 L68 28 L54 34 L60 48 L46 42 L40 56 L34 42 L20 48 L26 34 L12 28 L26 22 L20 8 L34 14 Z' fill='none' stroke='%23e8e8f0' stroke-width='0.5'/%3E%3Ccircle cx='40' cy='28' r='8' fill='none' stroke='%23e8e8f0' stroke-width='0.5'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23ig)'/%3E%3C/svg%3E");
+}
+
+@keyframes feed-hint-chevron {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.55;
+  }
+
+  50% {
+    transform: translateY(4px);
+    opacity: 1;
+  }
+}
+
+.animate-feed-hint-chevron {
+  animation: feed-hint-chevron 1.6s ease-in-out infinite;
+}
+
+@keyframes feed-hint-fade {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+.feed-scroll-hint-hide {
+  animation: feed-hint-fade 600ms ease-out 3s forwards;
+}
+
+.theme-swatch-preview {
+  background: var(--swatch-gradient);
 }

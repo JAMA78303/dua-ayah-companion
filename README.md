@@ -1,24 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Dua & Ayah Companion
+
+Next.js + Supabase app for emotionally guided Qur'anic ayah/dua reflections.
 
 ## Getting Started
 
-First, run the development server:
+1) Install dependencies:
+
+```bash
+npm install
+```
+
+2) Add environment variables (`.env.local`):
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_URL=http://localhost:3000
+```
+
+3) Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+If you already have another project on port 3000 (e.g. BiteSync), use:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run dev:3001
+```
+
+Then open [http://127.0.0.1:3001](http://127.0.0.1:3001).
+
+## Database Setup
+
+Apply SQL migration in Supabase:
+
+- `supabase/migrations/001_mvp_core.sql`
+
+## Seed MVP Content
+
+Seed baseline approved content (15 rows: 5 categories x 3 each):
+
+```bash
+npm run seed:mvp
+```
+
+Validate seed quality:
+
+```bash
+npm run seed:check
+```
+
+Both commands require:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
 
 ## Learn More
 

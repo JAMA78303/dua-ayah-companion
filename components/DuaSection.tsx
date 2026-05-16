@@ -1,0 +1,84 @@
+"use client";
+
+import { AyahAudioPlayer } from "@/components/AyahAudioPlayer";
+
+export type DuaSourceType = "quranic" | "prophetic_sunnah";
+
+export interface DuaSectionProps {
+  dua_text: string;
+  dua_transliteration: string | null;
+  dua_translation: string;
+  source_type: DuaSourceType;
+  surah: number | null;
+  ayah_number: number | null;
+  hadith_source: string | null;
+  duaAudioUrl: string | null;
+  duaVerseKey: string | null;
+  reciterName: string;
+  compact?: boolean;
+}
+
+function hasTransliteration(value: string | null | undefined): value is string {
+  return typeof value === "string" && value.trim() !== "";
+}
+
+function ArabicDuaText({ text, compact }: { text: string; compact?: boolean }) {
+  return (
+    <p
+      dir="rtl"
+      lang="ar"
+      className={`font-scheherazade w-full text-right leading-[2] text-[var(--text-arabic)] ${
+        compact ? "text-[20px] md:text-[22px]" : "text-[24px]"
+      }`}
+    >
+      {text}
+    </p>
+  );
+}
+
+export function DuaSection({
+  dua_text,
+  dua_transliteration,
+  dua_translation,
+  source_type,
+  duaAudioUrl,
+  duaVerseKey,
+  reciterName,
+  compact = false,
+}: DuaSectionProps) {
+  const showAudio = source_type === "quranic" && Boolean(duaAudioUrl && duaVerseKey);
+
+  return (
+    <section className={compact ? "space-y-2" : "space-y-2"}>
+      <h2 className="text-xs font-medium uppercase tracking-wide text-[var(--text-secondary)]">
+        A Related Supplication
+      </h2>
+
+      <ArabicDuaText text={dua_text} compact={compact} />
+
+      {hasTransliteration(dua_transliteration) ? (
+        <p
+          className="mb-1 mt-2 text-sm font-light italic leading-relaxed tracking-wide text-slate-500"
+          dir="ltr"
+          lang="en"
+        >
+          {dua_transliteration.trim()}
+        </p>
+      ) : null}
+
+      <p className="text-sm leading-relaxed text-slate-700">{dua_translation}</p>
+
+      {showAudio ? (
+        <AyahAudioPlayer
+          audioUrl={duaAudioUrl}
+          verseKey={duaVerseKey!}
+          reciterName={reciterName}
+        />
+      ) : null}
+
+      {source_type === "prophetic_sunnah" ? (
+        <p className="mt-2 text-xs italic text-slate-400">From the Sunnah of the Prophet ﷺ</p>
+      ) : null}
+    </section>
+  );
+}

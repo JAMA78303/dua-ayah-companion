@@ -1,0 +1,71 @@
+import { createClient } from "@/lib/supabase/client";
+
+import { getUserWithTimeout } from "@/lib/auth/getUserWithTimeout";
+
+export const SAVE_ERR_UNAUTHENTICATED = "UNAUTHENTICATED";
+export const SAVE_ERR_LIMIT_REACHED = "LIMIT_REACHED";
+
+const FREE_SAVE_CAP = 10;
+
+export type ToggleSaveResult = "saved" | "removed";
+
+/**
+ * Toggle `saved_items` for the signed-in user. RULE-005: explicit selects only.
+ */
+export async function toggleSave(pairingId: string): Promise<ToggleSaveResult> {
+  const user = await getUserWithTimeout();
+  if (!user) {
+    throw new Error(SAVE_ERR_UNAUTHENTICATED);
+  }
+
+  const supabase = createClient();
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("is_premium")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (profileError) {
+    throw new Error(profileError.message);
+  }
+
+  const isPremium = Boolean(profile?.is_premium);
+
+  const { data: existing, error: existingError } = await supabase
+    .from("saved_items")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("pairing_id", pairingId)
+    .maybeSingle();
+
+  if (existingError) {
+    throw new Error(existingError.message);
+  }
+
+  if (existing?.id) {
+    const { error: delError } = await supabase.from("saved_items").delete().eq("id", existing.id);
+    if (delError) throw new Error(delError.message);
+    return "removed";
+  }
+
+  if (!isPremium) {
+    const { count, error: countError } = await supabase
+      .from("saved_items")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id);
+
+    if (countError) throw new Error(countError.message);
+    if ((count ?? 0) >= FREE_SAVE_CAP) {
+      throw new Error(SAVE_ERR_LIMIT_REACHED);
+    }
+  }
+
+  const { error: insertError } = await supabase.from("saved_items").insert({
+    user_id: user.id,
+    pairing_id: pairingId,
+  });
+
+  if (insertError) throw new Error(insertError.message);
+  return "saved";
+}
