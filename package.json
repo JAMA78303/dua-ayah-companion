@@ -10,7 +10,8 @@
     "start": "next start",
     "lint": "eslint",
     "seed:mvp": "node scripts/seed-mvp-content.mjs",
-    "seed:check": "node scripts/check-seed.mjs"
+    "seed:check": "node scripts/check-seed.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.2",
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "@ducanh2912/next-pwa": "^10.2.9",
+    "@electric-sql/pglite": "^0.3.16",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -29,6 +31,7 @@
     "eslint-config-next": "16.2.4",
     "sharp": "^0.34.5",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   }
 }
