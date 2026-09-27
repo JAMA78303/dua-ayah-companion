@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { RemindersSettings } from "@/components/push/RemindersSettings";
 import { ReciterSelector } from "@/components/ReciterSelector";
 import { useReciter } from "@/components/ReciterProvider";
 import { getUserWithTimeout } from "@/lib/auth/getUserWithTimeout";
@@ -76,6 +77,8 @@ export function SettingsSheet({ open, onClose }: SettingsSheetProps) {
           <p className="text-xs text-[var(--text-secondary)]">Currently: {reciterName}</p>
           <ReciterSelector />
         </section>
+
+        <RemindersSettings />
 
         <section className="mt-6 space-y-3 border-t border-[var(--border)] pt-5">
           <h3 className="text-sm font-semibold text-[var(--text-primary)]">Account</h3>
