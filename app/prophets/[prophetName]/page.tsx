@@ -48,7 +48,7 @@ export default async function ProphetDetailPage({
           {prophetEnglishLabel(figureName, isProphet)}
         </h1>
         <p className="text-sm text-[var(--text-secondary)]">
-          {pairings.length} {pairings.length === 1 ? "dua" : "duas"} preserved in the Qur&apos;an
+          {`${pairings.length} ${pairings.length === 1 ? "dua" : "duas"} preserved in the Qur'an`}
         </p>
       </header>
 
