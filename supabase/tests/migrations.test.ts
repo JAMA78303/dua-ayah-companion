@@ -102,7 +102,7 @@ describe("migrations, run in order from scratch", () => {
     expect(await count(db, "SELECT DISTINCT surah, ayah_number, md5(dua_text) FROM ayah_pairings")).toBe(35);
   });
 
-  it("can re-run 012-015 without changing anything", async () => {
+  it("can re-run 012 onwards without changing anything", async () => {
     for (const file of migrationFiles.filter((f) => f >= "012")) await db.exec(readMigration(file));
     expect(await count(db, "SELECT 1 FROM ayah_pairings")).toBe(35);
   });
@@ -173,6 +173,18 @@ describe("permissions", () => {
     const keys = await as(db, "anon", null, () => db.query<{ k: string }>("SELECT * FROM hidden_content_keys() AS k"));
     expect(keys.rows.map((r) => r.k)).toEqual(["story:musa:3"]);
     expect(await as(db, "anon", null, () => count(db, "SELECT 1 FROM content_reviews"))).toBe(0);
+  });
+
+  it("each person sees and changes only their own duas", async () => {
+    await as(db, "authenticated", USER, () => db.query("INSERT INTO personal_duas (user_id, text) VALUES ($1, 'ease for my exams')", [USER]));
+    expect(await as(db, "authenticated", ADMIN, () => count(db, "SELECT 1 FROM personal_duas"))).toBe(0);
+    const tampered = await as(db, "authenticated", ADMIN, () => db.query("UPDATE personal_duas SET answered_at = now()"));
+    expect(tampered.affectedRows).toBe(0);
+    await expect(
+      as(db, "authenticated", ADMIN, () => db.query("INSERT INTO personal_duas (user_id, text) VALUES ($1, 'x')", [USER])),
+    ).rejects.toThrow(/row-level security/);
+    expect(await as(db, "authenticated", USER, () => count(db, "SELECT 1 FROM personal_duas"))).toBe(1);
+    expect(await as(db, "anon", null, () => count(db, "SELECT 1 FROM personal_duas"))).toBe(0);
   });
 
   it("feedback can't be attributed to someone else", async () => {
