@@ -104,6 +104,7 @@ export default async function ResultPage({ searchParams }: ResultPageProps) {
           hadithSource={pairing.hadith_source}
           qfTafsirLong={qf?.tafsirText ?? null}
           qfAudioUrl={qf?.audioUrl ?? null}
+        qfWords={qf?.textUthmani ? qf.words : null}
         />
       </main>
     );
@@ -152,6 +153,7 @@ export default async function ResultPage({ searchParams }: ResultPageProps) {
           hadithSource={pairing.hadith_source}
           qfTafsirLong={qf?.tafsirText ?? null}
           qfAudioUrl={qf?.audioUrl ?? null}
+        qfWords={qf?.textUthmani ? qf.words : null}
         />
       </main>
     );
@@ -214,6 +216,7 @@ export default async function ResultPage({ searchParams }: ResultPageProps) {
         hadithSource={pairing.hadith_source}
         qfTafsirLong={qf?.tafsirText ?? null}
         qfAudioUrl={qf?.audioUrl ?? null}
+        qfWords={qf?.textUthmani ? qf.words : null}
       />
     </main>
   );

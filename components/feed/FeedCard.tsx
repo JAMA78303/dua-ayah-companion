@@ -61,6 +61,7 @@ export function FeedCard({ pairing, index, total, isActive }: FeedCardProps) {
             translation: data.translation ?? null,
             audioUrl: data.audioUrl ?? null,
             tafsirText: data.tafsirText ?? null,
+            words: data.words ?? null,
           });
         }
       } catch {

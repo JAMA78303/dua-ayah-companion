@@ -29,6 +29,7 @@ export default async function ProphetDetailPage({
         translation: qf?.translation ?? pairing.translation,
         qfTafsirLong: qf?.tafsirText ?? null,
         qfAudioUrl: qf?.audioUrl ?? null,
+        qfWords: qf?.textUthmani ? qf.words : null,
       };
     }),
   );
@@ -62,7 +63,7 @@ export default async function ProphetDetailPage({
         ) : null}
       </header>
 
-      {enriched.map(({ pairing, arabicText, translation, qfTafsirLong, qfAudioUrl }) => (
+      {enriched.map(({ pairing, arabicText, translation, qfTafsirLong, qfAudioUrl, qfWords }) => (
         <AyahCard
           key={pairing.id}
           pairingId={pairing.id}
@@ -82,6 +83,7 @@ export default async function ProphetDetailPage({
           hadithSource={pairing.hadith_source}
           qfTafsirLong={qfTafsirLong}
           qfAudioUrl={qfAudioUrl}
+          qfWords={qfWords}
           expandPropheticStory
         />
       ))}

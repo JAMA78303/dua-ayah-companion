@@ -13,11 +13,20 @@ import { qfContentGet } from "@/lib/quranFoundation/client";
  * - tafsir 169 (Ibn Kathir, abridged) comes from its own endpoint, not an embedded `tafsirs` param
  * - audio comes from the per-chapter audio map (fetchAudio.ts)
  */
+/** One word of the verse, for word-by-word meaning (the ayah-number marker is excluded). */
+export type QfWord = {
+  arabic: string;
+  translit: string | null;
+  meaning: string | null;
+};
+
 export type QfAyahBundle = {
   textUthmani: string | null;
   translation: string | null;
   audioUrl: string | null;
   tafsirText: string | null;
+  /** Aligned with `textUthmani`'s words (pause marks stay attached to their word). */
+  words: QfWord[] | null;
 };
 
 const TRANSLATION_ID = "20";
@@ -68,7 +77,21 @@ function extractTranslation(payload: Record<string, unknown>): string | null {
   return null;
 }
 
-type QfAyahText = Pick<QfAyahBundle, "textUthmani" | "translation">;
+type QfAyahText = Pick<QfAyahBundle, "textUthmani" | "translation" | "words">;
+
+function extractWords(verse: Record<string, unknown> | undefined): QfWord[] | null {
+  const words = verse?.words;
+  if (!Array.isArray(words)) return null;
+  const out = words
+    .filter((w): w is Record<string, unknown> => Boolean(w) && typeof w === "object" && (w as { char_type_name?: unknown }).char_type_name === "word")
+    .map((w) => ({
+      arabic: pickString(w.text_uthmani) ?? "",
+      translit: pickString((w.transliteration as { text?: unknown } | undefined)?.text),
+      meaning: pickString((w.translation as { text?: unknown } | undefined)?.text),
+    }))
+    .filter((w) => w.arabic);
+  return out.length ? out : null;
+}
 
 /** Throws on failure so `unstable_cache` never stores a failed lookup. */
 async function fetchAyahTextUncached(surah: number, ayah: number): Promise<QfAyahText> {
@@ -76,6 +99,9 @@ async function fetchAyahTextUncached(surah: number, ayah: number): Promise<QfAya
   const query = new URLSearchParams({
     fields: "text_uthmani",
     translations: TRANSLATION_ID,
+    words: "true",
+    word_fields: "text_uthmani",
+    word_translation_language: "en",
   });
 
   // QDC mirrors Quran.com-style verse routes; see QF API docs.
@@ -90,7 +116,7 @@ async function fetchAyahTextUncached(surah: number, ayah: number): Promise<QfAya
   const translation = extractTranslation(payload);
   if (!textUthmani && !translation) throw new Error(`QF verse ${verseKey} returned no text`);
 
-  return { textUthmani, translation };
+  return { textUthmani, translation, words: extractWords(verse) };
 }
 
 /** Tafsir covers a passage (several ayat); throws on failure so it isn't cached. */
@@ -114,10 +140,10 @@ export async function fetchAyahFromQF(
   if (!Number.isInteger(surah) || surah < 1 || surah > 114) return null;
   if (!Number.isInteger(ayah) || ayah < 1) return null;
 
-  // v2: earlier entries were cached without text (the request never asked for it).
+  // v3: adds word-by-word data (v2 entries have none; v1 had no text at all).
   const cachedText = unstable_cache(
     async () => fetchAyahTextUncached(surah, ayah),
-    ["qf-ayah-text-v2", String(surah), String(ayah)],
+    ["qf-ayah-text-v3", String(surah), String(ayah)],
     { revalidate: 86_400 },
   );
   const cachedTafsir = unstable_cache(
