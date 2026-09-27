@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { CategoryTiles } from "@/components/CategoryTiles";
 import { MosqueSilhouette } from "@/components/MosqueSilhouette";
+import { NameOfTheDayCard } from "@/components/names/NameOfTheDayCard";
 import { DailyRecommendationCard } from "@/components/DailyRecommendationCard";
 import { EmotionInput } from "@/components/EmotionInput";
 import { IOSInstallBanner } from "@/components/IOSInstallBanner";
@@ -57,6 +58,7 @@ export default function Home() {
         <MosqueSilhouette />
         <div className="relative z-10 space-y-4">
         <DailyRecommendationCard />
+        <NameOfTheDayCard />
         <StreakDisplay />
         <p className="text-center text-xs italic text-[var(--text-secondary)]">{SUPPORTER_MISSION_LINE}</p>
 

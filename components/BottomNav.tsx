@@ -53,10 +53,20 @@ function ProphetsIcon() {
   );
 }
 
+function NamesIcon() {
+  return (
+    <NavIcon>
+      <rect x="6" y="6" width="12" height="12" rx="1" />
+      <rect x="6" y="6" width="12" height="12" rx="1" transform="rotate(45 12 12)" />
+    </NavIcon>
+  );
+}
+
 const TABS = [
-  { href: "/", label: "Home", Icon: HomeIcon, match: (p: string) => !p.startsWith("/quran") && !p.startsWith("/prophets") && !p.startsWith("/prophetic") && !p.startsWith("/stories") },
+  { href: "/", label: "Home", Icon: HomeIcon, match: (p: string) => !p.startsWith("/quran") && !p.startsWith("/prophets") && !p.startsWith("/prophetic") && !p.startsWith("/stories") && !p.startsWith("/names") },
   { href: "/quran", label: "Qur'an", Icon: QuranIcon, match: (p: string) => p.startsWith("/quran") },
   { href: "/prophets", label: "Prophets", Icon: ProphetsIcon, match: (p: string) => p.startsWith("/prophets") || p.startsWith("/prophetic") || p.startsWith("/stories") },
+  { href: "/names", label: "Names", Icon: NamesIcon, match: (p: string) => p.startsWith("/names") },
 ] as const;
 
 export function BottomNav() {
