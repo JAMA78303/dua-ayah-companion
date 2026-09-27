@@ -195,4 +195,16 @@ describe("permissions", () => {
       ),
     ).rejects.toThrow(/row-level security/);
   });
+
+  it("push subscriptions are server-only", async () => {
+    await db.query("INSERT INTO push_subscriptions (endpoint, p256dh, auth, timezone, user_id) VALUES ('https://push.example/1', 'k', 'a', 'Europe/London', $1)", [USER]);
+    for (const [role, id] of [["anon", null], ["authenticated", USER]] as const) {
+      await expect(as(db, role, id, () => db.query("SELECT * FROM push_subscriptions"))).rejects.toThrow(/permission denied/);
+      await expect(
+        as(db, role, id, () =>
+          db.query("INSERT INTO push_subscriptions (endpoint, p256dh, auth, timezone) VALUES ('https://push.example/2', 'k', 'a', 'UTC')"),
+        ),
+      ).rejects.toThrow(/permission denied/);
+    }
+  });
 });
