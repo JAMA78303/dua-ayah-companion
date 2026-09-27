@@ -18,7 +18,7 @@ interface SettingsSheetProps {
 type AccountState =
   | { status: "loading" }
   | { status: "signed-out" }
-  | { status: "signed-in"; email: string | null; isAdmin: boolean };
+  | { status: "signed-in"; email: string | null; isAdmin: boolean; isSupporter: boolean };
 
 export function SettingsSheet({ open, onClose }: SettingsSheetProps) {
   const { reciterName } = useReciter();
@@ -33,8 +33,19 @@ export function SettingsSheet({ open, onClose }: SettingsSheetProps) {
         if (!cancelled) setAccount({ status: "signed-out" });
         return;
       }
-      const { data } = await createClient().rpc("is_admin");
-      if (!cancelled) setAccount({ status: "signed-in", email: user.email ?? null, isAdmin: data === true });
+      const supabase = createClient();
+      const [{ data: isAdmin }, { data: profile }] = await Promise.all([
+        supabase.rpc("is_admin"),
+        supabase.from("profiles").select("is_premium").eq("id", user.id).maybeSingle(),
+      ]);
+      if (!cancelled) {
+        setAccount({
+          status: "signed-in",
+          email: user.email ?? null,
+          isAdmin: isAdmin === true,
+          isSupporter: profile?.is_premium === true,
+        });
+      }
     });
     return () => {
       cancelled = true;
@@ -99,6 +110,9 @@ export function SettingsSheet({ open, onClose }: SettingsSheetProps) {
                   {signingOut ? "Signing out…" : "Sign out"}
                 </button>
               </div>
+              <Link href="/supporter" onClick={onClose} className="block text-sm font-medium text-[var(--accent-primary)]">
+                {account.isSupporter ? "Your Supporter subscription →" : "Become a Supporter →"}
+              </Link>
               {account.isAdmin ? (
                 <Link href="/admin/review" onClick={onClose} className="block text-sm font-medium text-[var(--accent-primary)]">
                   Review content →
