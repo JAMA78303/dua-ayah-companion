@@ -137,6 +137,14 @@ describe("permissions", () => {
     await expect(
       as(db, "authenticated", USER, () => db.query(`UPDATE profiles SET is_premium = true WHERE id = '${USER}'`)),
     ).rejects.toThrow(/permission denied/);
+    for (const column of ["stripe_customer_id", "stripe_subscription_id", "subscription_status"]) {
+      await expect(
+        as(db, "authenticated", USER, () => db.query(`UPDATE profiles SET ${column} = 'x' WHERE id = '${USER}'`)),
+      ).rejects.toThrow(/permission denied/);
+    }
+    // ...but they can see their own subscription details.
+    const own = await as(db, "authenticated", USER, () => db.query("SELECT subscription_status, subscription_renews_at FROM profiles"));
+    expect(own.rows).toHaveLength(1);
   });
 
   it("users can still change their theme and reciter", async () => {

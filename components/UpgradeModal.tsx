@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect } from "react";
 
 interface UpgradeModalProps {
@@ -10,13 +11,13 @@ interface UpgradeModalProps {
 }
 
 /**
- * Free-tier save cap reached — Supporter / upgrade placeholder (Stripe later).
+ * Free-tier limit reached: points to the Supporter page.
  */
 export function UpgradeModal({
   open,
   onClose,
   title = "You've saved 10 ayahs",
-  description = "Upgrade to keep building your collection.",
+  description = "Become a Supporter for unlimited saves, and help fund Islamic causes.",
 }: UpgradeModalProps) {
   useEffect(() => {
     if (!open) return;
@@ -47,13 +48,13 @@ export function UpgradeModal({
         </h2>
         <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{description}</p>
         <div className="mt-6 flex flex-col gap-3">
-          <a
-            href="#"
+          <Link
+            href="/supporter"
+            onClick={onClose}
             className="block w-full rounded-lg bg-[var(--accent-primary)] py-3 text-center text-sm font-semibold text-white"
-            onClick={(e) => e.preventDefault()}
           >
-            Upgrade
-          </a>
+            Become a Supporter
+          </Link>
           <button
             type="button"
             onClick={onClose}
