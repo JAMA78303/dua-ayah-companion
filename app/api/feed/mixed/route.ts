@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { fetchAllApprovedPairings } from "@/lib/content/fetchPairings";
+import { fetchHiddenContentKeys } from "@/lib/feed/hiddenContent";
 import { buildMixedFeed } from "@/lib/feed/mixedFeed";
 import type { MixedFeedPage } from "@/lib/feed/types";
 
@@ -19,7 +20,9 @@ export async function GET(request: NextRequest) {
   const safeOffset = Number.isInteger(offset) && offset >= 0 ? offset : 0;
   const safeLimit = Number.isInteger(limit) && limit > 0 ? Math.min(limit, MAX_LIMIT) : 12;
 
-  const feed = buildMixedFeed(seed, await fetchAllApprovedPairings());
+  const [pairings, hidden] = await Promise.all([fetchAllApprovedPairings(), fetchHiddenContentKeys()]);
+  // Reviewers can hide a story chapter or Name without a deploy (see /admin/review).
+  const feed = buildMixedFeed(seed, pairings).filter((item) => !hidden.has(item.id));
   const items = feed.slice(safeOffset, safeOffset + safeLimit);
   const page: MixedFeedPage = {
     items,
