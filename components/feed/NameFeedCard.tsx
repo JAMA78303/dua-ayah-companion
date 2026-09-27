@@ -56,6 +56,7 @@ export function NameFeedCard({ item }: { item: NameItem }) {
             body: name.dua,
             footnote: name.duaSource,
           }}
+          save={{ contentKey: item.id }}
         />
       </div>
     </div>

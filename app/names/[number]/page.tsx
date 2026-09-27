@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { SaveButton } from "@/components/SaveButton";
 import { NAMES_OF_ALLAH, getNameOfAllah } from "@/lib/content/namesOfAllah";
 import { getSurahName } from "@/lib/quran/surahNames";
+import { nameKey } from "@/lib/saves/contentKeys";
 
 interface NamePageProps {
   params: Promise<{ number: string }>;
@@ -58,7 +60,10 @@ export default async function NamePage({ params }: NamePageProps) {
       </header>
 
       <section className="card-elevated space-y-2 p-5 md:p-6">
-        <h2 className="font-playfair text-lg font-semibold text-[var(--text-primary)]">Make it a dua</h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-playfair text-lg font-semibold text-[var(--text-primary)]">Make it a dua</h2>
+          <SaveButton contentKey={nameKey(name.number)} compact />
+        </div>
         <p className="text-[15px] leading-7 text-[var(--text-primary)]">{name.dua}</p>
         <p className="text-xs text-[var(--text-secondary)]">
           {name.duaSource ?? "Simple words to make your own. Call on Him by this name in your own language."}

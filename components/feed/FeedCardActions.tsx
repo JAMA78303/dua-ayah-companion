@@ -15,7 +15,8 @@ interface FeedCardActionsProps {
   shareText: string;
   /** What the shareable image shows. */
   card: ShareCardContent;
-  save?: { pairingId: string; surah: number; ayahNumber: number };
+  /** Content key (lib/saves/contentKeys.ts); ayat also pass surah/ayah for Quran.com bookmarks. */
+  save?: { contentKey: string; surah?: number; ayahNumber?: number };
 }
 
 export function FeedCardActions({ href, openLabel, shareTitle, shareText, card, save }: FeedCardActionsProps) {
@@ -24,7 +25,7 @@ export function FeedCardActions({ href, openLabel, shareTitle, shareText, card, 
   return (
     <div className="relative flex shrink-0 items-center justify-between gap-2 pt-4">
       <div className="flex items-center gap-2">
-        {save ? <SaveButton pairingId={save.pairingId} surah={save.surah} ayahNumber={save.ayahNumber} compact /> : null}
+        {save ? <SaveButton contentKey={save.contentKey} surah={save.surah} ayahNumber={save.ayahNumber} compact /> : null}
         <button
           type="button"
           onClick={() => setShareOpen(true)}

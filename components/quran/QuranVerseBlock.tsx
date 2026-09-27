@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { AyahListenControls } from "@/components/AyahListenControls";
 import { SaveButton } from "@/components/SaveButton";
+import { ayahKey } from "@/lib/saves/contentKeys";
 import type { QfVerse } from "@/lib/quranFoundation/versesByChapter";
 
 export interface QuranVersePlayback {
@@ -21,13 +22,11 @@ export interface QuranVersePlayback {
 interface QuranVerseBlockProps {
   verse: QfVerse;
   surahNumber: number;
-  pairingId?: string | null;
   playback: QuranVersePlayback;
 }
 
-export function QuranVerseBlock({ verse, surahNumber, pairingId, playback }: QuranVerseBlockProps) {
+export function QuranVerseBlock({ verse, surahNumber, playback }: QuranVerseBlockProps) {
   const reflectHref = `/result?verseKey=${encodeURIComponent(verse.verseKey)}`;
-  const canSave = Boolean(pairingId);
 
   return (
     <article
@@ -65,13 +64,7 @@ export function QuranVerseBlock({ verse, surahNumber, pairingId, playback }: Qur
           />
 
           <div className="mt-3 flex flex-wrap items-center gap-3 text-xs">
-            {canSave ? (
-              <SaveButton pairingId={pairingId!} surah={surahNumber} ayahNumber={verse.verseNumber} />
-            ) : (
-              <span className="text-[var(--text-secondary)]" title="No curated pairing for this ayah yet">
-                🔖 Save
-              </span>
-            )}
+            <SaveButton contentKey={ayahKey(surahNumber, verse.verseNumber)} surah={surahNumber} ayahNumber={verse.verseNumber} compact />
             <Link
               href={reflectHref}
               className="rounded-full bg-[var(--accent-primary)]/12 px-3 py-1 font-semibold text-[var(--accent-primary)] transition hover:bg-[var(--accent-primary)]/20"

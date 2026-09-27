@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { SaveButton } from "@/components/SaveButton";
 import { adhkarCompletion, readAdhkarProgress, writeAdhkarProgress, type AdhkarProgress } from "@/lib/adhkar/progress";
 import { adhkarFor, adhkarTimeNow, type AdhkarTime, type Dhikr } from "@/lib/content/adhkar";
 import { getSurahName } from "@/lib/quran/surahNames";
+import { adhkarKey } from "@/lib/saves/contentKeys";
 
 function DhikrCard({
   dhikr,
@@ -27,8 +29,11 @@ function DhikrCard({
   const eveningFragment = time === "evening" && !useEvening ? dhikr.eveningArabic : undefined;
 
   return (
-    <li className={`card-elevated space-y-3 p-5 transition ${done ? "opacity-70" : ""}`}>
-      {dhikr.title ? <p className="font-playfair text-base font-semibold text-[var(--text-primary)]">{dhikr.title}</p> : null}
+    <li id={dhikr.id} className={`card-elevated scroll-mt-24 space-y-3 p-5 transition ${done ? "opacity-70" : ""}`}>
+      <div className="flex items-start justify-between gap-3">
+        {dhikr.title ? <p className="font-playfair text-base font-semibold text-[var(--text-primary)]">{dhikr.title}</p> : <span />}
+        <SaveButton contentKey={adhkarKey(dhikr.id)} compact />
+      </div>
       <p dir="rtl" lang="ar" className="font-scheherazade text-right text-2xl leading-[2.1] text-[var(--text-arabic)]">
         {arabic}
       </p>

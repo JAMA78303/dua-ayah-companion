@@ -9,6 +9,7 @@ import { useReciter } from "@/components/ReciterProvider";
 import { SurahReferencePill } from "@/components/SurahReferencePill";
 import type { Pairing } from "@/lib/content/fetchPairings";
 import { getSurahName } from "@/lib/quran/surahNames";
+import { pairingKey } from "@/lib/saves/contentKeys";
 import type { QfAyahBundle } from "@/lib/quranFoundation/fetchAyah";
 import { toneGradientVar } from "@/lib/theme/toneGradient";
 
@@ -167,7 +168,7 @@ export function FeedCard({ pairing, index, total, isActive }: FeedCardProps) {
           shareTitle={pillLabel}
           shareText={`${translation} (${pillLabel})`}
           card={{ eyebrow: pillLabel, arabic: arabicText, body: translation }}
-          save={{ pairingId: pairing.id, surah: pairing.surah, ayahNumber: pairing.ayah_number }}
+          save={{ contentKey: pairingKey(pairing.id), surah: pairing.surah, ayahNumber: pairing.ayah_number }}
         />
 
         {index === 0 && scrollHintVisible ? (

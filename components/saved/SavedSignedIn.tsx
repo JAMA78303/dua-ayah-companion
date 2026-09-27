@@ -1,43 +1,16 @@
 import Link from "next/link";
 
-import { SavedAyahList } from "@/components/saved/SavedAyahList";
+import { SAVED_EMPTY_MESSAGE, SavedEntries } from "@/components/saved/SavedEntries";
+import { FREE_SAVE_CAP } from "@/lib/saves/limits";
+import { resolveSavedEntries } from "@/lib/saves/resolveSaved";
 import { createClient } from "@/lib/supabase/server";
-
-export type SavedRowWithPairing = {
-  id: string;
-  created_at: string;
-  pairing_id: string;
-  ayah_pairings: {
-    id: string;
-    surah: number;
-    ayah_number: number;
-    arabic_text: string;
-    translation: string;
-    tafsir_summary: string;
-    reflection_prompts: string[];
-    prophetic_story: string | null;
-    prophet_name: string | null;
-    tone_tag: "comfort" | "warning" | "balance";
-    dua_text: string;
-    dua_transliteration: string | null;
-    dua_translation: string;
-    emotion_category?: string | null;
-    qf_verse_key?: string | null;
-    source_type?: string | null;
-    hadith_source?: string | null;
-  } | null;
-};
-
-const SAVED_SELECT =
-  "id, created_at, pairing_id, ayah_pairings ( id, surah, ayah_number, arabic_text, translation, tafsir_summary, reflection_prompts, prophetic_story, prophet_name, tone_tag, dua_text, dua_transliteration, dua_translation, emotion_category, qf_verse_key, source_type, hadith_source )";
 
 export async function SavedSignedIn({ userId }: { userId: string }) {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("saved_items")
-    .select(SAVED_SELECT)
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
+  const [{ data, error }, { data: profile }] = await Promise.all([
+    supabase.from("saved_items").select("content_key, created_at").eq("user_id", userId).order("created_at", { ascending: false }),
+    supabase.from("profiles").select("is_premium").eq("id", userId).maybeSingle(),
+  ]);
 
   if (error) {
     return (
@@ -50,26 +23,28 @@ export async function SavedSignedIn({ userId }: { userId: string }) {
     );
   }
 
-  const rows = (data ?? []).map((raw: Record<string, unknown>) => {
-    const ap = raw.ayah_pairings;
-    const pairing = Array.isArray(ap) ? (ap[0] as SavedRowWithPairing["ayah_pairings"]) ?? null : (ap as SavedRowWithPairing["ayah_pairings"] | null);
-    return { ...raw, ayah_pairings: pairing } as SavedRowWithPairing;
-  });
+  const keys = (data ?? []).map((row) => row.content_key as string);
+  const entries = await resolveSavedEntries(keys, supabase);
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10 md:px-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Saved</h1>
-        <Link href="/" className="text-sm font-medium text-[var(--accent-primary)]">
-          Back
-        </Link>
-      </div>
-      <p className="text-sm text-[var(--text-secondary)]">Ayahs you have saved to your account.</p>
+      <header className="space-y-2">
+        <h1 className="font-playfair text-2xl font-semibold text-[var(--text-primary)]">Saved</h1>
+        <p className="text-sm text-[var(--text-secondary)]">Duas, adhkar, ayat, Names and stories you&apos;ve kept.</p>
+        {profile?.is_premium ? null : (
+          <p className="text-xs text-[var(--text-secondary)]">
+            {`${Math.min(keys.length, FREE_SAVE_CAP)} of ${FREE_SAVE_CAP} free saves used. `}
+            <Link href="/supporter" className="font-medium text-[var(--accent-primary)]">
+              Unlimited as a Supporter →
+            </Link>
+          </p>
+        )}
+      </header>
 
-      {rows.length === 0 ? (
-        <p className="text-sm text-[var(--text-secondary)]">Nothing saved yet. Start with today&apos;s ayah.</p>
+      {entries.length === 0 ? (
+        <p className="text-sm text-[var(--text-secondary)]">{SAVED_EMPTY_MESSAGE}</p>
       ) : (
-        <SavedAyahList rows={rows} />
+        <SavedEntries entries={entries} />
       )}
     </main>
   );

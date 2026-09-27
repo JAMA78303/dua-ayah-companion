@@ -30,7 +30,6 @@ export function QuranSurahReader({ surahNumber, chapterMeta }: QuranSurahReaderP
   const continueAfterKeyRef = useRef<string | null>(null);
 
   const [verses, setVerses] = useState<QfVerse[]>([]);
-  const [pairingMap, setPairingMap] = useState<Record<string, string>>({});
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -218,7 +217,7 @@ export function QuranSurahReader({ surahNumber, chapterMeta }: QuranSurahReaderP
     }
   }, [verses, audioByVerseKey, playVerse]);
 
-  // Verses + pairings depend only on the surah; a reciter change must not reset the page.
+  // Verses depend only on the surah; a reciter change must not reset the page.
   useEffect(() => {
     let cancelled = false;
     void (async () => {
@@ -226,14 +225,6 @@ export function QuranSurahReader({ surahNumber, chapterMeta }: QuranSurahReaderP
       setError(null);
       setAudioByVerseKey({});
       try {
-        const pairRes = await fetch(`/api/pairings-by-surah?surah=${surahNumber}`, {
-          cache: "no-store",
-        });
-        if (pairRes.ok) {
-          const pairJson = (await pairRes.json()) as { pairings?: Record<string, string> };
-          if (!cancelled) setPairingMap(pairJson.pairings ?? {});
-        }
-
         await loadPage(1, false);
       } catch {
         if (!cancelled) setError("This surah could not be loaded right now.");
@@ -362,7 +353,6 @@ export function QuranSurahReader({ surahNumber, chapterMeta }: QuranSurahReaderP
               key={verse.verseKey}
               verse={verse}
               surahNumber={surahNumber}
-              pairingId={pairingMap[verse.verseKey] ?? null}
               playback={{
                 canPlay: Boolean(audioByVerseKey[verse.verseKey]),
                 isPlaying: playing && isActive,

@@ -62,10 +62,11 @@ function splitStatements(sql: string): string[] {
   return out;
 }
 
-async function freshDatabase(options: { splitFrom?: string } = {}) {
+async function freshDatabase(options: { splitFrom?: string; before?: string } = {}) {
   const db = new PGlite();
   await db.exec(SUPABASE_SHIM);
   for (const file of migrationFiles) {
+    if (options.before && file >= options.before) break;
     if (options.splitFrom && file >= options.splitFrom) {
       // Like the Supabase SQL editor: one statement at a time, no temp tables surviving between them.
       for (const statement of splitStatements(readMigration(file))) {
@@ -214,5 +215,63 @@ describe("permissions", () => {
         ),
       ).rejects.toThrow(/permission denied/);
     }
+  });
+});
+
+describe("saving any content (019)", () => {
+  const USER = "00000000-0000-4000-8000-0000000000c3";
+  const OTHER = "00000000-0000-4000-8000-0000000000d4";
+  let db: PGlite;
+  let pairingIds: string[];
+  const save = (key: string, user = USER) =>
+    as(db, "authenticated", user, () => db.query("INSERT INTO saved_items (user_id, content_key) VALUES ($1, $2)", [user, key]));
+
+  beforeAll(async () => {
+    // Existing saves made before 019 must survive it.
+    db = await freshDatabase({ before: "019" });
+    await db.exec(`INSERT INTO auth.users (id) VALUES ('${USER}'), ('${OTHER}')`);
+    pairingIds = (await db.query<{ id: string }>("SELECT id FROM ayah_pairings ORDER BY id")).rows.map((row) => row.id);
+    await db.query("INSERT INTO saved_items (user_id, pairing_id) VALUES ($1, $2)", [USER, pairingIds[0]]);
+    for (const file of migrationFiles.filter((f) => f >= "019")) await db.exec(readMigration(file));
+  });
+
+  it("labels existing saves with their pairing", async () => {
+    const { rows } = await db.query<{ content_key: string }>("SELECT content_key FROM saved_items WHERE user_id = $1", [USER]);
+    expect(rows).toEqual([{ content_key: `pairing:${pairingIds[0]}` }]);
+  });
+
+  it("saves ayat, adhkar, Names and story chapters", async () => {
+    for (const key of ["ayah:2:255", "adhkar:hisn-77", "name:12", "story:yusuf:3"]) await save(key);
+    expect(await count(db, `SELECT 1 FROM saved_items WHERE user_id = '${USER}' AND pairing_id IS NULL`)).toBe(4);
+  });
+
+  it("links pairing saves to the pairing, whichever column the app sends", async () => {
+    await save(`pairing:${pairingIds[1]}`);
+    const byKey = await db.query<{ pairing_id: string }>("SELECT pairing_id FROM saved_items WHERE content_key = $1", [`pairing:${pairingIds[1]}`]);
+    expect(byKey.rows[0]!.pairing_id).toBe(pairingIds[1]);
+
+    // Older app versions insert pairing_id only.
+    await as(db, "authenticated", USER, () => db.query("INSERT INTO saved_items (user_id, pairing_id) VALUES ($1, $2)", [USER, pairingIds[2]]));
+    expect(await count(db, `SELECT 1 FROM saved_items WHERE content_key = 'pairing:${pairingIds[2]}'`)).toBe(1);
+
+    // Deleting a pairing still removes its saves.
+    await db.query("DELETE FROM ayah_pairings WHERE id = $1", [pairingIds[2]]);
+    expect(await count(db, `SELECT 1 FROM saved_items WHERE content_key = 'pairing:${pairingIds[2]}'`)).toBe(0);
+  });
+
+  it("rejects malformed labels, duplicates and other people's saves", async () => {
+    await expect(save("ayah:two:255")).rejects.toThrow(/saved_items_content_key_format/);
+    await expect(save("name:100")).rejects.toThrow(/saved_items_content_key_format/);
+    await expect(save("pairing:00000000-0000-4000-8000-000000000999")).rejects.toThrow(/foreign key/);
+    await expect(save("ayah:2:255")).rejects.toThrow(/duplicate key/);
+    await expect(
+      as(db, "authenticated", OTHER, () => db.query("INSERT INTO saved_items (user_id, content_key) VALUES ($1, 'name:1')", [USER])),
+    ).rejects.toThrow(/row-level security/);
+  });
+
+  it("counts every kind of save towards the free cap", async () => {
+    // 6 saves so far; 4 more reach the cap of 10.
+    for (const key of ["ayah:1:1", "ayah:1:2", "adhkar:ayat-al-kursi", "name:1"]) await save(key);
+    await expect(save("name:2")).rejects.toThrow(/SAVE_LIMIT_REACHED/);
   });
 });

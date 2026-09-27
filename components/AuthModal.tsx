@@ -58,7 +58,7 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
         <h2 id="auth-modal-title" className="text-lg font-semibold text-[var(--text-primary)]">
           Sign in to save
         </h2>
-        <p className="mt-1 text-sm text-[var(--text-secondary)]">You won’t lose this ayah — we’ll keep you right here.</p>
+        <p className="mt-1 text-sm text-[var(--text-secondary)]">Sign in and it’s saved straight away — we’ll keep you right here.</p>
 
         <div className="mt-4">
           <GoogleSignInButton nextPath={typeof window !== "undefined" ? `${window.location.pathname}${window.location.search}` : "/"} />

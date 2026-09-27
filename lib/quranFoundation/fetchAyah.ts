@@ -132,6 +132,24 @@ async function fetchTafsirUncached(surah: number, ayah: number): Promise<string 
   return html ? pickString(htmlToText(html)) : null;
 }
 
+// v3: adds word-by-word data (v2 entries have none; v1 had no text at all).
+function cachedAyahText(surah: number, ayah: number) {
+  return unstable_cache(async () => fetchAyahTextUncached(surah, ayah), ["qf-ayah-text-v3", String(surah), String(ayah)], {
+    revalidate: 86_400,
+  })();
+}
+
+/** Just the Arabic and translation (shares the text cache; no tafsir or audio lookups). */
+export async function fetchAyahText(surah: number, ayah: number): Promise<{ textUthmani: string | null; translation: string | null } | null> {
+  if (!Number.isInteger(surah) || surah < 1 || surah > 114 || !Number.isInteger(ayah) || ayah < 1) return null;
+  try {
+    const text = await cachedAyahText(surah, ayah);
+    return text ? { textUthmani: text.textUthmani, translation: text.translation } : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchAyahFromQF(
   surah: number,
   ayah: number,
@@ -140,12 +158,7 @@ export async function fetchAyahFromQF(
   if (!Number.isInteger(surah) || surah < 1 || surah > 114) return null;
   if (!Number.isInteger(ayah) || ayah < 1) return null;
 
-  // v3: adds word-by-word data (v2 entries have none; v1 had no text at all).
-  const cachedText = unstable_cache(
-    async () => fetchAyahTextUncached(surah, ayah),
-    ["qf-ayah-text-v3", String(surah), String(ayah)],
-    { revalidate: 86_400 },
-  );
+  const cachedText = () => cachedAyahText(surah, ayah);
   const cachedTafsir = unstable_cache(
     async () => fetchTafsirUncached(surah, ayah),
     ["qf-ayah-tafsir", String(surah), String(ayah)],
