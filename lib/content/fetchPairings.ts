@@ -238,6 +238,24 @@ export async function fetchPairingsForProphet(prophetName: string): Promise<Pair
   }
 }
 
+/** Every approved pairing, one copy per ayah (the swipe feed shuffles these itself). */
+export async function fetchAllApprovedPairings(): Promise<Pairing[]> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("ayah_pairings")
+      .select(`${PAIRING_COLUMNS}, emotion_category`)
+      .eq("status", "approved")
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .limit(1000);
+    if (error) throw error;
+    return dedupePairingsByAyah((data as Pairing[]) ?? []);
+  } catch {
+    return FALLBACK_PAIRINGS;
+  }
+}
+
 export interface FeedPage {
   pairings: Pairing[];
   /** Raw row offset for the next request — deduping can return fewer pairings than rows read. */

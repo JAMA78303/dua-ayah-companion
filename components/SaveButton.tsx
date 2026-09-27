@@ -18,6 +18,8 @@ interface SaveButtonProps {
   pairingId: string;
   surah?: number;
   ayahNumber?: number;
+  /** Feed cards: just the button, no helper text. */
+  compact?: boolean;
 }
 
 function syncLocalMirror(pairingId: string, shouldBeSaved: boolean) {
@@ -29,7 +31,7 @@ function syncLocalMirror(pairingId: string, shouldBeSaved: boolean) {
   }
 }
 
-export function SaveButton({ pairingId, surah, ayahNumber }: SaveButtonProps) {
+export function SaveButton({ pairingId, surah, ayahNumber, compact = false }: SaveButtonProps) {
   const [isSaved, setIsSaved] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
@@ -116,11 +118,24 @@ export function SaveButton({ pairingId, surah, ayahNumber }: SaveButtonProps) {
         type="button"
         onClick={() => void performToggle()}
         disabled={isBusy || !canPersistSave}
-        className="rounded-md border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--text-primary)] transition hover:bg-[var(--bg-subtle)] disabled:opacity-50"
+        aria-pressed={isSaved}
+        className={
+          compact
+            ? "rounded-full border border-[var(--border)] bg-[var(--bg-subtle)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--accent-primary)] disabled:opacity-50"
+            : "rounded-md border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--text-primary)] transition hover:bg-[var(--bg-subtle)] disabled:opacity-50"
+        }
       >
-        {!canPersistSave ? "Save unavailable" : isSaved ? "In favourites" : "Add to favourites"}
+        {compact
+          ? isSaved
+            ? "♥ Saved"
+            : "♡ Save"
+          : !canPersistSave
+            ? "Save unavailable"
+            : isSaved
+              ? "In favourites"
+              : "Add to favourites"}
       </button>
-      {!canPersistSave ? (
+      {compact ? null : !canPersistSave ? (
         <p className="text-xs text-[var(--text-secondary)]">
           This reflection is temporary and cannot be saved yet.
         </p>

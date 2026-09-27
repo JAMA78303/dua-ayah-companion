@@ -16,8 +16,8 @@ const SLIDES = [
     body: "Content is reviewed and based on classical tafsir sources, including Tafsir Ibn Kathir.",
   },
   {
-    title: "Start with how you're feeling",
-    body: "Type your emotion or choose a category tile to begin your first reflection loop.",
+    title: "Swipe for a gentle reminder",
+    body: "Scroll through ayat, duas, stories of the prophets and the Names of Allah, or tap \"How are you feeling?\" to find what fits your moment.",
   },
 ] as const;
 

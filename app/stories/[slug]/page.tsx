@@ -64,7 +64,7 @@ export default async function StoryPage({ params }: StoryPageProps) {
 
       <ol className="space-y-5">
         {story.chapters.map((chapter, chapterIndex) => (
-          <li key={chapter.title} className="card-elevated space-y-3 p-5 md:p-6">
+          <li key={chapter.title} id={`chapter-${chapterIndex + 1}`} className="card-elevated scroll-mt-24 space-y-3 p-5 md:p-6">
             <h2 className="flex items-baseline gap-3 font-playfair text-lg font-semibold text-[var(--text-primary)]">
               <span className="font-nunito text-xs font-semibold text-[var(--accent-gold)]">{chapterIndex + 1}</span>
               {chapter.title}
