@@ -39,6 +39,18 @@ export default function DiscoverPage() {
             </span>
           </Link>
           <Link
+            href="/prayer-times"
+            className="card-elevated flex items-center justify-between gap-4 p-5 transition hover:border-[var(--accent-primary)]"
+          >
+            <span>
+              <span className="block font-playfair text-lg font-semibold text-[var(--text-primary)]">Prayer times &amp; qibla</span>
+              <span className="block text-xs text-[var(--text-secondary)]">Today&apos;s times and the direction of the Ka&apos;bah.</span>
+            </span>
+            <span className="text-sm font-semibold text-[var(--accent-primary)]" aria-hidden>
+              →
+            </span>
+          </Link>
+          <Link
             href="/my-duas"
             className="card-elevated flex items-center justify-between gap-4 p-5 transition hover:border-[var(--accent-primary)]"
           >
