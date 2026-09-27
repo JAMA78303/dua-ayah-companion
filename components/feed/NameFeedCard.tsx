@@ -49,6 +49,13 @@ export function NameFeedCard({ item }: { item: NameItem }) {
           openLabel="More on this name"
           shareTitle={`${name.transliteration} · ${name.meaning}`}
           shareText={`${name.arabic} ${name.transliteration}, ${name.meaning}. ${name.dua}`}
+          card={{
+            eyebrow: `The Names of Allah · ${name.number} of 99`,
+            arabic: name.arabic,
+            title: `${name.transliteration} · ${name.meaning}`,
+            body: name.dua,
+            footnote: name.duaSource,
+          }}
         />
       </div>
     </div>

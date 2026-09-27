@@ -1,10 +1,9 @@
+@import "tailwindcss";
+
 :root {
   /* AppHeader height; the swipe feed fills the space between it and the bottom nav. */
   --app-header-h: 61px;
 }
-
-@import url("https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&display=swap");
-@import "tailwindcss";
 
 /* Shared tokens — overridden per [data-theme] */
 :root {
@@ -241,7 +240,7 @@ body {
 }
 
 .font-scheherazade {
-  font-family: "Scheherazade New", serif;
+  font-family: var(--font-scheherazade), "Scheherazade New", serif;
 }
 
 .font-playfair {
@@ -253,7 +252,7 @@ body {
 }
 
 .arabic-display {
-  font-family: "Scheherazade New", serif;
+  font-family: var(--font-scheherazade), "Scheherazade New", serif;
   direction: rtl;
   line-height: 2.2;
   letter-spacing: 0.02em;
