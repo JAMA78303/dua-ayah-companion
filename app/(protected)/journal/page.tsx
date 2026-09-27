@@ -1,6 +1,10 @@
 import { JournalView } from "@/components/journal/JournalView";
 import { createClient } from "@/lib/supabase/server";
 
+function sevenDaysAgoIso() {
+  return new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+}
+
 export default async function JournalPage() {
   const supabase = await createClient();
   const {
@@ -13,7 +17,7 @@ export default async function JournalPage() {
   const { data: profile } = await supabase.from("profiles").select("is_premium").eq("id", user.id).maybeSingle();
   const isPremium = Boolean(profile?.is_premium);
 
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const sevenDaysAgo = sevenDaysAgoIso();
 
   let query = supabase
     .from("journal_entries")
@@ -31,7 +35,9 @@ export default async function JournalPage() {
   if (error) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-10">
-        <p className="text-sm text-red-700">Could not load journal: {error.message}</p>
+        <p className="text-sm text-[var(--text-secondary)]">
+          We couldn&apos;t load your journal right now. Please try again shortly.
+        </p>
       </main>
     );
   }

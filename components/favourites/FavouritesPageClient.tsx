@@ -31,7 +31,7 @@ export function FavouritesPageClient({
   }, []);
 
   useEffect(() => {
-    refreshIds();
+    queueMicrotask(refreshIds);
     const onStorage = (event: StorageEvent) => {
       if (event.key === "dua-app:favourite-pairing-ids") refreshIds();
     };
@@ -46,7 +46,7 @@ export function FavouritesPageClient({
 
   useEffect(() => {
     if (pairingIds.length === 0) {
-      setPairings([]);
+      queueMicrotask(() => setPairings([]));
       return;
     }
 

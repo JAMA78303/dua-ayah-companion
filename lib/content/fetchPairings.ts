@@ -116,25 +116,32 @@ function fallbackForCategory(category: EmotionCategory): Pairing {
   return match;
 }
 
-export async function fetchPairingsForCategory(
-  category: EmotionCategory,
-  limit = 3,
-): Promise<Pairing | null> {
+/** A random approved pairing from the whole category (count, then fetch one row at a random offset). */
+export async function fetchPairingsForCategory(category: EmotionCategory): Promise<Pairing | null> {
   try {
     const supabase = await createClient();
+    const { count, error: countError } = await supabase
+      .from("ayah_pairings")
+      .select("id", { count: "exact", head: true })
+      .eq("emotion_category", category)
+      .eq("status", "approved");
+
+    if (countError) throw countError;
+    if (!count) return fallbackForCategory(category);
+
+    const offset = Math.floor(Math.random() * count);
     const { data, error } = await supabase
       .from("ayah_pairings")
       .select(PAIRING_COLUMNS)
       .eq("emotion_category", category)
       .eq("status", "approved")
       .order("created_at", { ascending: false })
-      .limit(limit);
+      .order("id", { ascending: true })
+      .range(offset, offset)
+      .maybeSingle();
 
     if (error) throw error;
-    if (!data || data.length === 0) return fallbackForCategory(category);
-
-    const randomIndex = Math.floor(Math.random() * data.length);
-    return data[randomIndex] as Pairing;
+    return (data as Pairing | null) ?? fallbackForCategory(category);
   } catch {
     return fallbackForCategory(category);
   }
@@ -151,9 +158,10 @@ export async function fetchPairingById(pairingId: string): Promise<Pairing | nul
       .maybeSingle();
 
     if (error) throw error;
-    return (data as Pairing | null) ?? null;
+    return (data as Pairing | null) ?? FALLBACK_PAIRINGS.find((item) => item.id === pairingId) ?? null;
   } catch {
-    return FALLBACK_PAIRINGS.find((item) => item.id === pairingId) ?? FALLBACK_PAIRINGS[0];
+    // Only fallback ids map to fallback content; never show a different ayah for a real id.
+    return FALLBACK_PAIRINGS.find((item) => item.id === pairingId) ?? null;
   }
 }
 
@@ -230,6 +238,13 @@ export async function fetchPairingsForProphet(prophetName: string): Promise<Pair
   }
 }
 
+export interface FeedPage {
+  pairings: Pairing[];
+  /** Raw row offset for the next request — deduping can return fewer pairings than rows read. */
+  nextOffset: number;
+  hasMore: boolean;
+}
+
 export async function fetchPairingsForFeed({
   category,
   offset = 0,
@@ -238,7 +253,7 @@ export async function fetchPairingsForFeed({
   category?: EmotionCategory;
   offset?: number;
   limit?: number;
-}): Promise<Pairing[]> {
+}): Promise<FeedPage> {
   try {
     const supabase = await createClient();
     let query = supabase
@@ -246,6 +261,7 @@ export async function fetchPairingsForFeed({
       .select(`${PAIRING_COLUMNS}, emotion_category`)
       .eq("status", "approved")
       .order("created_at", { ascending: false })
+      .order("id", { ascending: true })
       .range(offset, offset + limit - 1);
 
     if (category) {
@@ -255,13 +271,21 @@ export async function fetchPairingsForFeed({
     const { data, error } = await query;
     if (error) throw error;
 
-    return dedupePairingsByAyah((data as Pairing[]) ?? []);
+    const rows = (data as Pairing[]) ?? [];
+    return {
+      pairings: dedupePairingsByAyah(rows),
+      nextOffset: offset + rows.length,
+      hasMore: rows.length === limit,
+    };
   } catch {
-    if (category) {
-      return dedupePairingsByAyah(
-        FALLBACK_PAIRINGS.filter((item) => item.id.includes(category)).slice(offset, offset + limit),
-      );
-    }
-    return dedupePairingsByAyah(FALLBACK_PAIRINGS.slice(offset, offset + limit));
+    const pool = category
+      ? FALLBACK_PAIRINGS.filter((item) => item.id.includes(category))
+      : FALLBACK_PAIRINGS;
+    const rows = pool.slice(offset, offset + limit);
+    return {
+      pairings: dedupePairingsByAyah(rows),
+      nextOffset: offset + rows.length,
+      hasMore: offset + rows.length < pool.length,
+    };
   }
 }

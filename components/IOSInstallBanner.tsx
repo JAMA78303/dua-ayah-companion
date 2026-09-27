@@ -36,7 +36,7 @@ export function IOSInstallBanner() {
       return;
     }
     if (!isIOS() || isStandalone() || !hasCompletedCoreLoop()) return;
-    setVisible(true);
+    queueMicrotask(() => setVisible(true));
   }, []);
 
   if (!visible) return null;

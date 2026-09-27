@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
-import { getUserWithTimeout } from "@/lib/supabase/getUserWithTimeout";
+import { getUserWithTimeout } from "@/lib/auth/getUserWithTimeout";
 
 export async function submitResonance(pairingId: string, response: boolean) {
   const supabase = createClient();

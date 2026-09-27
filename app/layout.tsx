@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Nunito, Playfair_Display } from "next/font/google";
 import { BottomNav } from "@/components/BottomNav";
 import { AppFooter } from "@/components/layout/AppFooter";
@@ -27,12 +27,15 @@ export const metadata: Metadata = {
   title: "Dua & Ayah Companion",
   description: "Find grounded Qur'anic ayah and dua pairings by emotional state.",
   manifest: "/manifest.json",
-  themeColor: "#1A8C8C",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "Companion",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1A8C8C",
 };
 
 export default function RootLayout({

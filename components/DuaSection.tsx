@@ -58,7 +58,7 @@ export function DuaSection({
 
       {hasTransliteration(dua_transliteration) ? (
         <p
-          className="mb-1 mt-2 text-sm font-light italic leading-relaxed tracking-wide text-slate-500"
+          className="mb-1 mt-2 text-sm font-light italic leading-relaxed tracking-wide text-[var(--text-secondary)]"
           dir="ltr"
           lang="en"
         >
@@ -66,7 +66,7 @@ export function DuaSection({
         </p>
       ) : null}
 
-      <p className="text-sm leading-relaxed text-slate-700">{dua_translation}</p>
+      <p className="text-sm leading-relaxed text-[var(--text-primary)]">{dua_translation}</p>
 
       {showAudio ? (
         <AyahAudioPlayer
@@ -77,7 +77,7 @@ export function DuaSection({
       ) : null}
 
       {source_type === "prophetic_sunnah" ? (
-        <p className="mt-2 text-xs italic text-slate-400">From the Sunnah of the Prophet ﷺ</p>
+        <p className="mt-2 text-xs italic text-[var(--text-secondary)]">From the Sunnah of the Prophet ﷺ</p>
       ) : null}
     </section>
   );

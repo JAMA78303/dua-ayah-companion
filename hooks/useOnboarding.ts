@@ -9,7 +9,7 @@ export function useOnboarding() {
 
   useEffect(() => {
     const seen = localStorage.getItem(ONBOARDING_KEY);
-    setShowOnboarding(!seen);
+    queueMicrotask(() => setShowOnboarding(!seen));
   }, []);
 
   const completeOnboarding = () => {

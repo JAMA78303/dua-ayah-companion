@@ -13,7 +13,7 @@ function styleBadgeClass(style: string | null): string {
   if (style?.toLowerCase().includes("mujawwad")) {
     return "rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800";
   }
-  return "rounded-full bg-teal-50 px-2 py-0.5 text-xs text-teal-700";
+  return "rounded-full bg-[color-mix(in_srgb,var(--accent-primary)_8%,transparent)] px-2 py-0.5 text-xs text-[var(--accent-primary)]";
 }
 
 function ReciterRow({
@@ -38,7 +38,7 @@ function ReciterRow({
         <p className="text-xs text-[var(--text-secondary)]">{reciter.name}</p>
       </div>
       {selected ? (
-        <span className="shrink-0 text-sm font-semibold text-teal-700" aria-hidden>
+        <span className="shrink-0 text-sm font-semibold text-[var(--accent-primary)]" aria-hidden>
           ✓
         </span>
       ) : reciter.style ? (

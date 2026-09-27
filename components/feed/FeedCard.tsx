@@ -6,30 +6,17 @@ import { useEffect, useRef, useState } from "react";
 import { AyahAudioPlayer } from "@/components/AyahAudioPlayer";
 import { DuaSection, type DuaSourceType } from "@/components/DuaSection";
 import { useReciter } from "@/components/ReciterProvider";
-import { getAudioUrl } from "@/lib/quranFoundation/getAudioUrl";
 import { SurahReferencePill } from "@/components/SurahReferencePill";
 import type { Pairing } from "@/lib/content/fetchPairings";
 import { getSurahName } from "@/lib/quran/surahNames";
 import type { QfAyahBundle } from "@/lib/quranFoundation/fetchAyah";
+import { toneGradientVar } from "@/lib/theme/toneGradient";
 
 interface FeedCardProps {
   pairing: Pairing;
   index: number;
   total: number;
   isActive: boolean;
-}
-
-function toneGradientVar(tone: Pairing["tone_tag"]) {
-  switch (tone) {
-    case "comfort":
-      return "var(--gradient-card-comfort)";
-    case "warning":
-      return "var(--gradient-card-grief)";
-    case "balance":
-      return "var(--gradient-card-guidance)";
-    default:
-      return "var(--gradient-card-default)";
-  }
 }
 
 /**
@@ -39,7 +26,6 @@ export function FeedCard({ pairing, index, total, isActive }: FeedCardProps) {
   const { reciterId, reciterName } = useReciter();
   const cardRef = useRef<HTMLDivElement | null>(null);
   const [qf, setQf] = useState<QfAyahBundle | null>(null);
-  const [duaAudioUrl, setDuaAudioUrl] = useState<string | null>(null);
   const [scrollHintVisible, setScrollHintVisible] = useState(index === 0);
 
   const sourceType: DuaSourceType =
@@ -86,25 +72,13 @@ export function FeedCard({ pairing, index, total, isActive }: FeedCardProps) {
   }, [pairing.surah, pairing.ayah_number, reciterId]);
 
   useEffect(() => {
-    if (!duaVerseKey) {
-      queueMicrotask(() => setDuaAudioUrl(null));
-      return;
-    }
-    let cancelled = false;
-    void getAudioUrl(pairing.surah, pairing.ayah_number, reciterId).then((url) => {
-      if (!cancelled) setDuaAudioUrl(url);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [duaVerseKey, pairing.surah, pairing.ayah_number, reciterId]);
-
-  useEffect(() => {
     if (index !== 0) return;
     const timer = window.setTimeout(() => setScrollHintVisible(false), 3000);
     return () => window.clearTimeout(timer);
   }, [index]);
 
+  // The dua recitation is the same verse recording already fetched for this reciter.
+  const duaAudioUrl = duaVerseKey ? (qf?.audioUrl ?? null) : null;
   const arabicText = qf?.textUthmani ?? pairing.arabic_text;
   const translation = qf?.translation ?? pairing.translation;
   const surahName = getSurahName(pairing.surah);

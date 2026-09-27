@@ -1,20 +1,27 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 
-export const revalidate = 86400;
+const DATE_PARAM = /^(\d{4})-(\d{2})-(\d{2})$/;
 
-export async function GET() {
+/** Seed from the caller's local date (`?date=YYYY-MM-DD`), falling back to the server's date. */
+function daySeed(dateParam: string | null): number {
+  const match = dateParam ? DATE_PARAM.exec(dateParam) : null;
+  if (match) return Number(`${match[1]}${match[2]}${match[3]}`);
+  const today = new Date();
+  return Number(
+    `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, "0")}${String(today.getDate()).padStart(2, "0")}`,
+  );
+}
+
+export async function GET(request: NextRequest) {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return NextResponse.json(null);
   }
 
   const supabase = await createClient();
 
-  const today = new Date();
-  const seed = Number(
-    `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, "0")}${String(today.getDate()).padStart(2, "0")}`,
-  );
+  const seed = daySeed(request.nextUrl.searchParams.get("date"));
 
   const { count, error: countError } = await supabase
     .from("ayah_pairings")
@@ -38,6 +45,7 @@ export async function GET() {
     )
     .eq("status", "approved")
     .order("created_at", { ascending: true })
+    .order("id", { ascending: true })
     .range(offset, offset)
     .single();
 

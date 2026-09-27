@@ -8,7 +8,7 @@ import {
 } from "@/lib/content/fetchPairings";
 import { getSurahName } from "@/lib/quran/surahNames";
 import { fetchAyahFromQF } from "@/lib/quranFoundation/fetchAyah";
-import type { EmotionCategory } from "@/types/emotions";
+import { isEmotionCategory } from "@/types/emotions";
 
 interface ResultPageProps {
   searchParams: Promise<{ category?: string; pairingId?: string; verseKey?: string }>;
@@ -19,23 +19,6 @@ const VERSE_REFLECTION_PROMPTS = [
   "How does this verse meet you where you are right now?",
   "What would it look like to carry this ayah with you today?",
 ];
-
-const VALID_CATEGORIES: EmotionCategory[] = [
-  "anxiety",
-  "sadness",
-  "gratitude",
-  "guidance",
-  "patience",
-  "guilt",
-  "grief",
-  "hope",
-  "forgiveness",
-  "loneliness",
-];
-
-function isEmotionCategory(value: string): value is EmotionCategory {
-  return VALID_CATEGORIES.includes(value as EmotionCategory);
-}
 
 export default async function ResultPage({ searchParams }: ResultPageProps) {
   const params = await searchParams;
@@ -131,8 +114,8 @@ export default async function ResultPage({ searchParams }: ResultPageProps) {
     if (!pairing) {
       return (
         <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-4 py-10 md:px-8">
-          <h1 className="text-xl font-semibold text-zinc-900">Reflection unavailable</h1>
-          <p className="text-sm text-zinc-600">
+          <h1 className="text-xl font-semibold text-[var(--text-primary)]">Reflection unavailable</h1>
+          <p className="text-sm text-[var(--text-secondary)]">
             We could not load this reflection right now.
           </p>
           <Link href="/" className="text-sm font-medium text-[var(--accent-primary)] hover:opacity-80">
@@ -177,8 +160,8 @@ export default async function ResultPage({ searchParams }: ResultPageProps) {
   if (!category || !isEmotionCategory(category)) {
     return (
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-4 py-10 md:px-8">
-        <h1 className="text-xl font-semibold text-zinc-900">Invalid category</h1>
-        <p className="text-sm text-zinc-600">
+        <h1 className="text-xl font-semibold text-[var(--text-primary)]">Invalid category</h1>
+        <p className="text-sm text-[var(--text-secondary)]">
           Please return home and choose a valid emotion category.
         </p>
         <Link href="/" className="text-sm font-medium text-[var(--accent-primary)] hover:opacity-80">
@@ -193,8 +176,8 @@ export default async function ResultPage({ searchParams }: ResultPageProps) {
   if (!pairing) {
     return (
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-4 py-10 md:px-8">
-        <h1 className="text-xl font-semibold text-zinc-900">No approved pairings yet</h1>
-        <p className="text-sm text-zinc-600">
+        <h1 className="text-xl font-semibold text-[var(--text-primary)]">No approved pairings yet</h1>
+        <p className="text-sm text-[var(--text-secondary)]">
           We couldn&apos;t find approved content for this category yet. Please try another one.
         </p>
         <Link href="/" className="text-sm font-medium text-[var(--accent-primary)] hover:opacity-80">

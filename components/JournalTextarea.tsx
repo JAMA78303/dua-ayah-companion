@@ -4,9 +4,20 @@ import { useEffect, useMemo, useState } from "react";
 
 import { AuthModal } from "@/components/AuthModal";
 import {
+  JOURNAL_ERR_EMPTY,
+  JOURNAL_ERR_TOO_LONG,
   JOURNAL_ERR_UNAUTHENTICATED,
+  JOURNAL_ERR_UNSAVABLE_PAIRING,
   saveJournalEntry,
 } from "@/lib/journal/saveJournalEntry";
+import { createClient } from "@/lib/supabase/client";
+import { isUuid } from "@/lib/uuid";
+
+const SAVE_ERROR_MESSAGES: Record<string, string> = {
+  [JOURNAL_ERR_EMPTY]: "Write something before saving.",
+  [JOURNAL_ERR_TOO_LONG]: "Reflections can be up to 2,000 characters.",
+  [JOURNAL_ERR_UNSAVABLE_PAIRING]: "This reflection can't be saved to your journal yet.",
+};
 
 interface JournalTextareaProps {
   pairingId: string;
@@ -14,19 +25,53 @@ interface JournalTextareaProps {
   ayahNumber?: number;
 }
 
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
 export function JournalTextarea({ pairingId, surah, ayahNumber }: JournalTextareaProps) {
-  const canPersistJournal = UUID_REGEX.test(pairingId);
+  const canPersistJournal = isUuid(pairingId);
   const draftKey = useMemo(() => `journal-draft-${pairingId}`, [pairingId]);
   const [content, setContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
+  const [hasSavedEntry, setHasSavedEntry] = useState(false);
 
   useEffect(() => {
-    setContent(typeof window !== "undefined" ? window.localStorage.getItem(draftKey) ?? "" : "");
-  }, [draftKey]);
+    let cancelled = false;
+    const draft = window.localStorage.getItem(draftKey) ?? "";
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setContent(draft);
+      setHasSavedEntry(false);
+    });
+    if (!canPersistJournal) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    // Saving upserts one entry per pairing, so show the saved reflection to edit
+    // rather than an empty box that would silently overwrite it.
+    void (async () => {
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session || cancelled) return;
+      const { data } = await supabase
+        .from("journal_entries")
+        .select("content")
+        .eq("user_id", session.user.id)
+        .eq("pairing_id", pairingId)
+        .maybeSingle();
+      if (cancelled || !data?.content) return;
+      setHasSavedEntry(true);
+      // A local draft (or anything typed meanwhile) is newer than the saved copy.
+      setContent((prev) => (prev.trim() ? prev : data.content));
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [draftKey, pairingId, canPersistJournal]);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -45,6 +90,7 @@ export function JournalTextarea({ pairingId, surah, ayahNumber }: JournalTextare
     setMessage(null);
     try {
       await saveJournalEntry(pairingId, content, { surah, ayahNumber });
+      setHasSavedEntry(true);
       setMessage("Saved");
       window.setTimeout(() => setMessage(null), 2000);
     } catch (error) {
@@ -53,11 +99,8 @@ export function JournalTextarea({ pairingId, surah, ayahNumber }: JournalTextare
         setAuthOpen(true);
         return;
       }
-      if (error instanceof Error && error.message) {
-        setMessage(error.message);
-        return;
-      }
-      setMessage("Could not save reflection.");
+      // Database / network errors aren't user-facing; keep the draft and suggest a retry.
+      setMessage(SAVE_ERROR_MESSAGES[msg] ?? "Could not save your reflection. Your draft is kept — try again.");
     } finally {
       setIsSaving(false);
     }
@@ -89,7 +132,13 @@ export function JournalTextarea({ pairingId, surah, ayahNumber }: JournalTextare
           disabled={isSaving || content.trim().length === 0 || !canPersistJournal}
           className="rounded-md bg-[var(--accent-primary)] px-3 py-1.5 text-sm text-white disabled:opacity-60"
         >
-          {!canPersistJournal ? "Save unavailable" : isSaving ? "Saving..." : "Save Reflection"}
+          {!canPersistJournal
+            ? "Save unavailable"
+            : isSaving
+              ? "Saving..."
+              : hasSavedEntry
+                ? "Update Reflection"
+                : "Save Reflection"}
         </button>
       </div>
       {!canPersistJournal ? (

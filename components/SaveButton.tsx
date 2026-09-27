@@ -12,14 +12,13 @@ import {
   toggleSave,
 } from "@/lib/saves/toggleSave";
 import { createClient } from "@/lib/supabase/client";
+import { isUuid } from "@/lib/uuid";
 
 interface SaveButtonProps {
   pairingId: string;
   surah?: number;
   ayahNumber?: number;
 }
-
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function syncLocalMirror(pairingId: string, shouldBeSaved: boolean) {
   const has = isFavouritePairing(pairingId);
@@ -36,9 +35,12 @@ export function SaveButton({ pairingId, surah, ayahNumber }: SaveButtonProps) {
   const [authOpen, setAuthOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const canPersistSave = UUID_REGEX.test(pairingId);
+  const canPersistSave = isUuid(pairingId);
   const isSavedRef = useRef(isSaved);
-  isSavedRef.current = isSaved;
+
+  useEffect(() => {
+    isSavedRef.current = isSaved;
+  }, [isSaved]);
 
   useEffect(() => {
     if (!canPersistSave) return;
