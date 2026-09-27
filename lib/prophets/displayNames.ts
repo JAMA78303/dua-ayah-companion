@@ -13,6 +13,18 @@ const PROPHET_ARABIC: Record<string, string> = {
   Yusuf: "يُوسُف",
   Lut: "لُوط",
   "Shu'ayb": "شُعَيْب",
+  Idris: "إِدْرِيس",
+  Hud: "هُود",
+  Salih: "صَالِح",
+  "Isma'il": "إِسْمَاعِيل",
+  Ishaq: "إِسْحَاق",
+  Harun: "هَارُون",
+  "Dhul-Kifl": "ذُو الْكِفْل",
+  Dawud: "دَاوُود",
+  Ilyas: "إِلْيَاس",
+  "Al-Yasa'": "الْيَسَع",
+  Yahya: "يَحْيَى",
+  "'Isa": "عِيسَى",
 };
 
 export function prophetArabicName(englishName: string): string {

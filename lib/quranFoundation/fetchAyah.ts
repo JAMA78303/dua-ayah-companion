@@ -8,10 +8,10 @@ import { qfContentGet } from "@/lib/quranFoundation/client";
  * Docs reference (verse payload shape aligns with Quran.com-compatible JSON APIs):
  * https://api-docs.quran.foundation
  *
- * Params per hackathon spec:
- * - translations=131 (Saheeh International)
- * - tafsirs=169 (Ibn Kathir English)
- * - audio=7 (Mishari al-Afasy)
+ * - fields=text_uthmani — the verse text is only returned when asked for
+ * - translations=20 (Saheeh International; 131 is not served by QDC)
+ * - tafsir 169 (Ibn Kathir, abridged) comes from its own endpoint, not an embedded `tafsirs` param
+ * - audio comes from the per-chapter audio map (fetchAudio.ts)
  */
 export type QfAyahBundle = {
   textUthmani: string | null;
@@ -20,9 +20,30 @@ export type QfAyahBundle = {
   tafsirText: string | null;
 };
 
+const TRANSLATION_ID = "20";
+const TAFSIR_ID = 169;
+
 function pickString(value: unknown): string | null {
   if (typeof value === "string" && value.trim()) return value.trim();
   return null;
+}
+
+const HTML_ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
+
+/** Plain text from QDC's HTML (tafsir paragraphs, translation footnote markers). Never rendered as HTML. */
+function htmlToText(html: string): string {
+  return html
+    .replace(/<sup[^>]*>[\s\S]*?<\/sup>/gi, "")
+    .replace(/<\/(p|h\d|div|li)>|<br\s*\/?>/gi, "\n\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (entity, code: string) => {
+      if (code[0] !== "#") return HTML_ENTITIES[code.toLowerCase()] ?? entity;
+      const n = code[1].toLowerCase() === "x" ? parseInt(code.slice(2), 16) : parseInt(code.slice(1), 10);
+      return Number.isFinite(n) ? String.fromCodePoint(n) : entity;
+    })
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 function extractTranslation(payload: Record<string, unknown>): string | null {
@@ -30,7 +51,7 @@ function extractTranslation(payload: Record<string, unknown>): string | null {
   const direct = verse?.translations;
   if (Array.isArray(direct) && direct[0] && typeof direct[0] === "object") {
     const text = (direct[0] as { text?: unknown }).text;
-    const s = pickString(text);
+    const s = pickString(typeof text === "string" ? htmlToText(text) : text);
     if (s) return s;
   }
   const included = payload.included as unknown[] | undefined;
@@ -47,37 +68,14 @@ function extractTranslation(payload: Record<string, unknown>): string | null {
   return null;
 }
 
-function extractTafsir(payload: Record<string, unknown>): string | null {
-  const verse = payload.verse as Record<string, unknown> | undefined;
-  const direct = verse?.tafsirs;
-  if (Array.isArray(direct) && direct[0] && typeof direct[0] === "object") {
-    const text = (direct[0] as { text?: unknown }).text;
-    const s = pickString(text);
-    if (s) return s;
-  }
-  const included = payload.included as unknown[] | undefined;
-  if (Array.isArray(included)) {
-    for (const item of included) {
-      if (!item || typeof item !== "object") continue;
-      const rec = item as { type?: unknown; text?: unknown };
-      if (rec.type === "tafsir") {
-        const s = pickString(rec.text);
-        if (s) return s;
-      }
-    }
-  }
-  return null;
-}
-
-type QfAyahText = Omit<QfAyahBundle, "audioUrl">;
+type QfAyahText = Pick<QfAyahBundle, "textUthmani" | "translation">;
 
 /** Throws on failure so `unstable_cache` never stores a failed lookup. */
 async function fetchAyahTextUncached(surah: number, ayah: number): Promise<QfAyahText> {
   const verseKey = `${surah}:${ayah}`;
   const query = new URLSearchParams({
-    translations: "131",
-    tafsirs: "169",
-    audio: "7",
+    fields: "text_uthmani",
+    translations: TRANSLATION_ID,
   });
 
   // QDC mirrors Quran.com-style verse routes; see QF API docs.
@@ -89,12 +87,23 @@ async function fetchAyahTextUncached(surah: number, ayah: number): Promise<QfAya
   const payload = (await response.json()) as Record<string, unknown>;
   const verse = payload.verse as Record<string, unknown> | undefined;
   const textUthmani = pickString(verse?.text_uthmani) ?? pickString(verse?.text_uthmani_simple) ?? null;
+  const translation = extractTranslation(payload);
+  if (!textUthmani && !translation) throw new Error(`QF verse ${verseKey} returned no text`);
 
-  return {
-    textUthmani,
-    translation: extractTranslation(payload),
-    tafsirText: extractTafsir(payload),
-  };
+  return { textUthmani, translation };
+}
+
+/** Tafsir covers a passage (several ayat); throws on failure so it isn't cached. */
+async function fetchTafsirUncached(surah: number, ayah: number): Promise<string | null> {
+  const verseKey = `${surah}:${ayah}`;
+  const response = await qfContentGet(`/tafsirs/${TAFSIR_ID}/by_ayah/${verseKey}`, {
+    next: { revalidate: 86_400 },
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!response.ok) throw new Error(`QF tafsir ${verseKey} failed: ${response.status}`);
+  const payload = (await response.json()) as { tafsir?: { text?: unknown } };
+  const html = pickString(payload.tafsir?.text);
+  return html ? pickString(htmlToText(html)) : null;
 }
 
 export async function fetchAyahFromQF(
@@ -105,20 +114,25 @@ export async function fetchAyahFromQF(
   if (!Number.isInteger(surah) || surah < 1 || surah > 114) return null;
   if (!Number.isInteger(ayah) || ayah < 1) return null;
 
+  // v2: earlier entries were cached without text (the request never asked for it).
   const cachedText = unstable_cache(
     async () => fetchAyahTextUncached(surah, ayah),
-    ["qf-ayah-text", String(surah), String(ayah)],
+    ["qf-ayah-text-v2", String(surah), String(ayah)],
+    { revalidate: 86_400 },
+  );
+  const cachedTafsir = unstable_cache(
+    async () => fetchTafsirUncached(surah, ayah),
+    ["qf-ayah-tafsir", String(surah), String(ayah)],
     { revalidate: 86_400 },
   );
 
-  try {
-    // Audio has its own per-chapter cache (which skips failures), so keep it out of the 24h text cache.
-    const [text, audioUrl] = await Promise.all([
-      cachedText(),
-      fetchVerseAudioUrl(surah, ayah, reciterId),
-    ]);
-    return { ...text, audioUrl };
-  } catch {
-    return null;
-  }
+  // Audio has its own per-chapter cache (which skips failures), so keep it out of the 24h text cache.
+  // Tafsir is optional: its failure must not hide the verse.
+  const [text, tafsirText, audioUrl] = await Promise.all([
+    cachedText().catch(() => null),
+    cachedTafsir().catch(() => null),
+    fetchVerseAudioUrl(surah, ayah, reciterId),
+  ]);
+  if (!text) return null;
+  return { ...text, tafsirText, audioUrl };
 }
