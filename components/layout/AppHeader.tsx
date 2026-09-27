@@ -12,7 +12,7 @@ export function AppHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--card-bg)]/90 px-4 py-3 backdrop-blur-md">
+      <header className="sticky top-0 z-50 flex h-[var(--app-header-h)] items-center border-b border-[var(--border)] bg-[var(--card-bg)]/90 px-4 backdrop-blur-md">
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
           <Link
             href="/"

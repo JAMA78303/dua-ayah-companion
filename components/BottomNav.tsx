@@ -35,6 +35,15 @@ function HomeIcon() {
   );
 }
 
+function DiscoverIcon() {
+  return (
+    <NavIcon>
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m16 16 4 4" />
+    </NavIcon>
+  );
+}
+
 function QuranIcon() {
   return (
     <NavIcon>
@@ -63,7 +72,14 @@ function NamesIcon() {
 }
 
 const TABS = [
-  { href: "/", label: "Home", Icon: HomeIcon, match: (p: string) => !p.startsWith("/quran") && !p.startsWith("/prophets") && !p.startsWith("/prophetic") && !p.startsWith("/stories") && !p.startsWith("/names") },
+  { href: "/", label: "Feed", Icon: HomeIcon, match: (p: string) => p === "/" },
+  {
+    href: "/discover",
+    label: "Discover",
+    Icon: DiscoverIcon,
+    match: (p: string) =>
+      p !== "/" && !p.startsWith("/quran") && !p.startsWith("/prophets") && !p.startsWith("/prophetic") && !p.startsWith("/stories") && !p.startsWith("/names"),
+  },
   { href: "/quran", label: "Qur'an", Icon: QuranIcon, match: (p: string) => p.startsWith("/quran") },
   { href: "/prophets", label: "Prophets", Icon: ProphetsIcon, match: (p: string) => p.startsWith("/prophets") || p.startsWith("/prophetic") || p.startsWith("/stories") },
   { href: "/names", label: "Names", Icon: NamesIcon, match: (p: string) => p.startsWith("/names") },

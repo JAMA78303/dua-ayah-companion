@@ -118,8 +118,8 @@ export default async function ResultPage({ searchParams }: ResultPageProps) {
           <p className="text-sm text-[var(--text-secondary)]">
             We could not load this reflection right now.
           </p>
-          <Link href="/" className="text-sm font-medium text-[var(--accent-primary)] hover:opacity-80">
-            Back to Home
+          <Link href="/discover" className="text-sm font-medium text-[var(--accent-primary)] hover:opacity-80">
+            Back to Discover
           </Link>
         </main>
       );
@@ -131,7 +131,7 @@ export default async function ResultPage({ searchParams }: ResultPageProps) {
 
     return (
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10 md:px-8">
-        <Link href="/" className="text-sm font-medium text-[var(--accent-primary)] hover:opacity-80">
+        <Link href="/discover" className="text-sm font-medium text-[var(--accent-primary)] hover:opacity-80">
           Back
         </Link>
         <AyahCard
@@ -164,8 +164,8 @@ export default async function ResultPage({ searchParams }: ResultPageProps) {
         <p className="text-sm text-[var(--text-secondary)]">
           Please return home and choose a valid emotion category.
         </p>
-        <Link href="/" className="text-sm font-medium text-[var(--accent-primary)] hover:opacity-80">
-          Back to Home
+        <Link href="/discover" className="text-sm font-medium text-[var(--accent-primary)] hover:opacity-80">
+          Back to Discover
         </Link>
       </main>
     );
@@ -180,8 +180,8 @@ export default async function ResultPage({ searchParams }: ResultPageProps) {
         <p className="text-sm text-[var(--text-secondary)]">
           We couldn&apos;t find approved content for this category yet. Please try another one.
         </p>
-        <Link href="/" className="text-sm font-medium text-[var(--accent-primary)] hover:opacity-80">
-          Back to Home
+        <Link href="/discover" className="text-sm font-medium text-[var(--accent-primary)] hover:opacity-80">
+          Back to Discover
         </Link>
       </main>
     );
@@ -193,7 +193,7 @@ export default async function ResultPage({ searchParams }: ResultPageProps) {
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10 md:px-8">
-      <Link href="/" className="text-sm font-medium text-[var(--accent-primary)] hover:opacity-80">
+      <Link href="/discover" className="text-sm font-medium text-[var(--accent-primary)] hover:opacity-80">
         Back
       </Link>
       <AyahCard

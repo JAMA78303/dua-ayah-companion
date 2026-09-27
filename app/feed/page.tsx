@@ -19,7 +19,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
     <main className="flex min-h-dvh flex-1 flex-col">
       <header className="sticky top-0 z-10 border-b border-[var(--border)] bg-[var(--card-bg)]/95 px-4 py-3 backdrop-blur">
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between">
-          <Link href="/" className="text-sm font-medium text-[var(--accent-primary)] hover:opacity-80">
+          <Link href="/discover" className="text-sm font-medium text-[var(--accent-primary)] hover:opacity-80">
             Back
           </Link>
           <p className="text-xs uppercase tracking-wide text-[var(--text-secondary)]">
