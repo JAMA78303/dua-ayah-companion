@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { SaveButton } from "@/components/SaveButton";
+import { ShareSheet } from "@/components/share/ShareSheet";
+import type { ShareCardContent } from "@/lib/share/renderShareCard";
 
 interface FeedCardActionsProps {
   /** Path of the item's full page — shared, and opened by the "open" link. */
@@ -11,28 +13,13 @@ interface FeedCardActionsProps {
   openLabel: string;
   shareTitle: string;
   shareText: string;
+  /** What the shareable image shows. */
+  card: ShareCardContent;
   save?: { pairingId: string; surah: number; ayahNumber: number };
 }
 
-export function FeedCardActions({ href, openLabel, shareTitle, shareText, save }: FeedCardActionsProps) {
-  const [toast, setToast] = useState<string | null>(null);
-
-  async function share() {
-    const url = `${window.location.origin}${href}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: shareTitle, text: shareText, url });
-        return;
-      }
-      await navigator.clipboard.writeText(`${shareText}\n${url}`);
-      setToast("Link copied");
-    } catch (error) {
-      // Closing the share sheet is not an error worth reporting.
-      if (error instanceof DOMException && error.name === "AbortError") return;
-      setToast("Couldn't share right now");
-    }
-    window.setTimeout(() => setToast(null), 2500);
-  }
+export function FeedCardActions({ href, openLabel, shareTitle, shareText, card, save }: FeedCardActionsProps) {
+  const [shareOpen, setShareOpen] = useState(false);
 
   return (
     <div className="relative flex shrink-0 items-center justify-between gap-2 pt-4">
@@ -40,7 +27,7 @@ export function FeedCardActions({ href, openLabel, shareTitle, shareText, save }
         {save ? <SaveButton pairingId={save.pairingId} surah={save.surah} ayahNumber={save.ayahNumber} compact /> : null}
         <button
           type="button"
-          onClick={() => void share()}
+          onClick={() => setShareOpen(true)}
           className="rounded-full border border-[var(--border)] bg-[var(--bg-subtle)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--accent-primary)]"
         >
           ↗ Share
@@ -49,13 +36,8 @@ export function FeedCardActions({ href, openLabel, shareTitle, shareText, save }
       <Link href={href} className="text-sm font-medium text-[var(--accent-primary)] underline-offset-4 hover:underline">
         {`${openLabel} →`}
       </Link>
-      {toast ? (
-        <span
-          role="status"
-          className="absolute -top-8 left-0 rounded-full bg-[var(--text-primary)] px-3 py-1 text-xs text-[var(--bg-base)] shadow"
-        >
-          {toast}
-        </span>
+      {shareOpen ? (
+        <ShareSheet card={card} href={href} title={shareTitle} text={shareText} onClose={() => setShareOpen(false)} />
       ) : null}
     </div>
   );

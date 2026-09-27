@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Nunito, Playfair_Display } from "next/font/google";
+import { Geist_Mono, Nunito, Playfair_Display, Scheherazade_New } from "next/font/google";
 import { BottomNav } from "@/components/BottomNav";
 import { AppFooter } from "@/components/layout/AppFooter";
 import { AppHeader } from "@/components/layout/AppHeader";
@@ -16,6 +16,13 @@ const nunito = Nunito({
 const playfair = Playfair_Display({
   variable: "--font-playfair",
   subsets: ["latin"],
+});
+
+// Arabic text (Qur'an, duas, Names). Loaded via next/font: a CSS @import can't stay first in the bundled stylesheet.
+const scheherazade = Scheherazade_New({
+  variable: "--font-scheherazade",
+  subsets: ["arabic", "latin"],
+  weight: ["400", "700"],
 });
 
 const geistMono = Geist_Mono({
@@ -47,7 +54,7 @@ export default function RootLayout({
     <html
       lang="en"
       data-theme="abyad"
-      className={`${nunito.variable} ${playfair.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${nunito.variable} ${playfair.variable} ${scheherazade.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>

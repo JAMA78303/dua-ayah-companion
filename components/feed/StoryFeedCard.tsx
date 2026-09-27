@@ -54,6 +54,13 @@ export function StoryFeedCard({ item }: { item: StoryItem }) {
           openLabel="Full story"
           shareTitle={`The story of ${label}`}
           shareText={`${item.chapter.title}: ${item.chapter.body}`}
+          card={{
+            eyebrow: `Stories of the Prophets · ${label}`,
+            arabic: prophetArabicName(item.prophetName),
+            title: item.chapter.title,
+            body: item.chapter.body,
+            footnote: item.chapter.refs.map((ref) => `${getSurahName(Number(ref.split(":")[0]))} ${ref.replace("-", "–")}`).join(" · "),
+          }}
         />
       </div>
     </div>

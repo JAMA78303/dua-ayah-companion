@@ -165,6 +165,7 @@ export function FeedCard({ pairing, index, total, isActive }: FeedCardProps) {
           openLabel="Full reflection"
           shareTitle={pillLabel}
           shareText={`${translation} (${pillLabel})`}
+          card={{ eyebrow: pillLabel, arabic: arabicText, body: translation }}
           save={{ pairingId: pairing.id, surah: pairing.surah, ayahNumber: pairing.ayah_number }}
         />
 
