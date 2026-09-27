@@ -1,13 +1,12 @@
 import { createClient } from "@/lib/supabase/client";
 
 import { getUserWithTimeout } from "@/lib/auth/getUserWithTimeout";
+import { isUuid } from "@/lib/uuid";
 
 export const JOURNAL_ERR_UNAUTHENTICATED = "UNAUTHENTICATED";
 export const JOURNAL_ERR_EMPTY = "EMPTY_CONTENT";
 export const JOURNAL_ERR_TOO_LONG = "CONTENT_TOO_LONG";
 export const JOURNAL_ERR_UNSAVABLE_PAIRING = "UNSAVABLE_PAIRING";
-
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export interface SaveJournalOptions {
   surah?: number;
@@ -26,7 +25,7 @@ export async function saveJournalEntry(
   const trimmed = content.trim();
   if (trimmed.length === 0) throw new Error(JOURNAL_ERR_EMPTY);
   if (trimmed.length > 2000) throw new Error(JOURNAL_ERR_TOO_LONG);
-  if (!UUID_REGEX.test(pairingId)) throw new Error(JOURNAL_ERR_UNSAVABLE_PAIRING);
+  if (!isUuid(pairingId)) throw new Error(JOURNAL_ERR_UNSAVABLE_PAIRING);
 
   const user = await getUserWithTimeout();
   if (!user) throw new Error(JOURNAL_ERR_UNAUTHENTICATED);

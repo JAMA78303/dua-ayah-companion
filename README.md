@@ -10,13 +10,11 @@ Next.js + Supabase app for emotionally guided Qur'anic ayah/dua reflections.
 npm install
 ```
 
-2) Add environment variables (`.env.local`):
+2) Copy `.env.example` to `.env.local` and fill in the Supabase values. The Quran Foundation
+   variables are optional (defaults are listed in the example file).
 
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-NEXT_PUBLIC_URL=http://localhost:3000
+cp .env.example .env.local
 ```
 
 3) Run the development server:
@@ -37,9 +35,11 @@ Then open [http://127.0.0.1:3001](http://127.0.0.1:3001).
 
 ## Database Setup
 
-Apply SQL migration in Supabase:
+Apply every file in `supabase/migrations/` in numeric order (`001_…` through the latest) via the
+Supabase SQL editor or `supabase db push`. Later migrations depend on earlier ones — for example
+`012` creates profile rows for every user and locks `is_premium` / the free save cap server-side.
 
-- `supabase/migrations/001_mvp_core.sql`
+See `SETUP.md` for the auth redirect URLs.
 
 ## Seed MVP Content
 

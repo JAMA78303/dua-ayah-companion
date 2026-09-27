@@ -33,7 +33,7 @@ export function AyahListenControls({
           onClick={isPlaying ? onPause : onPlay}
           disabled={loading}
           aria-label={isPlaying ? "Pause recitation" : "Play recitation"}
-          className="flex items-center gap-2 rounded-full border border-teal-200 px-3 py-1.5 text-xs font-medium text-teal-700 transition-colors hover:bg-teal-50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--accent-primary)_35%,transparent)] px-3 py-1.5 text-xs font-medium text-[var(--accent-primary)] transition-colors hover:bg-[color-mix(in_srgb,var(--accent-primary)_8%,transparent)] disabled:cursor-not-allowed disabled:opacity-40"
         >
           {loading ? "·····" : isPlaying ? "⏸" : "▶"}
           {loading ? "Loading" : isPlaying ? "Pause" : "Listen"}
@@ -42,19 +42,19 @@ export function AyahListenControls({
         <button
           type="button"
           onClick={onSpeedToggle}
-          className="font-mono text-xs text-slate-400 transition-colors hover:text-slate-600"
+          className="font-mono text-xs text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
           aria-label="Toggle playback speed"
         >
           {speed}×
         </button>
 
-        <span className="flex-1 truncate text-xs italic text-slate-400">{reciterName}</span>
+        <span className="flex-1 truncate text-xs italic text-[var(--text-secondary)]">{reciterName}</span>
       </div>
 
       {(isPlaying || progress > 0) && (
-        <div className="h-0.5 w-full overflow-hidden rounded-full bg-slate-100">
+        <div className="h-0.5 w-full overflow-hidden rounded-full bg-[var(--border)]">
           <div
-            className="h-full rounded-full bg-teal-500 transition-all duration-100"
+            className="h-full rounded-full bg-[var(--accent-primary)] transition-all duration-100"
             style={{ width: `${progress}%` }}
           />
         </div>

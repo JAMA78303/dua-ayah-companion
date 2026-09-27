@@ -12,7 +12,6 @@ import {
 
 import { saveReciterPreference } from "@/app/actions/reciter";
 import { createClient } from "@/lib/supabase/client";
-import { clearChapterAudioCache } from "@/lib/quranFoundation/fetchAudio";
 import {
   FALLBACK_RECITERS,
   fetchReciters,
@@ -89,7 +88,6 @@ export function ReciterProvider({ children }: { children: ReactNode }) {
     (id: number) => {
       saveReciterIdToStorage(id);
       setReciterId(id);
-      clearChapterAudioCache();
       window.dispatchEvent(new CustomEvent("reciter-changed"));
       void saveReciterPreference(id);
 

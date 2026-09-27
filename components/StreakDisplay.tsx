@@ -32,7 +32,7 @@ export function StreakDisplay() {
   }, []);
 
   useEffect(() => {
-    void loadStreaks();
+    queueMicrotask(() => void loadStreaks());
   }, [loadStreaks]);
 
   useEffect(() => {

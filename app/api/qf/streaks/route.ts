@@ -8,8 +8,6 @@ import { createClient } from "@/lib/supabase/server";
  * Quran Foundation User API — GET /api/v4/streaks
  * Docs: https://api-docs.quran.foundation
  */
-export const revalidate = 300;
-
 export async function GET() {
   const supabase = await createClient();
   const {

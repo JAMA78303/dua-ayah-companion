@@ -21,7 +21,6 @@ async function main() {
     const buf = await sharp(Buffer.from(svg)).png().toBuffer();
     const out = path.join(publicDir, `icon-${size}.png`);
     fs.writeFileSync(out, buf);
-    // eslint-disable-next-line no-console
     console.log("Wrote", out);
   }
 }

@@ -21,7 +21,7 @@ export function ProphetFigureCard({ name, duaCount, asProphet = true }: ProphetF
         {prophetEnglishLabel(name, asProphet)}
       </p>
       <p className="mt-2 text-xs text-[var(--accent-primary)]">
-        {duaCount} {duaCount === 1 ? "dua" : "duas"} in the Qur&apos;an
+        {`${duaCount} ${duaCount === 1 ? "dua" : "duas"} in the Qur'an`}
       </p>
     </Link>
   );

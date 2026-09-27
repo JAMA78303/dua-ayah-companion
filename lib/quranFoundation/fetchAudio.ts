@@ -46,7 +46,7 @@ async function fetchFromReciterAudioFiles(
 ): Promise<Record<string, string> | null> {
   const response = await qfContentGet(
     `/audio/reciters/${reciterId}/audio_files?chapter=${surahNumber}`,
-    { next: { revalidate: 86_400 } },
+    { next: { revalidate: 86_400 }, signal: AbortSignal.timeout(8000) },
   );
   if (!response.ok) return null;
 
@@ -62,7 +62,7 @@ async function fetchFromQuranRecitations(
 ): Promise<Record<string, string> | null> {
   const response = await qfContentGet(
     `/quran/recitations/${reciterId}?chapter=${surahNumber}`,
-    { next: { revalidate: 86_400 } },
+    { next: { revalidate: 86_400 }, signal: AbortSignal.timeout(8000) },
   );
   if (!response.ok) return null;
 
@@ -83,10 +83,10 @@ async function fetchChapterAudioMapUncached(
   }
 
   // Ayah-by-ayah URLs live on recitations; reciter audio_files is chapter-level only.
-  const fromRecitations = await fetchFromQuranRecitations(surahNumber, reciterId);
+  const fromRecitations = await fetchFromQuranRecitations(surahNumber, reciterId).catch(() => null);
   if (fromRecitations) return fromRecitations;
 
-  return fetchFromReciterAudioFiles(surahNumber, reciterId);
+  return fetchFromReciterAudioFiles(surahNumber, reciterId).catch(() => null);
 }
 
 /**
@@ -103,11 +103,13 @@ export async function fetchChapterAudioMap(
 
   let pending = inflight.get(key);
   if (!pending) {
-    pending = fetchChapterAudioMapUncached(surahNumber, reciterId).then((map) => {
-      if (map) chapterAudioCache.set(key, map);
-      inflight.delete(key);
-      return map;
-    });
+    // Only successful maps are cached; failures are retried on the next call.
+    pending = fetchChapterAudioMapUncached(surahNumber, reciterId)
+      .then((map) => {
+        if (map) chapterAudioCache.set(key, map);
+        return map;
+      })
+      .finally(() => inflight.delete(key));
     inflight.set(key, pending);
   }
 
@@ -122,9 +124,4 @@ export async function fetchVerseAudioUrl(
   const map = await fetchChapterAudioMap(surahNumber, reciterId);
   if (!map) return null;
   return map[`${surahNumber}:${ayahNumber}`] ?? null;
-}
-
-export function clearChapterAudioCache(): void {
-  chapterAudioCache.clear();
-  inflight.clear();
 }

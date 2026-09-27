@@ -3,18 +3,31 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { FeedCard } from "@/components/feed/FeedCard";
-import type { Pairing } from "@/lib/content/fetchPairings";
+import type { FeedPage, Pairing } from "@/lib/content/fetchPairings";
 
 interface FeedViewProps {
   initialPairings: Pairing[];
+  initialNextOffset: number;
+  initialHasMore: boolean;
   initialCategory?: string;
   startAtId?: string;
 }
 
-export function FeedView({ initialPairings, initialCategory, startAtId }: FeedViewProps) {
+function verseKeyOf(pairing: Pairing) {
+  return `${pairing.surah}:${pairing.ayah_number}`;
+}
+
+export function FeedView({
+  initialPairings,
+  initialNextOffset,
+  initialHasMore,
+  initialCategory,
+  startAtId,
+}: FeedViewProps) {
   const [pairings, setPairings] = useState(initialPairings);
+  const [nextOffset, setNextOffset] = useState(initialNextOffset);
   const [loading, setLoading] = useState(false);
-  const [exhausted, setExhausted] = useState(initialPairings.length === 0);
+  const [exhausted, setExhausted] = useState(!initialHasMore);
   const feedContainerRef = useRef<HTMLDivElement | null>(null);
   const loadTriggerRef = useRef<HTMLDivElement | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -48,34 +61,37 @@ export function FeedView({ initialPairings, initialCategory, startAtId }: FeedVi
 
     try {
       const params = new URLSearchParams({
-        offset: String(pairings.length),
+        offset: String(nextOffset),
         limit: "10",
       });
       if (initialCategory) {
         params.set("category", initialCategory);
       }
 
-      const response = await fetch(`/api/feed?${params.toString()}`, { cache: "no-store" });
-      if (!response.ok) {
+      const response = await fetch(`/api/feed?${params.toString()}`, { cache: "no-store" }).catch(
+        () => null,
+      );
+      if (!response?.ok) {
+        // End the feed rather than retrying in a loop while the trigger stays in range.
+        setExhausted(true);
         return;
       }
 
-      const nextBatch = (await response.json()) as Pairing[];
-      if (nextBatch.length === 0) {
+      const page = (await response.json()) as FeedPage;
+      // A page of only repeats still advances the offset; the observer re-fires while the trigger stays visible.
+      const seenAyahs = new Set(pairings.map(verseKeyOf));
+      const uniqueBatch = page.pairings.filter((item) => !seenAyahs.has(verseKeyOf(item)));
+      if (uniqueBatch.length > 0) {
+        setPairings((prev) => [...prev, ...uniqueBatch]);
+      }
+      setNextOffset(page.nextOffset);
+      if (!page.hasMore) {
         setExhausted(true);
-      } else {
-        const existingIds = new Set(pairings.map((item) => item.id));
-        const uniqueBatch = nextBatch.filter((item) => !existingIds.has(item.id));
-        if (uniqueBatch.length === 0) {
-          setExhausted(true);
-        } else {
-          setPairings((prev) => [...prev, ...uniqueBatch]);
-        }
       }
     } finally {
       setLoading(false);
     }
-  }, [exhausted, initialCategory, loading, pairings]);
+  }, [exhausted, initialCategory, loading, nextOffset, pairings]);
 
   useEffect(() => {
     if (startIndex <= 0) return;
@@ -87,16 +103,19 @@ export function FeedView({ initialPairings, initialCategory, startAtId }: FeedVi
 
   useEffect(() => {
     const node = loadTriggerRef.current;
-    if (!node) return;
+    const root = feedContainerRef.current;
+    if (!node || !root) return;
 
     observerRef.current?.disconnect();
+    // Snap scrolling always rests on the last card, so the trigger itself never becomes visible;
+    // observe within the feed container and start loading ~2 screens early.
     observerRef.current = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
           void loadMore();
         }
       },
-      { threshold: 0.1 },
+      { root, rootMargin: "0px 0px 200% 0px" },
     );
     observerRef.current.observe(node);
 

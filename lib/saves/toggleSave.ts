@@ -66,6 +66,10 @@ export async function toggleSave(pairingId: string): Promise<ToggleSaveResult> {
     pairing_id: pairingId,
   });
 
-  if (insertError) throw new Error(insertError.message);
+  if (insertError) {
+    // The database enforces the free cap too (migration 012), e.g. on a race or stale premium flag.
+    if (insertError.message.includes("SAVE_LIMIT_REACHED")) throw new Error(SAVE_ERR_LIMIT_REACHED);
+    throw new Error(insertError.message);
+  }
   return "saved";
 }

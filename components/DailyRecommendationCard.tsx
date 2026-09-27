@@ -21,7 +21,9 @@ export function DailyRecommendationCard() {
   useEffect(() => {
     async function run() {
       try {
-        const response = await fetch("/api/daily");
+        const now = new Date();
+        const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+        const response = await fetch(`/api/daily?date=${localDate}`);
         if (!response.ok) return;
         const json = (await response.json()) as DailyPairing | null;
         setPairing(json);

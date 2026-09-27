@@ -13,9 +13,9 @@ import {
   setContinuousPlayEnabled,
 } from "@/lib/quranFoundation/continuousPlayPreference";
 import { getSurahName } from "@/lib/quran/surahNames";
+import { cyclePlaybackSpeed, readPlaybackSpeed } from "@/lib/audio/playbackSpeed";
 
 const BISMILLAH = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ";
-const SPEED_STORAGE_KEY = "dac-playback-speed";
 
 interface QuranSurahReaderProps {
   surahNumber: number;
@@ -42,29 +42,25 @@ export function QuranSurahReader({ surahNumber, chapterMeta }: QuranSurahReaderP
   const [playing, setPlaying] = useState(false);
   const [loadingAudio, setLoadingAudio] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [speed, setSpeed] = useState(() => {
-    if (typeof window === "undefined") return 1;
-    return Number(localStorage.getItem(SPEED_STORAGE_KEY) ?? 1);
-  });
+  const [speed, setSpeed] = useState(1);
 
-  continuousPlayRef.current = continuousPlay;
-  activeVerseKeyRef.current = activeVerseKey;
+  useEffect(() => {
+    continuousPlayRef.current = continuousPlay;
+    activeVerseKeyRef.current = activeVerseKey;
+  }, [continuousPlay, activeVerseKey]);
 
   const englishName = chapterMeta?.nameSimple ?? getSurahName(surahNumber);
   const arabicName = chapterMeta?.nameArabic ?? englishName;
   const verseCount = chapterMeta?.versesCount;
 
   const loadAudio = useCallback(
-    async (reciter: number) => {
+    async (reciter: number): Promise<Record<string, string>> => {
       const audioRes = await fetch(`/api/quran/${surahNumber}/audio?reciterId=${reciter}`, {
         cache: "no-store",
       });
-      if (!audioRes.ok) {
-        setAudioByVerseKey({});
-        return;
-      }
+      if (!audioRes.ok) return {};
       const audioJson = (await audioRes.json()) as { audioByVerseKey?: Record<string, string> };
-      setAudioByVerseKey(audioJson.audioByVerseKey ?? {});
+      return audioJson.audioByVerseKey ?? {};
     },
     [surahNumber],
   );
@@ -169,23 +165,25 @@ export function QuranSurahReader({ surahNumber, chapterMeta }: QuranSurahReaderP
   }, [advanceAfterVerse]);
 
   const handleSpeedToggle = useCallback(() => {
-    const speeds = [0.75, 1, 1.25];
-    const next = speeds[(speeds.indexOf(speed) + 1) % speeds.length]!;
+    const next = cyclePlaybackSpeed(speed);
     setSpeed(next);
-    localStorage.setItem(SPEED_STORAGE_KEY, String(next));
     if (audioRef.current) {
       audioRef.current.playbackRate = next;
     }
   }, [speed]);
 
   useEffect(() => {
-    queueMicrotask(() => setContinuousPlay(getContinuousPlayEnabled()));
+    queueMicrotask(() => {
+      setContinuousPlay(getContinuousPlayEnabled());
+      setSpeed(readPlaybackSpeed());
+    });
   }, []);
 
   const stopAllPlayback = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause();
-      audioRef.current.src = "";
+      audioRef.current.removeAttribute("src");
+      audioRef.current.load();
     }
     setActiveVerseKey(null);
     setPlaying(false);
@@ -194,7 +192,7 @@ export function QuranSurahReader({ surahNumber, chapterMeta }: QuranSurahReaderP
   }, []);
 
   useEffect(() => {
-    stopAllPlayback();
+    queueMicrotask(stopAllPlayback);
   }, [surahNumber, reciterId, stopAllPlayback]);
 
   useEffect(() => {
@@ -220,6 +218,7 @@ export function QuranSurahReader({ surahNumber, chapterMeta }: QuranSurahReaderP
     }
   }, [verses, audioByVerseKey, playVerse]);
 
+  // Verses + pairings depend only on the surah; a reciter change must not reset the page.
   useEffect(() => {
     let cancelled = false;
     void (async () => {
@@ -236,10 +235,6 @@ export function QuranSurahReader({ surahNumber, chapterMeta }: QuranSurahReaderP
         }
 
         await loadPage(1, false);
-
-        void loadAudio(reciterId).catch(() => {
-          if (!cancelled) setAudioByVerseKey({});
-        });
       } catch {
         if (!cancelled) setError("This surah could not be loaded right now.");
       } finally {
@@ -249,7 +244,20 @@ export function QuranSurahReader({ surahNumber, chapterMeta }: QuranSurahReaderP
     return () => {
       cancelled = true;
     };
-  }, [surahNumber, reciterId, loadPage, loadAudio]);
+  }, [surahNumber, loadPage]);
+
+  useEffect(() => {
+    let cancelled = false;
+    // Keep the previous reciter's map until the new one arrives so Listen controls don't
+    // vanish and collapse the page (playback is already stopped on reciter change).
+    void (async () => {
+      const map = await loadAudio(reciterId).catch(() => ({}));
+      if (!cancelled) setAudioByVerseKey(map);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [reciterId, loadAudio]);
 
   async function loadMore() {
     if (!hasMore || loadingMore) return;

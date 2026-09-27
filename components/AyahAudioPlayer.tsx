@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { cyclePlaybackSpeed, readPlaybackSpeed } from "@/lib/audio/playbackSpeed";
+
 interface AyahAudioPlayerProps {
   audioUrl: string | null;
   verseKey: string;
@@ -12,6 +14,9 @@ interface AyahAudioPlayerProps {
   autoPlay?: boolean;
   onPlayStart?: () => void;
   onEnded?: () => void;
+  /** Playback position, e.g. for word highlighting. */
+  onTimeUpdate?: (currentTime: number, duration: number) => void;
+  onPlayingChange?: (playing: boolean) => void;
 }
 
 export function AyahAudioPlayer({
@@ -22,21 +27,36 @@ export function AyahAudioPlayer({
   autoPlay = false,
   onPlayStart,
   onEnded,
+  onTimeUpdate,
+  onPlayingChange,
 }: AyahAudioPlayerProps) {
   const [playing, setPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [speed, setSpeed] = useState(() => {
-    if (typeof window === "undefined") return 1;
-    return Number(localStorage.getItem("dac-playback-speed") ?? 1);
-  });
+  const [speed, setSpeed] = useState(1);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const onPlayingChangeRef = useRef(onPlayingChange);
+
+  useEffect(() => {
+    onPlayingChangeRef.current = onPlayingChange;
+  });
+
+  useEffect(() => {
+    onPlayingChangeRef.current?.(playing);
+  }, [playing]);
+
+  useEffect(() => {
+    // Read after mount so server and client render the same initial speed.
+    queueMicrotask(() => setSpeed(readPlaybackSpeed()));
+  }, []);
 
   function pausePlayback() {
     if (audioRef.current) {
+      // Unload without `src = ""` — an empty src fires `error`, which would hide the player.
       audioRef.current.pause();
-      audioRef.current.src = "";
+      audioRef.current.removeAttribute("src");
+      audioRef.current.load();
     }
     setPlaying(false);
     setProgress(0);
@@ -82,7 +102,10 @@ export function AyahAudioPlayer({
 
     setLoading(true);
     try {
-      audioRef.current.src = audioUrl;
+      // Resume a paused clip; only (re)load when the source changed or was unloaded.
+      if (audioRef.current.getAttribute("src") !== audioUrl) {
+        audioRef.current.src = audioUrl;
+      }
       audioRef.current.playbackRate = speed;
       await audioRef.current.play();
       setPlaying(true);
@@ -96,7 +119,7 @@ export function AyahAudioPlayer({
 
   useEffect(() => {
     if (!autoPlay || shouldPause || !audioUrl || playing || loading) return;
-    void startPlayback();
+    queueMicrotask(() => void startPlayback());
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to autoPlay request
   }, [autoPlay, audioUrl, shouldPause]);
 
@@ -115,10 +138,8 @@ export function AyahAudioPlayer({
   }
 
   function handleSpeedToggle() {
-    const speeds = [0.75, 1, 1.25];
-    const next = speeds[(speeds.indexOf(speed) + 1) % speeds.length]!;
+    const next = cyclePlaybackSpeed(speed);
     setSpeed(next);
-    localStorage.setItem("dac-playback-speed", String(next));
     if (audioRef.current) {
       audioRef.current.playbackRate = next;
     }
@@ -132,7 +153,7 @@ export function AyahAudioPlayer({
           onClick={() => void handlePlay()}
           disabled={loading}
           aria-label={playing ? "Pause recitation" : "Play recitation"}
-          className="flex items-center gap-2 rounded-full border border-teal-200 px-3 py-1.5 text-xs font-medium text-teal-700 transition-colors hover:bg-teal-50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--accent-primary)_35%,transparent)] px-3 py-1.5 text-xs font-medium text-[var(--accent-primary)] transition-colors hover:bg-[color-mix(in_srgb,var(--accent-primary)_8%,transparent)] disabled:cursor-not-allowed disabled:opacity-40"
         >
           {loading ? "·····" : playing ? "⏸" : "▶"}
           {loading ? "Loading" : playing ? "Pause" : "Listen"}
@@ -141,19 +162,19 @@ export function AyahAudioPlayer({
         <button
           type="button"
           onClick={handleSpeedToggle}
-          className="font-mono text-xs text-slate-400 transition-colors hover:text-slate-600"
+          className="font-mono text-xs text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
           aria-label="Toggle playback speed"
         >
           {speed}×
         </button>
 
-        <span className="flex-1 truncate text-xs italic text-slate-400">{reciterName}</span>
+        <span className="flex-1 truncate text-xs italic text-[var(--text-secondary)]">{reciterName}</span>
       </div>
 
       {(playing || progress > 0) && (
-        <div className="h-0.5 w-full overflow-hidden rounded-full bg-slate-100">
+        <div className="h-0.5 w-full overflow-hidden rounded-full bg-[var(--border)]">
           <div
-            className="h-full rounded-full bg-teal-500 transition-all duration-100"
+            className="h-full rounded-full bg-[var(--accent-primary)] transition-all duration-100"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -168,13 +189,17 @@ export function AyahAudioPlayer({
           setProgress(0);
           onEnded?.();
         }}
-        onError={() => setError(true)}
+        onError={() => {
+          // Only a real load failure should hide the player, not an unloaded element.
+          if (audioRef.current?.getAttribute("src")) setError(true);
+        }}
         onTimeUpdate={() => {
           if (!audioRef.current) return;
           const { currentTime, duration } = audioRef.current;
           if (duration > 0) {
             setProgress((currentTime / duration) * 100);
           }
+          onTimeUpdate?.(currentTime, duration);
         }}
       />
     </div>

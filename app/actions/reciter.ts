@@ -16,10 +16,18 @@ export async function saveReciterPreference(reciterId: number): Promise<{ ok: bo
     return { ok: false, error: "Not authenticated" };
   }
 
-  const { error } = await supabase.from("profiles").update({ reciter_id: reciterId }).eq("id", user.id);
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({ reciter_id: reciterId })
+    .eq("id", user.id)
+    .select("id");
 
   if (error) {
     return { ok: false, error: error.message };
+  }
+
+  if (!data?.length) {
+    return { ok: false, error: "Profile not found" };
   }
 
   return { ok: true };

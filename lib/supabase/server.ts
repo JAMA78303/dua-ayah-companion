@@ -18,7 +18,7 @@ export async function createClient() {
               cookieStore.set(name, value, options),
             );
           } catch {
-            // Server Component write attempts can throw; middleware handles refresh.
+            // Server Component write attempts can throw; proxy.ts handles refresh.
           }
         },
       },

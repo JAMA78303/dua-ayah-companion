@@ -18,13 +18,18 @@ export async function saveThemePreference(theme: ThemeId): Promise<{ ok: boolean
     return { ok: false, error: "Not authenticated" };
   }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("profiles")
     .update({ theme_preference: normalized })
-    .eq("id", user.id);
+    .eq("id", user.id)
+    .select("id");
 
   if (error) {
     return { ok: false, error: error.message };
+  }
+
+  if (!data?.length) {
+    return { ok: false, error: "Profile not found" };
   }
 
   return { ok: true };

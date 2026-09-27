@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { AyahCard } from "@/components/AyahCard";
 import { fetchPairingsForFigure } from "@/lib/content/fetchPairings";
+import { getStoryByProphetName } from "@/lib/content/prophetStories";
 import { fetchAyahFromQF } from "@/lib/quranFoundation/fetchAyah";
 import { prophetArabicName, prophetEnglishLabel } from "@/lib/prophets/displayNames";
 
@@ -33,6 +34,7 @@ export default async function ProphetDetailPage({
   );
 
   const isProphet = pairings.some((p) => p.prophet_name === figureName);
+  const story = isProphet ? getStoryByProphetName(figureName) : undefined;
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-8 md:px-8">
@@ -48,8 +50,16 @@ export default async function ProphetDetailPage({
           {prophetEnglishLabel(figureName, isProphet)}
         </h1>
         <p className="text-sm text-[var(--text-secondary)]">
-          {pairings.length} {pairings.length === 1 ? "dua" : "duas"} preserved in the Qur&apos;an
+          {`${pairings.length} ${pairings.length === 1 ? "dua" : "duas"} preserved in the Qur'an`}
         </p>
+        {story ? (
+          <Link
+            href={`/stories/${story.slug}`}
+            className="inline-block text-sm font-medium text-[var(--accent-primary)] hover:opacity-80"
+          >
+            {`Read the story of ${prophetEnglishLabel(figureName)} →`}
+          </Link>
+        ) : null}
       </header>
 
       {enriched.map(({ pairing, arabicText, translation, qfTafsirLong, qfAudioUrl }) => (

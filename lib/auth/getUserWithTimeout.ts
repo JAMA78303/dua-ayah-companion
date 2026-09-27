@@ -5,32 +5,27 @@ import { createClient } from "@/lib/supabase/client";
 const GET_USER_TIMEOUT_MS = 10_000;
 
 /**
- * Client-side auth check with BUG-009 guard: slow or hung `getUser()` times out,
- * clears the session, and sends the user to login.
+ * Client-side "who is signed in" check for UI decisions (BUG-009 guard: never hangs).
+ *
+ * Reads the local session (refreshing it if expired) instead of a network `getUser()`
+ * round trip; writes are still protected by RLS. A slow network resolves to `null`
+ * rather than signing the user out.
  */
 export async function getUserWithTimeout(): Promise<User | null> {
   if (typeof window === "undefined") return null;
 
   const supabase = createClient();
-  let hardStopped = false;
-
-  const timeoutId = window.setTimeout(() => {
-    hardStopped = true;
-    void (async () => {
-      await supabase.auth.signOut();
-      window.location.assign("/login?reason=session_expired");
-    })();
-  }, GET_USER_TIMEOUT_MS);
+  let timeoutId: number | undefined;
+  const timeout = new Promise<null>((resolve) => {
+    timeoutId = window.setTimeout(() => resolve(null), GET_USER_TIMEOUT_MS);
+  });
 
   try {
-    const { data, error } = await supabase.auth.getUser();
-    window.clearTimeout(timeoutId);
-    if (hardStopped) return null;
-    if (error) return null;
-    return data.user;
+    const result = await Promise.race([supabase.auth.getSession(), timeout]);
+    return result?.data.session?.user ?? null;
   } catch {
-    window.clearTimeout(timeoutId);
-    if (hardStopped) return null;
     return null;
+  } finally {
+    window.clearTimeout(timeoutId);
   }
 }

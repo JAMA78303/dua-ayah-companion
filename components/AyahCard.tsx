@@ -4,13 +4,14 @@ import { ArabicAyahText } from "@/components/ArabicAyahText";
 import { AyahAudioPlayer } from "@/components/AyahAudioPlayer";
 import { DuaSection, type DuaSourceType } from "@/components/DuaSection";
 import { useReciter } from "@/components/ReciterProvider";
-import { getAudioUrl } from "@/lib/quranFoundation/getAudioUrl";
 import { JournalTextarea } from "@/components/JournalTextarea";
 import { PropheticStorySection } from "@/components/PropheticStorySection";
 import { ResonanceSurvey } from "@/components/ResonanceSurvey";
 import { SaveButton } from "@/components/SaveButton";
 import { SurahReferencePill } from "@/components/SurahReferencePill";
 import { getSurahName } from "@/lib/quran/surahNames";
+import { normalizeAudioUrl } from "@/lib/quranFoundation/fetchAudio";
+import { toneGradientVar, type ToneTag } from "@/lib/theme/toneGradient";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
@@ -27,7 +28,7 @@ interface AyahCardProps {
   duaText: string;
   duaTransliteration?: string | null;
   duaTranslation: string;
-  toneTag: "comfort" | "warning" | "balance";
+  toneTag: ToneTag;
   sourceType?: string | null;
   hadithSource?: string | null;
   qfTafsirLong?: string | null;
@@ -47,6 +48,7 @@ interface RelatedDua {
   dua_translation: string;
 }
 
+/** Quran.com word timing: [wordIndex (0-based), wordPosition, startMs, endMs]. */
 type AudioSegment = [number, number, number, number];
 interface VerseWord {
   transliteration?: { text?: string | null };
@@ -54,19 +56,6 @@ interface VerseWord {
 
 function normalizeComparableText(value: string) {
   return value.replace(/\s+/g, " ").trim();
-}
-
-function toneGradientVar(tone: "comfort" | "warning" | "balance") {
-  switch (tone) {
-    case "comfort":
-      return "var(--gradient-card-comfort)";
-    case "warning":
-      return "var(--gradient-card-grief)";
-    case "balance":
-      return "var(--gradient-card-guidance)";
-    default:
-      return "var(--gradient-card-default)";
-  }
 }
 
 export function AyahCard({
@@ -95,7 +84,6 @@ export function AyahCard({
   const pauseAudio = shouldPauseAudio ?? false;
   const { reciterId, reciterName } = useReciter();
   const [clientAudioUrl, setClientAudioUrl] = useState<string | null>(qfAudioUrl ?? null);
-  const [duaAudioUrl, setDuaAudioUrl] = useState<string | null>(null);
 
   const duaVerseKey =
     sourceType === "quranic" && Number.isFinite(surah) && Number.isFinite(ayahNumber)
@@ -126,20 +114,6 @@ export function AyahCard({
   }, [surah, ayahNumber, reciterId]);
 
   useEffect(() => {
-    if (!duaVerseKey) {
-      queueMicrotask(() => setDuaAudioUrl(null));
-      return;
-    }
-    let cancelled = false;
-    void getAudioUrl(surah, ayahNumber, reciterId).then((url) => {
-      if (!cancelled) setDuaAudioUrl(url);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [duaVerseKey, surah, ayahNumber, reciterId]);
-
-  useEffect(() => {
     if (pauseAudio) return;
     window.dispatchEvent(new CustomEvent("qf-streak-refresh"));
   }, [pauseAudio, pairingId]);
@@ -156,7 +130,8 @@ export function AyahCard({
   const ayahPadded = String(ayahNumber).padStart(3, "0");
   const fallbackRecitationUrl = `https://everyayah.com/data/Alafasy_128kbps/${surahPadded}${ayahPadded}.mp3`;
   const [recitationUrl, setRecitationUrl] = useState(fallbackRecitationUrl);
-  const [audioSegments, setAudioSegments] = useState<AudioSegment[]>([]);
+  /** Word timings, tagged with the recording they belong to. */
+  const [timedSegments, setTimedSegments] = useState<{ url: string; segments: AudioSegment[] } | null>(null);
   const [ayahTransliteration, setAyahTransliteration] = useState<string | null>(null);
   const [activeWordIndex, setActiveWordIndex] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -173,13 +148,14 @@ export function AyahCard({
 
     async function fetchVerseSpecificRecitation() {
       try {
+        // Same recording as the QF chapter audio for this reciter, plus word timings + transliteration.
         const response = await fetch(
-          `https://api.quran.com/api/v4/verses/by_key/${surah}:${ayahNumber}?audio=7&words=true`,
+          `https://api.quran.com/api/v4/verses/by_key/${surah}:${ayahNumber}?audio=${reciterId}&words=true`,
           { signal: controller.signal },
         );
         if (!response.ok) {
           setRecitationUrl(fallbackRecitationUrl);
-          setAudioSegments([]);
+          setTimedSegments(null);
           setAyahTransliteration(null);
           return;
         }
@@ -188,15 +164,8 @@ export function AyahCard({
           verse?: { audio?: { url?: string; segments?: number[][] }; words?: VerseWord[] };
         };
         const audioPath = payload.verse?.audio?.url;
-        if (!audioPath) {
-          setRecitationUrl(fallbackRecitationUrl);
-          setAudioSegments([]);
-        } else {
-          const normalizedUrl = audioPath.startsWith("http")
-            ? audioPath
-            : `https://verses.quran.com/${audioPath.replace(/^\/+/, "")}`;
-          setRecitationUrl(normalizedUrl);
-        }
+        const normalizedUrl = audioPath ? normalizeAudioUrl(audioPath) : fallbackRecitationUrl;
+        setRecitationUrl(normalizedUrl);
         const rawSegments = payload.verse?.audio?.segments ?? [];
         const normalizedSegments = rawSegments.filter(
           (segment): segment is AudioSegment =>
@@ -204,7 +173,7 @@ export function AyahCard({
             segment.length === 4 &&
             segment.every((value) => Number.isFinite(value)),
         );
-        setAudioSegments(normalizedSegments);
+        setTimedSegments(audioPath ? { url: normalizedUrl, segments: normalizedSegments } : null);
 
         const transliteration = (payload.verse?.words ?? [])
           .map((word) => word.transliteration?.text?.trim() ?? "")
@@ -213,7 +182,7 @@ export function AyahCard({
         setAyahTransliteration(transliteration || null);
       } catch {
         setRecitationUrl(fallbackRecitationUrl);
-        setAudioSegments([]);
+        setTimedSegments(null);
         setAyahTransliteration(null);
       }
     }
@@ -221,7 +190,12 @@ export function AyahCard({
     void fetchVerseSpecificRecitation();
 
     return () => controller.abort();
-  }, [surah, ayahNumber, fallbackRecitationUrl]);
+  }, [surah, ayahNumber, reciterId, fallbackRecitationUrl]);
+
+  // One recording drives both players: QF chapter audio first, Quran.com verse audio as fallback.
+  const playerAudioUrl = clientAudioUrl ?? recitationUrl;
+  const duaAudioUrl = duaVerseKey ? playerAudioUrl : null;
+  const audioSegments = timedSegments?.url === playerAudioUrl ? timedSegments.segments : [];
 
   useEffect(() => {
     if (!supplicationMatchesAyah) {
@@ -315,64 +289,28 @@ export function AyahCard({
         <p className="text-center text-sm italic text-[var(--text-secondary)]">{ayahTransliteration}</p>
       ) : null}
 
-      {clientAudioUrl ? (
-        <AyahAudioPlayer
-          audioUrl={clientAudioUrl}
-          verseKey={`${surah}:${ayahNumber}`}
-          reciterName={reciterName}
-          shouldPause={pauseAudio}
-        />
-      ) : null}
+      <AyahAudioPlayer
+        audioUrl={playerAudioUrl}
+        verseKey={`${surah}:${ayahNumber}`}
+        reciterName={reciterName}
+        shouldPause={pauseAudio}
+        onTimeUpdate={updateWordHighlight}
+        onPlayingChange={(playing) => {
+          setIsPlaying(playing);
+          if (!playing) setActiveWordIndex(null);
+        }}
+      />
 
-      {!clientAudioUrl ? (
-        <section className="space-y-2">
-          <h2 className="text-sm font-semibold text-[var(--text-primary)]">Listen</h2>
-          <audio
-            key={recitationUrl}
-            controls
-            preload="none"
-            className="w-full"
-            onPlay={() => setIsPlaying(true)}
-            onLoadedData={() => {
-              setIsPlaying(false);
-              setActiveWordIndex(null);
-            }}
-            onPause={() => setIsPlaying(false)}
-            onEnded={() => {
-              setIsPlaying(false);
-              setActiveWordIndex(null);
-            }}
-            onTimeUpdate={(event) =>
-              updateWordHighlight(event.currentTarget.currentTime, event.currentTarget.duration)
-            }
-            onSeeked={(event) =>
-              updateWordHighlight(event.currentTarget.currentTime, event.currentTarget.duration)
-            }
-          >
-            <source src={recitationUrl} type="audio/mpeg" />
-            Your browser does not support audio playback.
-          </audio>
-          <a
-            href={quranComUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs font-medium text-[var(--accent-primary)] hover:text-[var(--accent-primary-hover)]"
-          >
-            Open on Quran.com
-          </a>
-        </section>
-      ) : (
-        <p className="text-xs text-[var(--text-secondary)]">
-          <a
-            href={quranComUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-medium text-[var(--accent-primary)] hover:text-[var(--accent-primary-hover)]"
-          >
-            Open on Quran.com
-          </a>
-        </p>
-      )}
+      <p className="text-xs text-[var(--text-secondary)]">
+        <a
+          href={quranComUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-[var(--accent-primary)] hover:text-[var(--accent-primary-hover)]"
+        >
+          Open on Quran.com
+        </a>
+      </p>
 
       <section className="space-y-2">
         <h2 className="text-sm font-semibold text-[var(--text-primary)]">Tafsir Summary</h2>
@@ -421,14 +359,14 @@ export function AyahCard({
             <p className="text-[var(--text-primary)]">{relatedDua.dua_text}</p>
             {relatedDua.dua_transliteration?.trim() ? (
               <p
-                className="mb-1 mt-2 text-sm font-light leading-relaxed tracking-wide text-slate-500"
+                className="mb-1 mt-2 text-sm font-light leading-relaxed tracking-wide text-[var(--text-secondary)]"
                 dir="ltr"
                 lang="en"
               >
                 {relatedDua.dua_transliteration.trim()}
               </p>
             ) : null}
-            <p className="text-sm leading-relaxed text-slate-700">{relatedDua.dua_translation}</p>
+            <p className="text-sm leading-relaxed text-[var(--text-primary)]">{relatedDua.dua_translation}</p>
             <p className="mt-2 text-xs font-medium text-[var(--accent-primary)]">
               Surah {relatedDua.surah} ({getSurahName(relatedDua.surah)}), Ayah {relatedDua.ayah_number} — open
               reflection
