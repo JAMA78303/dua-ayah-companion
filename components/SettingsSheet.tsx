@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { ReciterSelector } from "@/components/ReciterSelector";
 import { useReciter } from "@/components/ReciterProvider";
 import { getUserWithTimeout } from "@/lib/auth/getUserWithTimeout";
+import { createClient } from "@/lib/supabase/client";
 import { signOutAndClearLocalData } from "@/lib/auth/signOut";
 
 interface SettingsSheetProps {
@@ -13,7 +14,10 @@ interface SettingsSheetProps {
   onClose: () => void;
 }
 
-type AccountState = { status: "loading" } | { status: "signed-out" } | { status: "signed-in"; email: string | null };
+type AccountState =
+  | { status: "loading" }
+  | { status: "signed-out" }
+  | { status: "signed-in"; email: string | null; isAdmin: boolean };
 
 export function SettingsSheet({ open, onClose }: SettingsSheetProps) {
   const { reciterName } = useReciter();
@@ -23,9 +27,13 @@ export function SettingsSheet({ open, onClose }: SettingsSheetProps) {
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
-    void getUserWithTimeout().then((user) => {
-      if (cancelled) return;
-      setAccount(user ? { status: "signed-in", email: user.email ?? null } : { status: "signed-out" });
+    void getUserWithTimeout().then(async (user) => {
+      if (!user) {
+        if (!cancelled) setAccount({ status: "signed-out" });
+        return;
+      }
+      const { data } = await createClient().rpc("is_admin");
+      if (!cancelled) setAccount({ status: "signed-in", email: user.email ?? null, isAdmin: data === true });
     });
     return () => {
       cancelled = true;
@@ -74,19 +82,26 @@ export function SettingsSheet({ open, onClose }: SettingsSheetProps) {
           {account.status === "loading" ? (
             <p className="text-xs text-[var(--text-secondary)]">Checking sign-in…</p>
           ) : account.status === "signed-in" ? (
-            <div className="flex items-center justify-between gap-3">
-              <p className="min-w-0 truncate text-xs text-[var(--text-secondary)]">
-                Signed in{account.email ? ` as ${account.email}` : ""}
-              </p>
-              <button
-                type="button"
-                onClick={() => void handleSignOut()}
-                disabled={signingOut}
-                className="shrink-0 rounded-md border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--text-primary)] transition hover:bg-[var(--bg-subtle)] disabled:opacity-60"
-              >
-                {signingOut ? "Signing out…" : "Sign out"}
-              </button>
-            </div>
+            <>
+              <div className="flex items-center justify-between gap-3">
+                <p className="min-w-0 truncate text-xs text-[var(--text-secondary)]">
+                  Signed in{account.email ? ` as ${account.email}` : ""}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void handleSignOut()}
+                  disabled={signingOut}
+                  className="shrink-0 rounded-md border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--text-primary)] transition hover:bg-[var(--bg-subtle)] disabled:opacity-60"
+                >
+                  {signingOut ? "Signing out…" : "Sign out"}
+                </button>
+              </div>
+              {account.isAdmin ? (
+                <Link href="/admin/review" onClick={onClose} className="block text-sm font-medium text-[var(--accent-primary)]">
+                  Review content →
+                </Link>
+              ) : null}
+            </>
           ) : (
             <div className="flex items-center justify-between gap-3">
               <p className="text-xs text-[var(--text-secondary)]">Sign in to sync saves and reflections.</p>
