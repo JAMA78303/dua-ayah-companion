@@ -38,6 +38,20 @@ export default function DiscoverPage() {
               →
             </span>
           </Link>
+          <Link
+            href="/my-duas"
+            className="card-elevated flex items-center justify-between gap-4 p-5 transition hover:border-[var(--accent-primary)]"
+          >
+            <span>
+              <span className="block font-playfair text-lg font-semibold text-[var(--text-primary)]">My duas</span>
+              <span className="block text-xs text-[var(--text-secondary)]">
+                Keep what you&apos;re asking for, and mark each one as it&apos;s answered.
+              </span>
+            </span>
+            <span className="text-sm font-semibold text-[var(--accent-primary)]" aria-hidden>
+              →
+            </span>
+          </Link>
           <StreakDisplay />
           <p className="text-center text-xs italic text-[var(--text-secondary)]">{SUPPORTER_MISSION_LINE}</p>
 
