@@ -11,6 +11,7 @@ import { SaveButton } from "@/components/SaveButton";
 import { SurahReferencePill } from "@/components/SurahReferencePill";
 import { getSurahName } from "@/lib/quran/surahNames";
 import { normalizeAudioUrl } from "@/lib/quranFoundation/fetchAudio";
+import type { QfWord } from "@/lib/quranFoundation/fetchAyah";
 import { toneGradientVar, type ToneTag } from "@/lib/theme/toneGradient";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -33,6 +34,8 @@ interface AyahCardProps {
   hadithSource?: string | null;
   qfTafsirLong?: string | null;
   qfAudioUrl?: string | null;
+  /** Word-by-word data for `arabicText`, when it's the Quran Foundation text. */
+  qfWords?: QfWord[] | null;
   /** When true, pause QF recitation (e.g. feed card scrolled out of view). */
   shouldPauseAudio?: boolean;
   /** Prophets tab: show prophetic story expanded by default. */
@@ -76,6 +79,7 @@ export function AyahCard({
   hadithSource,
   qfTafsirLong,
   qfAudioUrl,
+  qfWords,
   shouldPauseAudio,
   expandPropheticStory = false,
 }: AyahCardProps) {
@@ -139,7 +143,12 @@ export function AyahCard({
   const reflectionAnchorId = `reflection-prompts-${pairingId}`;
   const quranComUrl = `https://quran.com/${surah}/${ayahNumber}`;
   const surahName = getSurahName(surah);
-  const totalWords = useMemo(() => arabicText.trim().split(/\s+/).filter(Boolean).length, [arabicText]);
+  // Real words, not space-separated tokens: pause marks are separate tokens in the text and would shift
+  // the highlight by one after each mark.
+  const totalWords = useMemo(
+    () => qfWords?.length ?? arabicText.trim().split(/\s+/).filter(Boolean).length,
+    [arabicText, qfWords],
+  );
   const supplicationMatchesAyah =
     normalizeComparableText(duaText) === normalizeComparableText(arabicText);
 
@@ -276,7 +285,7 @@ export function AyahCard({
           <SurahReferencePill>{pillLabel}</SurahReferencePill>
         </div>
         <div className="min-w-0 pt-8 text-right">
-          <ArabicAyahText text={arabicText} activeWordIndex={isPlaying ? activeWordIndex : null} />
+          <ArabicAyahText text={arabicText} words={qfWords} activeWordIndex={isPlaying ? activeWordIndex : null} />
         </div>
         <hr className="gold-rule gold-rule-animate" aria-hidden />
         <p className="translation-text mx-auto max-w-prose text-center text-lg text-[var(--text-primary)] md:text-xl">
