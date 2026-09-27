@@ -5,6 +5,7 @@ import { AyahAudioPlayer } from "@/components/AyahAudioPlayer";
 import { DuaSection, type DuaSourceType } from "@/components/DuaSection";
 import { useReciter } from "@/components/ReciterProvider";
 import { JournalTextarea } from "@/components/JournalTextarea";
+import { MemoriseSheet } from "@/components/memorise/MemoriseSheet";
 import { PropheticStorySection } from "@/components/PropheticStorySection";
 import { ResonanceSurvey } from "@/components/ResonanceSurvey";
 import { SaveButton } from "@/components/SaveButton";
@@ -140,6 +141,7 @@ export function AyahCard({
   const [activeWordIndex, setActiveWordIndex] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [relatedDua, setRelatedDua] = useState<RelatedDua | null>(null);
+  const [memoriseOpen, setMemoriseOpen] = useState(false);
   const reflectionAnchorId = `reflection-prompts-${pairingId}`;
   const quranComUrl = `https://quran.com/${surah}/${ayahNumber}`;
   const surahName = getSurahName(surah);
@@ -319,7 +321,23 @@ export function AyahCard({
         >
           Open on Quran.com
         </a>
+        <span aria-hidden> · </span>
+        <button
+          type="button"
+          onClick={() => setMemoriseOpen(true)}
+          className="font-medium text-[var(--accent-primary)] hover:text-[var(--accent-primary-hover)]"
+        >
+          Memorise this ayah
+        </button>
       </p>
+      {memoriseOpen ? (
+        <MemoriseSheet
+          title={`${surahName} ${surah}:${ayahNumber}`}
+          words={qfWords?.map((word) => word.arabic) ?? arabicText.trim().split(/\s+/).filter(Boolean)}
+          audioUrl={playerAudioUrl}
+          onClose={() => setMemoriseOpen(false)}
+        />
+      ) : null}
 
       <section className="space-y-2">
         <h2 className="text-sm font-semibold text-[var(--text-primary)]">Tafsir Summary</h2>
