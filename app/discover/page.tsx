@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 import { CategoryTiles } from "@/components/CategoryTiles";
@@ -25,6 +26,18 @@ export default function DiscoverPage() {
           <div className="relative z-10 space-y-4">
           <DailyRecommendationCard />
           <NameOfTheDayCard />
+          <Link
+            href="/adhkar"
+            className="card-elevated flex items-center justify-between gap-4 p-5 transition hover:border-[var(--accent-primary)]"
+          >
+            <span>
+              <span className="block font-playfair text-lg font-semibold text-[var(--text-primary)]">Morning &amp; evening adhkar</span>
+              <span className="block text-xs text-[var(--text-secondary)]">The daily remembrances, with a counter for each.</span>
+            </span>
+            <span className="text-sm font-semibold text-[var(--accent-primary)]" aria-hidden>
+              →
+            </span>
+          </Link>
           <StreakDisplay />
           <p className="text-center text-xs italic text-[var(--text-secondary)]">{SUPPORTER_MISSION_LINE}</p>
 

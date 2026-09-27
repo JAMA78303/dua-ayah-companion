@@ -4,10 +4,13 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { EmotionInput } from "@/components/EmotionInput";
+import { AdhkarFeedCard } from "@/components/feed/AdhkarFeedCard";
 import { FeedCard } from "@/components/feed/FeedCard";
 import { NameFeedCard } from "@/components/feed/NameFeedCard";
 import { StoryFeedCard } from "@/components/feed/StoryFeedCard";
 import { ZeroResultState } from "@/components/ZeroResultState";
+import { adhkarCompletion, readAdhkarProgress } from "@/lib/adhkar/progress";
+import { adhkarTimeNow, type AdhkarTime } from "@/lib/content/adhkar";
 import type { FeedItem, MixedFeedPage } from "@/lib/feed/types";
 
 const SEED_KEY = "feed:mixed:seed";
@@ -99,6 +102,15 @@ export function MixedFeedView() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [moodOpen, setMoodOpen] = useState(false);
+  const [adhkarDue, setAdhkarDue] = useState<{ time: AdhkarTime; done: number; total: number } | null>(null);
+
+  // Morning / evening adhkar lead the feed while they're due and unfinished today.
+  useEffect(() => {
+    const time = adhkarTimeNow(new Date());
+    if (!time) return;
+    const { done, total, complete } = adhkarCompletion(time, readAdhkarProgress(time));
+    if (!complete) queueMicrotask(() => setAdhkarDue({ time, done, total }));
+  }, []);
 
   const start = useCallback(async (sessionSeed: number, resumeIndex: number) => {
     setStatus("loading");
@@ -214,6 +226,14 @@ export function MixedFeedView() {
               Try again
             </button>
           </div>
+        ) : null}
+
+        {status === "ready" && adhkarDue ? (
+          <section className="flex h-full snap-start snap-always flex-col px-3 pb-3 pt-14 md:px-5">
+            <div className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col">
+              <AdhkarFeedCard time={adhkarDue.time} done={adhkarDue.done} total={adhkarDue.total} />
+            </div>
+          </section>
         ) : null}
 
         {items.map((item, index) => (
