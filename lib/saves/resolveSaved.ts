@@ -5,6 +5,7 @@ import { getNameOfAllah } from "@/lib/content/namesOfAllah";
 import { getProphetStory } from "@/lib/content/prophetStories";
 import { prophetEnglishLabel } from "@/lib/prophets/displayNames";
 import { getSurahName } from "@/lib/quran/surahNames";
+import { duaFromOtherAyah, verseRefLabel } from "@/lib/quran/verseRef";
 import { fetchAyahText } from "@/lib/quranFoundation/fetchAyah";
 import { parseContentKey } from "@/lib/saves/contentKeys";
 import type { SavedEntry } from "@/lib/saves/types";
@@ -18,6 +19,7 @@ interface PairingSummary {
   source_type: string | null;
   hadith_source: string | null;
   prophet_name: string | null;
+  dua_verse_key: string | null;
 }
 
 const ADHKAR_TIME_LABEL = { morning: "Morning", evening: "Evening", both: "Morning & evening" } as const;
@@ -34,7 +36,7 @@ export async function resolveSavedEntries(keys: string[], supabase: SupabaseClie
   if (pairingIds.length > 0) {
     const { data } = await supabase
       .from("ayah_pairings")
-      .select("id, surah, ayah_number, dua_text, dua_translation, source_type, hadith_source, prophet_name")
+      .select("id, surah, ayah_number, dua_text, dua_translation, source_type, hadith_source, prophet_name, dua_verse_key")
       .in("id", pairingIds);
     for (const row of (data ?? []) as PairingSummary[]) pairings.set(row.id, row);
   }
@@ -45,6 +47,7 @@ export async function resolveSavedEntries(keys: string[], supabase: SupabaseClie
         case "pairing": {
           const pairing = pairings.get(content.pairingId);
           if (!pairing) return null;
+          const duaAyah = duaFromOtherAyah(pairing.dua_verse_key, pairing.surah, pairing.ayah_number);
           return {
             key,
             group: "duas",
@@ -54,7 +57,7 @@ export async function resolveSavedEntries(keys: string[], supabase: SupabaseClie
             source:
               pairing.source_type === "prophetic_sunnah" && pairing.hadith_source
                 ? pairing.hadith_source
-                : `${getSurahName(pairing.surah)} ${pairing.surah}:${pairing.ayah_number}`,
+                : verseRefLabel(duaAyah ?? `${pairing.surah}:${pairing.ayah_number}`),
             href: `/result?pairingId=${pairing.id}`,
             surah: pairing.surah,
             ayahNumber: pairing.ayah_number,

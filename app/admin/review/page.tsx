@@ -33,7 +33,7 @@ export default async function ReviewPage() {
     supabase
       .from("ayah_pairings")
       .select(
-        "id, surah, ayah_number, arabic_text, translation, emotion_category, tone_tag, tafsir_summary, reflection_prompts, dua_text, dua_transliteration, dua_translation, prophetic_story, prophet_name, status, reviewer_notes, reviewed_at",
+        "id, surah, ayah_number, arabic_text, translation, emotion_category, tone_tag, tafsir_summary, reflection_prompts, dua_text, dua_transliteration, dua_translation, dua_verse_key, inclusion_reason, tafsir_source, prophetic_story, prophet_name, status, reviewer_notes, reviewed_at",
       )
       .order("surah", { ascending: true })
       .order("ayah_number", { ascending: true }),

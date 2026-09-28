@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { AyahAudioPlayer } from "@/components/AyahAudioPlayer";
 
 export type DuaSourceType = "quranic" | "prophetic_sunnah";
@@ -15,6 +17,8 @@ export interface DuaSectionProps {
   duaAudioUrl: string | null;
   duaVerseKey: string | null;
   reciterName: string;
+  /** A Qur'anic dua quoted from another ayah: where it is from (links to that ayah). */
+  citation?: { label: string; href: string } | null;
   compact?: boolean;
 }
 
@@ -44,6 +48,7 @@ export function DuaSection({
   duaAudioUrl,
   duaVerseKey,
   reciterName,
+  citation = null,
   compact = false,
 }: DuaSectionProps) {
   const showAudio = source_type === "quranic" && Boolean(duaAudioUrl && duaVerseKey);
@@ -67,6 +72,12 @@ export function DuaSection({
       ) : null}
 
       <p className="text-sm leading-relaxed text-[var(--text-primary)]">{dua_translation}</p>
+
+      {citation ? (
+        <Link href={citation.href} className="inline-block text-xs font-medium text-[var(--accent-primary)] hover:opacity-80">
+          {`From ${citation.label} →`}
+        </Link>
+      ) : null}
 
       {showAudio ? (
         <AyahAudioPlayer

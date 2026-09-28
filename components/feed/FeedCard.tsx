@@ -9,6 +9,7 @@ import { useReciter } from "@/components/ReciterProvider";
 import { SurahReferencePill } from "@/components/SurahReferencePill";
 import type { Pairing } from "@/lib/content/fetchPairings";
 import { getSurahName } from "@/lib/quran/surahNames";
+import { duaFromOtherAyah, verseRefHref, verseRefLabel } from "@/lib/quran/verseRef";
 import { pairingKey } from "@/lib/saves/contentKeys";
 import type { QfAyahBundle } from "@/lib/quranFoundation/fetchAyah";
 import { toneGradientVar } from "@/lib/theme/toneGradient";
@@ -32,8 +33,10 @@ export function FeedCard({ pairing, index, total, isActive }: FeedCardProps) {
 
   const sourceType: DuaSourceType =
     pairing.source_type === "prophetic_sunnah" ? "prophetic_sunnah" : "quranic";
+  const duaOtherAyah =
+    sourceType === "quranic" ? duaFromOtherAyah(pairing.dua_verse_key, pairing.surah, pairing.ayah_number) : null;
   const duaVerseKey =
-    sourceType === "quranic" && pairing.surah && pairing.ayah_number
+    sourceType === "quranic" && !duaOtherAyah && pairing.surah && pairing.ayah_number
       ? `${pairing.surah}:${pairing.ayah_number}`
       : null;
 
@@ -156,6 +159,7 @@ export function FeedCard({ pairing, index, total, isActive }: FeedCardProps) {
                 duaAudioUrl={null}
                 duaVerseKey={duaVerseKey}
                 reciterName={reciterName}
+                citation={duaOtherAyah ? { label: verseRefLabel(duaOtherAyah), href: verseRefHref(duaOtherAyah) } : null}
                 compact
               />
             </div>

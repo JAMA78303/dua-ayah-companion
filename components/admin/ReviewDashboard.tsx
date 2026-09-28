@@ -7,6 +7,7 @@ import { reviewContent, reviewPairing, type PairingReviewInput } from "@/app/act
 import { NAMES_OF_ALLAH } from "@/lib/content/namesOfAllah";
 import { PROPHET_STORIES } from "@/lib/content/prophetStories";
 import { getSurahName } from "@/lib/quran/surahNames";
+import { duaFromOtherAyah, verseRefLabel } from "@/lib/quran/verseRef";
 import { prophetEnglishLabel } from "@/lib/prophets/displayNames";
 import { EMOTION_CATEGORIES } from "@/types/emotions";
 
@@ -23,6 +24,9 @@ export interface ReviewPairing {
   dua_text: string;
   dua_transliteration: string | null;
   dua_translation: string;
+  dua_verse_key: string | null;
+  inclusion_reason: string | null;
+  tafsir_source: string | null;
   prophetic_story: string | null;
   prophet_name: string | null;
   status: "pending" | "approved" | "rejected";
@@ -111,6 +115,15 @@ function PairingReviewCard({ pairing }: { pairing: ReviewPairing }) {
           <p dir="rtl" lang="ar" className="font-scheherazade text-right text-xl leading-loose text-[var(--text-arabic)]">
             {pairing.dua_text}
           </p>
+          {duaFromOtherAyah(pairing.dua_verse_key, pairing.surah, pairing.ayah_number) ? (
+            <p className="text-xs text-[var(--text-secondary)]">{`Dua quoted from ${verseRefLabel(pairing.dua_verse_key!)}`}</p>
+          ) : null}
+          {pairing.inclusion_reason ? (
+            <p className="text-xs text-[var(--text-secondary)]">{`Why it's here: ${pairing.inclusion_reason}`}</p>
+          ) : null}
+          {pairing.tafsir_source ? (
+            <p className="text-xs text-[var(--text-secondary)]">{`Based on: ${pairing.tafsir_source}`}</p>
+          ) : null}
           <p className="text-xs text-[var(--text-secondary)]">Arabic text isn&apos;t editable here, to avoid typing mistakes.</p>
 
           <div className="grid grid-cols-2 gap-2">

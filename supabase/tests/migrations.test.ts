@@ -8,6 +8,8 @@ import path from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { isValidAyahRef } from "@/lib/quran/verseCounts";
+
 const MIGRATIONS_DIR = path.resolve(__dirname, "../migrations");
 const migrationFiles = readdirSync(MIGRATIONS_DIR).filter((f) => f.endsWith(".sql")).sort();
 const readMigration = (file: string) => readFileSync(path.join(MIGRATIONS_DIR, file), "utf8");
@@ -98,14 +100,38 @@ describe("migrations, run in order from scratch", () => {
     db = await freshDatabase();
   });
 
-  it("seed 35 approved duas with no duplicate ayah + dua", async () => {
+  it("seed 35 approved duas and 85 for review, with no duplicate ayah + dua", async () => {
     expect(await count(db, "SELECT 1 FROM ayah_pairings WHERE status = 'approved'")).toBe(35);
-    expect(await count(db, "SELECT DISTINCT surah, ayah_number, md5(dua_text) FROM ayah_pairings")).toBe(35);
+    expect(await count(db, "SELECT 1 FROM ayah_pairings WHERE status = 'pending'")).toBe(85);
+    expect(await count(db, "SELECT DISTINCT surah, ayah_number, md5(dua_text) FROM ayah_pairings")).toBe(120);
+  });
+
+  it("gives every feeling 12 ayat, each ayah used once", async () => {
+    const { rows } = await db.query<{ emotion_category: string; n: number }>(
+      "SELECT emotion_category, count(*)::int AS n FROM ayah_pairings GROUP BY 1 ORDER BY 1",
+    );
+    expect(rows).toHaveLength(10);
+    for (const row of rows) expect(row).toMatchObject({ n: 12 });
+    expect(await count(db, "SELECT DISTINCT surah, ayah_number FROM ayah_pairings")).toBe(120);
+  });
+
+  it("says where every new dua is quoted from", async () => {
+    const { rows } = await db.query<{ surah: number; ayah_number: number; dua_verse_key: string | null; dua_text: string; tafsir_source: string }>(
+      "SELECT surah, ayah_number, dua_verse_key, dua_text, tafsir_source FROM ayah_pairings WHERE status = 'pending'",
+    );
+    for (const row of rows) {
+      expect(isValidAyahRef(row.dua_verse_key ?? "")).toBe(true);
+      expect(row.dua_text.trim()).not.toBe("");
+      expect(row.tafsir_source).toContain(`${row.surah}:`);
+    }
+    await expect(db.exec("UPDATE ayah_pairings SET dua_verse_key = '20:25–26' WHERE status = 'pending'")).rejects.toThrow(
+      /ayah_pairings_dua_verse_key_format/,
+    );
   });
 
   it("can re-run 012 onwards without changing anything", async () => {
     for (const file of migrationFiles.filter((f) => f >= "012")) await db.exec(readMigration(file));
-    expect(await count(db, "SELECT 1 FROM ayah_pairings")).toBe(35);
+    expect(await count(db, "SELECT 1 FROM ayah_pairings")).toBe(120);
   });
 
   it("gives every new user a profile row", async () => {
@@ -131,7 +157,7 @@ describe("permissions", () => {
     db = await freshDatabase();
     await db.exec(`INSERT INTO auth.users (id) VALUES ('${ADMIN}'), ('${USER}')`);
     await db.exec(`INSERT INTO admin_users (id) VALUES ('${ADMIN}')`);
-    await db.exec("UPDATE ayah_pairings SET status = 'pending' WHERE id = (SELECT id FROM ayah_pairings ORDER BY id LIMIT 1)");
+    await db.exec("UPDATE ayah_pairings SET status = 'pending' WHERE id = (SELECT id FROM ayah_pairings WHERE status = 'approved' ORDER BY id LIMIT 1)");
   });
 
   it("users cannot make themselves premium", async () => {
@@ -175,7 +201,7 @@ describe("permissions", () => {
   });
 
   it("admins see and review everything; the feed sees hidden keys only", async () => {
-    expect(await as(db, "authenticated", ADMIN, () => count(db, "SELECT 1 FROM ayah_pairings"))).toBe(35);
+    expect(await as(db, "authenticated", ADMIN, () => count(db, "SELECT 1 FROM ayah_pairings"))).toBe(120);
     await as(db, "authenticated", ADMIN, () =>
       db.query("INSERT INTO content_reviews (content_key, status, notes) VALUES ('story:musa:3', 'hidden', 'check wording')"),
     );
