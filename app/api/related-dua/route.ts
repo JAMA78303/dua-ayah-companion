@@ -13,8 +13,9 @@ interface RelatedDuaRow {
   dua_verse_key: string | null;
 }
 
+/** Same text whether stored by the SQL editor (NFC) or served by the Qur'an API (marks in source order). */
 function normalizeComparableText(value: string) {
-  return value.replace(/\s+/g, " ").trim();
+  return value.normalize("NFC").replace(/\s+/g, " ").trim();
 }
 
 export async function GET(request: NextRequest) {
