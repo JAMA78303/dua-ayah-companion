@@ -64,6 +64,10 @@ export const BUILTIN_MAPPINGS: IntentMapping[] = [
   ...(["alone", "lonely", "loneliness", "isolated", "no friends"] as const).map((keyword) => ({ keyword, category: "loneliness" as const, weight: 0.9 })),
   { keyword: "left out", category: "loneliness", weight: 0.8 },
   { keyword: "nobody", category: "loneliness", weight: 0.7 },
+
+  ...(["lost my temper", "losing my temper", "so angry", "so mad"] as const).map((keyword) => ({ keyword, category: "anger" as const, weight: 1 })),
+  ...(["angry", "anger", "furious", "rage", "raging", "livid", "fuming", "mad at", "pissed off"] as const).map((keyword) => ({ keyword, category: "anger" as const, weight: 0.9 })),
+  ...(["frustrated", "frustration", "annoyed", "irritated", "resentment", "resentful", "bitter"] as const).map((keyword) => ({ keyword, category: "anger" as const, weight: 0.8 })),
 ];
 
 /**

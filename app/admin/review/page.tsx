@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-import { ReviewDashboard, type ContentReview, type ReviewPairing } from "@/components/admin/ReviewDashboard";
+import { ReviewDashboard, type ContentReview, type ReviewPairing, type ReviewSunnahDua } from "@/components/admin/ReviewDashboard";
 import { isCurrentUserAdmin } from "@/lib/auth/isAdmin";
+import { SUNNAH_DUA_COLUMNS } from "@/lib/content/sunnahDuas";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -29,7 +30,7 @@ export default async function ReviewPage() {
     );
   }
 
-  const [{ data: pairings, error }, { data: reviews }] = await Promise.all([
+  const [{ data: pairings, error }, { data: sunnahDuas }, { data: reviews }] = await Promise.all([
     supabase
       .from("ayah_pairings")
       .select(
@@ -37,6 +38,7 @@ export default async function ReviewPage() {
       )
       .order("surah", { ascending: true })
       .order("ayah_number", { ascending: true }),
+    supabase.from("sunnah_duas").select(`${SUNNAH_DUA_COLUMNS}, status, reviewer_notes`).order("sort", { ascending: true }),
     supabase.from("content_reviews").select("content_key, status, notes, reviewed_at"),
   ]);
 
@@ -48,5 +50,11 @@ export default async function ReviewPage() {
     );
   }
 
-  return <ReviewDashboard pairings={(pairings ?? []) as ReviewPairing[]} reviews={(reviews ?? []) as ContentReview[]} />;
+  return (
+    <ReviewDashboard
+      pairings={(pairings ?? []) as ReviewPairing[]}
+      sunnahDuas={(sunnahDuas ?? []) as ReviewSunnahDua[]}
+      reviews={(reviews ?? []) as ContentReview[]}
+    />
+  );
 }

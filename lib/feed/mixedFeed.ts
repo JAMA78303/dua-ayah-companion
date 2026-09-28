@@ -1,10 +1,13 @@
 import type { Pairing } from "@/lib/content/fetchPairings";
 import { NAMES_OF_ALLAH } from "@/lib/content/namesOfAllah";
 import { PROPHET_STORIES } from "@/lib/content/prophetStories";
+import type { SunnahDua } from "@/lib/content/sunnahDuas";
 import type { FeedItem } from "@/lib/feed/types";
 
 /** Card rhythm: ayah & dua, story chapter, ayah & dua, Name of Allah — then repeat. */
 const RHYTHM: FeedItem["kind"][] = ["pairing", "story", "pairing", "name"];
+/** With duas from the Sunnah approved, one joins every cycle. */
+const RHYTHM_WITH_DUAS: FeedItem["kind"][] = ["pairing", "story", "pairing", "dua", "pairing", "name"];
 
 /** Small deterministic PRNG so a session seed always produces the same order (stable pagination). */
 function mulberry32(seed: number) {
@@ -32,7 +35,7 @@ function shuffled<T>(items: readonly T[], random: () => number): T[] {
  * a new seed gives a fresh order. Stories are serialised: prophets come in shuffled order, but each
  * prophet's chapters stay in sequence as they reappear down the feed.
  */
-export function buildMixedFeed(seed: number, pairings: Pairing[]): FeedItem[] {
+export function buildMixedFeed(seed: number, pairings: Pairing[], sunnahDuas: SunnahDua[] = []): FeedItem[] {
   const random = mulberry32(seed);
 
   const pools: { [K in FeedItem["kind"]]: FeedItem[] } = {
@@ -49,12 +52,14 @@ export function buildMixedFeed(seed: number, pairings: Pairing[]): FeedItem[] {
       })),
     ),
     name: shuffled(NAMES_OF_ALLAH, random).map((name) => ({ kind: "name", id: `name:${name.number}`, name })),
+    dua: shuffled(sunnahDuas, random).map((dua) => ({ kind: "dua", id: `sunnah:${dua.id}`, dua })),
   };
+  const rhythm = sunnahDuas.length > 0 ? RHYTHM_WITH_DUAS : RHYTHM;
 
   const feed: FeedItem[] = [];
   let step = 0;
-  while (pools.pairing.length || pools.story.length || pools.name.length) {
-    const kind = RHYTHM[step % RHYTHM.length]!;
+  while (pools.pairing.length || pools.story.length || pools.name.length || pools.dua.length) {
+    const kind = rhythm[step % rhythm.length]!;
     step++;
     const next = pools[kind].shift();
     if (next) feed.push(next);

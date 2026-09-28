@@ -3,6 +3,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { ADHKAR } from "@/lib/content/adhkar";
 import { getNameOfAllah } from "@/lib/content/namesOfAllah";
 import { getProphetStory } from "@/lib/content/prophetStories";
+import { situationTitle } from "@/lib/content/sunnahSituations";
+import { SUNNAH_DUA_COLUMNS, type SunnahDua } from "@/lib/content/sunnahDuas";
 import { prophetEnglishLabel } from "@/lib/prophets/displayNames";
 import { getSurahName } from "@/lib/quran/surahNames";
 import { duaFromOtherAyah, verseRefLabel } from "@/lib/quran/verseRef";
@@ -39,6 +41,13 @@ export async function resolveSavedEntries(keys: string[], supabase: SupabaseClie
       .select("id, surah, ayah_number, dua_text, dua_translation, source_type, hadith_source, prophet_name, dua_verse_key")
       .in("id", pairingIds);
     for (const row of (data ?? []) as PairingSummary[]) pairings.set(row.id, row);
+  }
+
+  const sunnahIds = parsed.flatMap(({ content }) => (content?.kind === "sunnah" ? [content.id] : []));
+  const sunnahDuas = new Map<string, SunnahDua>();
+  if (sunnahIds.length > 0) {
+    const { data } = await supabase.from("sunnah_duas").select(SUNNAH_DUA_COLUMNS).eq("status", "approved").in("id", sunnahIds);
+    for (const row of (data ?? []) as SunnahDua[]) sunnahDuas.set(row.id, row);
   }
 
   const entries = await Promise.all(
@@ -117,6 +126,19 @@ export async function resolveSavedEntries(keys: string[], supabase: SupabaseClie
             title: chapter.title,
             body: chapter.body,
             href: `/stories/${story.slug}#chapter-${content.chapterIndex + 1}`,
+          };
+        }
+        case "sunnah": {
+          const dua = sunnahDuas.get(content.id);
+          if (!dua) return null;
+          return {
+            key,
+            group: "duas",
+            eyebrow: `From the Sunnah · ${situationTitle(dua.situation)}`,
+            arabic: dua.arabic,
+            body: dua.translation,
+            source: dua.source ?? undefined,
+            href: `/duas#sunnah-${dua.id}`,
           };
         }
         default:

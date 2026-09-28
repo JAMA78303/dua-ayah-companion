@@ -9,6 +9,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import { isValidAyahRef } from "@/lib/quran/verseCounts";
+import { EMOTION_CATEGORIES } from "@/types/emotions";
 
 const MIGRATIONS_DIR = path.resolve(__dirname, "../migrations");
 const migrationFiles = readdirSync(MIGRATIONS_DIR).filter((f) => f.endsWith(".sql")).sort();
@@ -100,19 +101,19 @@ describe("migrations, run in order from scratch", () => {
     db = await freshDatabase();
   });
 
-  it("seed 35 approved duas and 85 for review, with no duplicate ayah + dua", async () => {
+  it("seed 35 approved duas and 97 for review, with no duplicate ayah + dua", async () => {
     expect(await count(db, "SELECT 1 FROM ayah_pairings WHERE status = 'approved'")).toBe(35);
-    expect(await count(db, "SELECT 1 FROM ayah_pairings WHERE status = 'pending'")).toBe(85);
-    expect(await count(db, "SELECT DISTINCT surah, ayah_number, md5(dua_text) FROM ayah_pairings")).toBe(120);
+    expect(await count(db, "SELECT 1 FROM ayah_pairings WHERE status = 'pending'")).toBe(97);
+    expect(await count(db, "SELECT DISTINCT surah, ayah_number, md5(dua_text) FROM ayah_pairings")).toBe(132);
   });
 
   it("gives every feeling 12 ayat, each ayah used once", async () => {
     const { rows } = await db.query<{ emotion_category: string; n: number }>(
       "SELECT emotion_category, count(*)::int AS n FROM ayah_pairings GROUP BY 1 ORDER BY 1",
     );
-    expect(rows).toHaveLength(10);
+    expect(rows.map((row) => row.emotion_category)).toEqual([...EMOTION_CATEGORIES].sort());
     for (const row of rows) expect(row).toMatchObject({ n: 12 });
-    expect(await count(db, "SELECT DISTINCT surah, ayah_number FROM ayah_pairings")).toBe(120);
+    expect(await count(db, "SELECT DISTINCT surah, ayah_number FROM ayah_pairings")).toBe(132);
   });
 
   it("says where every new dua is quoted from", async () => {
@@ -131,7 +132,8 @@ describe("migrations, run in order from scratch", () => {
 
   it("can re-run 012 onwards without changing anything", async () => {
     for (const file of migrationFiles.filter((f) => f >= "012")) await db.exec(readMigration(file));
-    expect(await count(db, "SELECT 1 FROM ayah_pairings")).toBe(120);
+    expect(await count(db, "SELECT 1 FROM ayah_pairings")).toBe(132);
+    expect(await count(db, "SELECT 1 FROM sunnah_duas")).toBe(36);
   });
 
   it("gives every new user a profile row", async () => {
@@ -201,7 +203,7 @@ describe("permissions", () => {
   });
 
   it("admins see and review everything; the feed sees hidden keys only", async () => {
-    expect(await as(db, "authenticated", ADMIN, () => count(db, "SELECT 1 FROM ayah_pairings"))).toBe(120);
+    expect(await as(db, "authenticated", ADMIN, () => count(db, "SELECT 1 FROM ayah_pairings"))).toBe(132);
     await as(db, "authenticated", ADMIN, () =>
       db.query("INSERT INTO content_reviews (content_key, status, notes) VALUES ('story:musa:3', 'hidden', 'check wording')"),
     );
@@ -229,6 +231,29 @@ describe("permissions", () => {
         db.query("INSERT INTO resonance_feedback (pairing_id, user_id, response) VALUES ($1, $2, true)", [pairing, USER]),
       ),
     ).rejects.toThrow(/row-level security/);
+  });
+
+  it("Sunnah duas stay hidden until an admin approves them, and their Arabic can't be edited", async () => {
+    expect(await as(db, "anon", null, () => count(db, "SELECT 1 FROM sunnah_duas"))).toBe(0);
+    expect(await as(db, "authenticated", USER, () => count(db, "SELECT 1 FROM sunnah_duas"))).toBe(0);
+    expect(await as(db, "authenticated", ADMIN, () => count(db, "SELECT 1 FROM sunnah_duas"))).toBe(36);
+
+    const byUser = await as(db, "authenticated", USER, () => db.query("UPDATE sunnah_duas SET status = 'approved'"));
+    expect(byUser.affectedRows).toBe(0);
+    await as(db, "authenticated", ADMIN, () => db.query("UPDATE sunnah_duas SET status = 'approved' WHERE id = '121'"));
+    expect(await as(db, "anon", null, () => count(db, "SELECT 1 FROM sunnah_duas"))).toBe(1);
+
+    await expect(as(db, "authenticated", ADMIN, () => db.query("UPDATE sunnah_duas SET arabic = 'x' WHERE id = '121'"))).rejects.toThrow(
+      /permission denied/,
+    );
+    await expect(db.query("UPDATE sunnah_duas SET feelings = ARRAY['joy'] WHERE id = '121'")).rejects.toThrow(/check constraint/);
+  });
+
+  it("every Sunnah dua has a verified reference or is left for the reviewer", async () => {
+    const { rows } = await db.query<{ id: string; source: string | null; source_url: string | null }>("SELECT id, source, source_url FROM sunnah_duas");
+    expect(rows.filter((row) => !row.source_url).map((row) => row.id).sort()).toEqual(["120", "139", "159"]);
+    expect(rows.filter((row) => !row.source).map((row) => row.id).sort()).toEqual(["139", "159"]);
+    for (const row of rows.filter((r) => r.source_url)) expect(row.source_url).toMatch(/^https:\/\/sunnah\.com\/[a-z]+:\d+[a-z]?$/);
   });
 
   it("push subscriptions are server-only", async () => {
@@ -266,9 +291,9 @@ describe("saving any content (019)", () => {
     expect(rows).toEqual([{ content_key: `pairing:${pairingIds[0]}` }]);
   });
 
-  it("saves ayat, adhkar, Names and story chapters", async () => {
-    for (const key of ["ayah:2:255", "adhkar:hisn-77", "name:12", "story:yusuf:3"]) await save(key);
-    expect(await count(db, `SELECT 1 FROM saved_items WHERE user_id = '${USER}' AND pairing_id IS NULL`)).toBe(4);
+  it("saves ayat, adhkar, Names, story chapters and Sunnah duas", async () => {
+    for (const key of ["ayah:2:255", "adhkar:hisn-77", "name:12", "story:yusuf:3", "sunnah:jk4"]) await save(key);
+    expect(await count(db, `SELECT 1 FROM saved_items WHERE user_id = '${USER}' AND pairing_id IS NULL`)).toBe(5);
   });
 
   it("links pairing saves to the pairing, whichever column the app sends", async () => {
@@ -296,8 +321,8 @@ describe("saving any content (019)", () => {
   });
 
   it("counts every kind of save towards the free cap", async () => {
-    // 6 saves so far; 4 more reach the cap of 10.
-    for (const key of ["ayah:1:1", "ayah:1:2", "adhkar:ayat-al-kursi", "name:1"]) await save(key);
+    // 7 saves so far; 3 more reach the cap of 10.
+    for (const key of ["ayah:1:1", "ayah:1:2", "adhkar:ayat-al-kursi"]) await save(key);
     await expect(save("name:2")).rejects.toThrow(/SAVE_LIMIT_REACHED/);
   });
 });

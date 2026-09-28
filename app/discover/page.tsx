@@ -39,6 +39,18 @@ export default function DiscoverPage() {
             </span>
           </Link>
           <Link
+            href="/duas"
+            className="card-elevated flex items-center justify-between gap-4 p-5 transition hover:border-[var(--accent-primary)]"
+          >
+            <span>
+              <span className="block font-playfair text-lg font-semibold text-[var(--text-primary)]">Duas from the Sunnah</span>
+              <span className="block text-xs text-[var(--text-secondary)]">For worry, fear, anger, loss and more, each with its hadith.</span>
+            </span>
+            <span className="text-sm font-semibold text-[var(--accent-primary)]" aria-hidden>
+              →
+            </span>
+          </Link>
+          <Link
             href="/prayer-times"
             className="card-elevated flex items-center justify-between gap-4 p-5 transition hover:border-[var(--accent-primary)]"
           >

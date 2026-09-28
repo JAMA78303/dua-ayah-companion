@@ -11,7 +11,7 @@ import { NAMES_OF_ALLAH } from "@/lib/content/namesOfAllah";
 import { PROPHET_STORIES } from "@/lib/content/prophetStories";
 import { buildMixedFeed } from "@/lib/feed/mixedFeed";
 import type { Pairing } from "@/lib/content/fetchPairings";
-import { adhkarKey, ayahKey, nameKey, pairingKey, parseContentKey, storyKey } from "@/lib/saves/contentKeys";
+import { adhkarKey, ayahKey, nameKey, pairingKey, parseContentKey, storyKey, sunnahKey } from "@/lib/saves/contentKeys";
 import { resolveSavedEntries } from "@/lib/saves/resolveSaved";
 
 const PAIRING_ID = "7c9e6679-7425-40de-944b-e07fc1f90ae7";
@@ -23,6 +23,8 @@ describe("content keys", () => {
     expect(parseContentKey(adhkarKey("hisn-77"))).toEqual({ kind: "adhkar", id: "hisn-77" });
     expect(parseContentKey(nameKey(99))).toEqual({ kind: "name", number: 99 });
     expect(parseContentKey(storyKey("yusuf", 3))).toEqual({ kind: "story", slug: "yusuf", chapterIndex: 3 });
+    expect(parseContentKey(sunnahKey("218a"))).toEqual({ kind: "sunnah", id: "218a" });
+    expect(parseContentKey(sunnahKey("jk2"))).toEqual({ kind: "sunnah", id: "jk2" });
   });
 
   it("rejects ayat that don't exist and other malformed keys", () => {

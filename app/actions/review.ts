@@ -95,3 +95,51 @@ export async function reviewContent(
   });
   return error ? { ok: false, error: error.message } : { ok: true };
 }
+
+export interface SunnahDuaReviewInput {
+  status: (typeof PAIRING_STATUSES)[number];
+  reviewerNotes: string;
+  source: string;
+  sourceUrl: string;
+  grade: string;
+  transliteration: string;
+  translation: string;
+  note: string;
+}
+
+const SUNNAH_ID = /^(\d{1,3}[a-z]?|jk\d{1,2})$/;
+
+/** Approve / reject a dua from the Sunnah, or correct its reference and wording. The Arabic isn't editable. */
+export async function reviewSunnahDua(id: string, input: SunnahDuaReviewInput): Promise<Result> {
+  if (!SUNNAH_ID.test(id)) return { ok: false, error: "Unknown dua" };
+  if (!PAIRING_STATUSES.includes(input.status)) return { ok: false, error: "Invalid status" };
+  const sourceUrl = clean(input.sourceUrl);
+  if (sourceUrl && !sourceUrl.startsWith("https://sunnah.com/")) return { ok: false, error: "Links must be to sunnah.com" };
+  if (!clean(input.translation)) return { ok: false, error: "A translation is required" };
+  if (!(await isCurrentUserAdmin())) return { ok: false, error: "Admins only" };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data, error } = await supabase
+    .from("sunnah_duas")
+    .update({
+      status: input.status,
+      reviewer_notes: clean(input.reviewerNotes) || null,
+      source: clean(input.source) || null,
+      source_url: sourceUrl || null,
+      grade: clean(input.grade) || null,
+      transliteration: clean(input.transliteration) || null,
+      translation: clean(input.translation),
+      note: clean(input.note) || null,
+      reviewed_by: user?.id ?? null,
+      reviewed_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select("id");
+
+  if (error) return { ok: false, error: error.message };
+  if (!data?.length) return { ok: false, error: "Nothing was updated" };
+  return { ok: true };
+}

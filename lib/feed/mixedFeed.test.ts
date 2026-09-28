@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { Pairing } from "@/lib/content/fetchPairings";
 import { NAMES_OF_ALLAH } from "@/lib/content/namesOfAllah";
 import { PROPHET_STORIES } from "@/lib/content/prophetStories";
+import type { SunnahDua } from "@/lib/content/sunnahDuas";
 import { buildMixedFeed } from "@/lib/feed/mixedFeed";
 
 const pairings = Array.from({ length: 35 }, (_, i) => ({ id: `p${i}`, surah: 1, ayah_number: i + 1 }) as unknown as Pairing);
@@ -34,6 +35,13 @@ describe("buildMixedFeed", () => {
       const order = feed.flatMap((item) => (item.kind === "story" && item.slug === story.slug ? [item.chapterIndex] : []));
       expect(order).toEqual(story.chapters.map((_, i) => i));
     }
+  });
+
+  it("adds a Sunnah dua to each cycle once some are approved", () => {
+    const duas = Array.from({ length: 5 }, (_, i) => ({ id: String(100 + i) }) as unknown as SunnahDua);
+    const feed = buildMixedFeed(7, pairings, duas);
+    expect(feed.slice(0, 6).map((item) => item.kind)).toEqual(["pairing", "story", "pairing", "dua", "pairing", "name"]);
+    expect(feed.filter((item) => item.kind === "dua").map((item) => item.id).sort()).toEqual(duas.map((dua) => `sunnah:${dua.id}`).sort());
   });
 
   it("still works with no pairings (e.g. the database is unreachable)", () => {
