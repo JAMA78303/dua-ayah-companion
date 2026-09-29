@@ -6,9 +6,10 @@ import { useEffect, useState } from "react";
 import { MoonCard } from "@/components/prayer/MoonCard";
 import { SkyScene } from "@/components/prayer/SkyScene";
 import { moonAge, moonIllumination, moonPhaseName } from "@/lib/prayer/moon";
+import { PRAYER_HADITH } from "@/lib/prayer/prayerHadith";
 import {
   CALCULATION_METHODS,
-  PRAYERS,
+  duhaWindow,
   fetchDayTimes,
   fetchQiblaDirection,
   minutesOf,
@@ -20,10 +21,9 @@ import {
   writePrayerSettings,
   type DayTimes,
   type PlaceResult,
-  type PrayerName,
   type PrayerSettings,
 } from "@/lib/prayer/prayerTimes";
-import { moonProgress, skyPeriod, sunProgress, type SkyPeriod } from "@/lib/prayer/sky";
+import { moonProgress, prayerMoment, previewMinutes, skyPeriod, sunProgress, type PrayerMoment } from "@/lib/prayer/sky";
 
 const selectClass =
   "w-full rounded-md border border-[var(--border)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none ring-[var(--accent-primary)] focus:ring-2";
@@ -34,27 +34,38 @@ function formatCountdown(totalMinutes: number) {
   return h > 0 ? `in ${h} h ${m} min` : `in ${m} min`;
 }
 
-/** How far into a prayer's time its sky is shown when that prayer is tapped. */
-const PREVIEW_OFFSET_MINUTES = 20;
+type ListedMoment = Exclude<PrayerMoment, "LastThird">;
 
-function skyCaption(period: SkyPeriod, day: DayTimes, minutes: number): string {
-  switch (period) {
-    case "fajr":
-      return "Fajr · first light, before sunrise";
-    case "morning":
-      return "Morning · the sun has risen";
-    case "dhuhr":
-      return "Dhuhr · the sun has passed its height";
-    case "asr":
-      return "Asr · the sun is lowering";
-    case "maghrib":
-      return "Maghrib · the sun has set";
-    case "night":
-      if (day.lastThird && minutes >= minutesOf(day.lastThird) && minutes < minutesOf(day.timings.Fajr)) {
-        return "The last third of the night";
-      }
-      return "Isha · night";
-  }
+/** The rows of the timetable: the five prayers, sunrise, and the voluntary Duha. */
+const ROWS: ListedMoment[] = ["Fajr", "Sunrise", "Duha", "Dhuhr", "Asr", "Maghrib", "Isha"];
+
+const MOMENT_CAPTIONS: Record<PrayerMoment, string> = {
+  Fajr: "Fajr · first light, before sunrise",
+  Sunrise: "Sunrise · wait until the sun is up to pray",
+  Duha: "Duha · the sun is up, the time for Duha",
+  Dhuhr: "Dhuhr · the sun has passed its height",
+  Asr: "Asr · the sun is lowering",
+  Maghrib: "Maghrib · the sun has set",
+  Isha: "Isha · night",
+  LastThird: "The last third of the night",
+};
+
+function PrayerHadithCard({ moment }: { moment: PrayerMoment }) {
+  return (
+    <div className="space-y-3 rounded-xl border border-[var(--border)] px-4 py-3">
+      {PRAYER_HADITH[moment].map((hadith) => (
+        <blockquote key={hadith.source} className="space-y-1">
+          <p className="text-sm leading-relaxed text-[var(--text-primary)]">{hadith.text}</p>
+          <footer className="text-xs text-[var(--text-secondary)]">
+            <a href={hadith.url} target="_blank" rel="noopener noreferrer" className="font-medium text-[var(--accent-primary)] hover:opacity-80">
+              {hadith.source}
+            </a>
+            {hadith.grade ? ` · ${hadith.grade}` : null}
+          </footer>
+        </blockquote>
+      ))}
+    </div>
+  );
 }
 
 function QiblaDial({ bearing }: { bearing: number }) {
@@ -87,7 +98,7 @@ export function PrayerTimesView() {
   const [locating, setLocating] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
-  const [preview, setPreview] = useState<PrayerName | null>(null);
+  const [preview, setPreview] = useState<ListedMoment | null>(null);
 
   useEffect(() => {
     queueMicrotask(() => setSettings(readPrayerSettings()));
@@ -156,11 +167,14 @@ export function PrayerTimesView() {
   const upcoming = day ? nextPrayer(day.timings, nowInTimezone(day.timezone, now)) : null;
   const age = moonAge(now);
   const southern = (settings.location?.latitude ?? 0) < 0;
-  const skyMinutes = day && preview ? (minutesOf(day.timings[preview]) + PREVIEW_OFFSET_MINUTES) % 1440 : nowMinutes;
+  const skyMinutes = day && preview ? previewMinutes(preview, day.timings) : nowMinutes;
   const period = day ? skyPeriod(day.timings, skyMinutes) : "night";
   const sun = day ? sunProgress(day.timings, skyMinutes) : null;
   const moon = day ? moonProgress(day.timings, skyMinutes, age) : null;
-  const caption = day ? skyCaption(period, day, skyMinutes) : "";
+  const moment = day ? prayerMoment(day.timings, skyMinutes, day.lastThird) : "Isha";
+  const caption = MOMENT_CAPTIONS[moment];
+  const duha = day ? duhaWindow(day.timings) : null;
+  const rowTime = (row: ListedMoment) => (row === "Duha" ? `${duha!.start}–${duha!.end}` : day!.timings[row]);
 
   return (
     <div className="space-y-6">
@@ -188,7 +202,7 @@ export function PrayerTimesView() {
                   label={`${caption}. ${moon === null ? "The moon is below the horizon." : `${moonPhaseName(age)} moon, ${Math.round(moonIllumination(age) * 100)}% lit.`}`}
                 />
                 <figcaption className="flex items-center justify-between gap-3 text-xs text-[var(--text-secondary)]">
-                  <span>{preview ? `${caption} (at ${day.timings[preview]})` : caption}</span>
+                  <span>{preview ? `${caption} (at ${preview === "Duha" ? duha!.best : day.timings[preview]})` : caption}</span>
                   {preview ? (
                     <button type="button" onClick={() => setPreview(null)} className="shrink-0 font-semibold text-[var(--accent-primary)]">
                       Back to now
@@ -198,6 +212,7 @@ export function PrayerTimesView() {
                   )}
                 </figcaption>
               </figure>
+              <PrayerHadithCard moment={moment} />
               <p className="rounded-xl bg-[var(--bg-subtle)] px-4 py-3 text-sm text-[var(--text-primary)]">
                 {upcoming ? (
                   <>
@@ -210,7 +225,7 @@ export function PrayerTimesView() {
                 )}
               </p>
               <ul className="divide-y divide-[var(--border)]">
-                {PRAYERS.map((name) => (
+                {ROWS.map((name) => (
                   <li key={name}>
                     <button
                       type="button"
@@ -221,17 +236,25 @@ export function PrayerTimesView() {
                       } ${
                         upcoming?.name === name
                           ? "font-semibold text-[var(--accent-primary)]"
-                          : name === "Sunrise"
+                          : name === "Sunrise" || name === "Duha"
                             ? "text-[var(--text-secondary)]"
                             : "text-[var(--text-primary)]"
                       }`}
                     >
-                      <span>{name}</span>
-                      <span className="tabular-nums">{day.timings[name]}</span>
+                      <span>
+                        {name}
+                        {name === "Duha" ? <span className="ml-2 text-xs">voluntary</span> : null}
+                      </span>
+                      <span className="tabular-nums">{rowTime(name)}</span>
                     </button>
                   </li>
                 ))}
               </ul>
+              {duha ? (
+                <p className="text-sm text-[var(--text-secondary)]">
+                  {`Duha is prayed once the sun is up until shortly before Dhuhr, best around ${duha.best} when the sun is hot. The times shown are approximate.`}
+                </p>
+              ) : null}
               {day.lastThird ? (
                 <p className="text-sm text-[var(--text-secondary)]">
                   {`The last third of the night begins around ${day.lastThird}, a time when dua is answered. `}

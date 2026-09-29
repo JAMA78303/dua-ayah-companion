@@ -1,5 +1,5 @@
 import { moonCycleFraction } from "@/lib/prayer/moon";
-import { minutesOf, type PrayerName } from "@/lib/prayer/prayerTimes";
+import { duhaWindow, minutesOf, type PrayerName } from "@/lib/prayer/prayerTimes";
 
 /** The part of the day the sky is drawn for, named after the prayer time it falls in. */
 export type SkyPeriod = "night" | "fajr" | "morning" | "dhuhr" | "asr" | "maghrib";
@@ -43,4 +43,37 @@ export function arcPoint(progress: number, box: { left: number; right: number; h
     x: box.left + (box.right - box.left) * progress,
     y: box.horizon - (box.horizon - box.peak) * Math.sin(Math.PI * progress),
   };
+}
+
+/** The prayer time a moment belongs to, as the page names it: Duha and the last third of the night included. */
+export type PrayerMoment = "Fajr" | "Sunrise" | "Duha" | "Dhuhr" | "Asr" | "Maghrib" | "Isha" | "LastThird";
+
+/** Whether `minutes` falls in [from, to), where the span may run past midnight. */
+function within(minutes: number, from: number, to: number): boolean {
+  const since = (minutes - from + DAY_MINUTES) % DAY_MINUTES;
+  return since < (to - from + DAY_MINUTES) % DAY_MINUTES;
+}
+
+export function prayerMoment(timings: Record<PrayerName, string>, minutes: number, lastThird: string | null): PrayerMoment {
+  switch (skyPeriod(timings, minutes)) {
+    case "fajr":
+      return "Fajr";
+    case "morning":
+      return minutes < minutesOf(duhaWindow(timings).start) ? "Sunrise" : "Duha";
+    case "dhuhr":
+      return "Dhuhr";
+    case "asr":
+      return "Asr";
+    case "maghrib":
+      return "Maghrib";
+    case "night":
+      return lastThird && within(minutes, minutesOf(lastThird), minutesOf(timings.Fajr)) ? "LastThird" : "Isha";
+  }
+}
+
+/** When to show the sky for a tapped prayer: just into its time (sunrise itself, Duha at its best). */
+export function previewMinutes(moment: Exclude<PrayerMoment, "LastThird">, timings: Record<PrayerName, string>): number {
+  if (moment === "Duha") return minutesOf(duhaWindow(timings).best);
+  const offset = moment === "Sunrise" ? 5 : 20;
+  return (minutesOf(timings[moment]) + offset) % DAY_MINUTES;
 }
