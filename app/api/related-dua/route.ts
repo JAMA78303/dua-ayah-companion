@@ -10,10 +10,12 @@ interface RelatedDuaRow {
   dua_text: string;
   dua_transliteration: string | null;
   dua_translation: string;
+  dua_verse_key: string | null;
 }
 
+/** Same text whether stored by the SQL editor (NFC) or served by the Qur'an API (marks in source order). */
 function normalizeComparableText(value: string) {
-  return value.replace(/\s+/g, " ").trim();
+  return value.normalize("NFC").replace(/\s+/g, " ").trim();
 }
 
 export async function GET(request: NextRequest) {
@@ -27,7 +29,7 @@ export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("ayah_pairings")
-    .select("id, surah, ayah_number, arabic_text, dua_text, dua_transliteration, dua_translation")
+    .select("id, surah, ayah_number, arabic_text, dua_text, dua_transliteration, dua_translation, dua_verse_key")
     .eq("status", "approved")
     .neq("id", excludePairingId)
     .limit(40);
@@ -58,5 +60,6 @@ export async function GET(request: NextRequest) {
     dua_text: selected.dua_text,
     dua_transliteration: selected.dua_transliteration,
     dua_translation: selected.dua_translation,
+    dua_verse_key: selected.dua_verse_key,
   });
 }

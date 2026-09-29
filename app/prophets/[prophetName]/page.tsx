@@ -81,6 +81,7 @@ export default async function ProphetDetailPage({
           toneTag={pairing.tone_tag}
           sourceType={pairing.source_type}
           hadithSource={pairing.hadith_source}
+          duaSourceKey={pairing.dua_verse_key}
           qfTafsirLong={qfTafsirLong}
           qfAudioUrl={qfAudioUrl}
           qfWords={qfWords}

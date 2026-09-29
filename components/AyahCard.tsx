@@ -11,6 +11,7 @@ import { ResonanceSurvey } from "@/components/ResonanceSurvey";
 import { SaveButton } from "@/components/SaveButton";
 import { SurahReferencePill } from "@/components/SurahReferencePill";
 import { getSurahName } from "@/lib/quran/surahNames";
+import { duaFromOtherAyah, verseRefHref, verseRefLabel } from "@/lib/quran/verseRef";
 import { ayahKey, pairingKey } from "@/lib/saves/contentKeys";
 import { isUuid } from "@/lib/uuid";
 import { normalizeAudioUrl } from "@/lib/quranFoundation/fetchAudio";
@@ -35,6 +36,8 @@ interface AyahCardProps {
   toneTag: ToneTag;
   sourceType?: string | null;
   hadithSource?: string | null;
+  /** Ayah the dua is quoted from, when not this one (pairing.dua_verse_key). */
+  duaSourceKey?: string | null;
   qfTafsirLong?: string | null;
   qfAudioUrl?: string | null;
   /** Word-by-word data for `arabicText`, when it's the Quran Foundation text. */
@@ -52,6 +55,7 @@ interface RelatedDua {
   dua_text: string;
   dua_transliteration: string | null;
   dua_translation: string;
+  dua_verse_key?: string | null;
 }
 
 /** Quran.com word timing: [wordIndex (0-based), wordPosition, startMs, endMs]. */
@@ -60,8 +64,9 @@ interface VerseWord {
   transliteration?: { text?: string | null };
 }
 
+/** Same text whether stored by the SQL editor (NFC) or served by the Qur'an API (marks in source order). */
 function normalizeComparableText(value: string) {
-  return value.replace(/\s+/g, " ").trim();
+  return value.normalize("NFC").replace(/\s+/g, " ").trim();
 }
 
 export function AyahCard({
@@ -80,6 +85,7 @@ export function AyahCard({
   toneTag,
   sourceType: sourceTypeProp,
   hadithSource,
+  duaSourceKey,
   qfTafsirLong,
   qfAudioUrl,
   qfWords,
@@ -92,10 +98,13 @@ export function AyahCard({
   const { reciterId, reciterName } = useReciter();
   const [clientAudioUrl, setClientAudioUrl] = useState<string | null>(qfAudioUrl ?? null);
 
+  // A dua quoted from another ayah is cited and linked; its audio lives on that ayah's page.
+  const duaOtherAyah = sourceType === "quranic" ? duaFromOtherAyah(duaSourceKey, surah, ayahNumber) : null;
   const duaVerseKey =
-    sourceType === "quranic" && Number.isFinite(surah) && Number.isFinite(ayahNumber)
+    sourceType === "quranic" && !duaOtherAyah && Number.isFinite(surah) && Number.isFinite(ayahNumber)
       ? `${surah}:${ayahNumber}`
       : null;
+  const duaCitation = duaOtherAyah ? { label: verseRefLabel(duaOtherAyah), href: verseRefHref(duaOtherAyah) } : null;
 
   useEffect(() => {
     let cancelled = false;
@@ -397,8 +406,9 @@ export function AyahCard({
             ) : null}
             <p className="text-sm leading-relaxed text-[var(--text-primary)]">{relatedDua.dua_translation}</p>
             <p className="mt-2 text-xs font-medium text-[var(--accent-primary)]">
-              Surah {relatedDua.surah} ({getSurahName(relatedDua.surah)}), Ayah {relatedDua.ayah_number} — open
-              reflection
+              {duaFromOtherAyah(relatedDua.dua_verse_key, relatedDua.surah, relatedDua.ayah_number)
+                ? `From ${verseRefLabel(relatedDua.dua_verse_key!)} — open reflection`
+                : `Surah ${relatedDua.surah} (${getSurahName(relatedDua.surah)}), Ayah ${relatedDua.ayah_number} — open reflection`}
             </p>
           </Link>
         </section>
@@ -423,6 +433,7 @@ export function AyahCard({
           duaAudioUrl={duaAudioUrl}
           duaVerseKey={duaVerseKey}
           reciterName={reciterName}
+          citation={duaCitation}
         />
       ) : null}
 

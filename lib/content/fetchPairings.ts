@@ -16,6 +16,8 @@ export interface Pairing {
   dua_text: string;
   dua_transliteration: string | null;
   dua_translation: string;
+  /** Ayah the dua is quoted from when it isn't this pairing's own (migration 020), e.g. "20:25-26". */
+  dua_verse_key?: string | null;
   emotion_category?: EmotionCategory;
   qf_verse_key?: string | null;
   source_type?: string | null;
@@ -23,7 +25,7 @@ export interface Pairing {
 }
 
 const PAIRING_COLUMNS =
-  "id, surah, ayah_number, arabic_text, translation, tafsir_summary, reflection_prompts, prophetic_story, prophet_name, tone_tag, dua_text, dua_transliteration, dua_translation, qf_verse_key, source_type, hadith_source";
+  "id, surah, ayah_number, arabic_text, translation, tafsir_summary, reflection_prompts, prophetic_story, prophet_name, tone_tag, dua_text, dua_transliteration, dua_translation, dua_verse_key, qf_verse_key, source_type, hadith_source";
 
 function dedupePairingsByAyah(pairings: Pairing[]): Pairing[] {
   const seen = new Set<string>();
