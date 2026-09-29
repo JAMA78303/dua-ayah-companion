@@ -13,6 +13,7 @@ export const SUNNAH_SITUATIONS = [
   { slug: "decision", title: "Before a decision (Istikharah)" },
   { slug: "doubt", title: "When doubts come" },
   { slug: "anger", title: "When you're angry" },
+  { slug: "fasting", title: "When you're fasting and someone is rude to you" },
   { slug: "gratitude", title: "When good things happen" },
 ] as const;
 
