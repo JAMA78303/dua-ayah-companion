@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ReciterSelector } from "@/components/ReciterSelector";
 import { useReciter } from "@/components/ReciterProvider";
 import { QuranVerseBlock } from "@/components/quran/QuranVerseBlock";
+import { fetchReflectedAyat } from "@/lib/journal/reflectedAyat";
 import type { QfChapter } from "@/lib/quranFoundation/chapters";
 import type { QfVerse } from "@/lib/quranFoundation/versesByChapter";
 import {
@@ -42,6 +43,21 @@ export function QuranSurahReader({ surahNumber, chapterMeta }: QuranSurahReaderP
   const [loadingAudio, setLoadingAudio] = useState(false);
   const [progress, setProgress] = useState(0);
   const [speed, setSpeed] = useState(1);
+  const [reflected, setReflected] = useState<Set<string>>(() => new Set());
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchReflectedAyat(surahNumber).then((keys) => {
+      if (!cancelled) setReflected(keys);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [surahNumber]);
+
+  const noteReflected = useCallback((key: string) => {
+    setReflected((prev) => (prev.has(key) ? prev : new Set(prev).add(key)));
+  }, []);
 
   useEffect(() => {
     continuousPlayRef.current = continuousPlay;
@@ -353,6 +369,8 @@ export function QuranSurahReader({ surahNumber, chapterMeta }: QuranSurahReaderP
               key={verse.verseKey}
               verse={verse}
               surahNumber={surahNumber}
+              hasReflection={reflected.has(`ayah:${verse.verseKey}`)}
+              onReflected={noteReflected}
               playback={{
                 canPlay: Boolean(audioByVerseKey[verse.verseKey]),
                 isPlaying: playing && isActive,

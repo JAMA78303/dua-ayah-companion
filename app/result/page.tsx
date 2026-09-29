@@ -10,6 +10,7 @@ import {
 import { fetchApprovedSunnahDuas, pickSunnahDuas } from "@/lib/content/sunnahDuas";
 import { getSurahName } from "@/lib/quran/surahNames";
 import { fetchAyahFromQF } from "@/lib/quranFoundation/fetchAyah";
+import { ayahKey } from "@/lib/saves/contentKeys";
 import { isEmotionCategory } from "@/types/emotions";
 
 interface ResultPageProps {
@@ -92,6 +93,7 @@ export default async function ResultPage({ searchParams }: ResultPageProps) {
           pairingId={pairing.id}
           surah={pairing.surah}
           ayahNumber={pairing.ayah_number}
+          journalContentKey={ayahKey(surah, ayahNumber)}
           arabicText={arabicText}
           translation={translation}
           tafsirSummary={pairing.tafsir_summary}

@@ -326,3 +326,75 @@ describe("saving any content (019)", () => {
     await expect(save("name:2")).rejects.toThrow(/SAVE_LIMIT_REACHED/);
   });
 });
+
+describe("journaling on any ayah (023)", () => {
+  const USER = "00000000-0000-4000-8000-0000000000e5";
+  const OTHER = "00000000-0000-4000-8000-0000000000f6";
+  let db: PGlite;
+  let pairingIds: string[];
+  const write = (key: string, content: string, user = USER) =>
+    as(db, "authenticated", user, () =>
+      db.query(
+        `INSERT INTO journal_entries (user_id, content_key, content) VALUES ($1, $2, $3)
+         ON CONFLICT (user_id, content_key) DO UPDATE SET content = EXCLUDED.content`,
+        [user, key, content],
+      ),
+    );
+
+  beforeAll(async () => {
+    // Reflections written before 023 must survive it.
+    db = await freshDatabase({ before: "023" });
+    await db.exec(`INSERT INTO auth.users (id) VALUES ('${USER}'), ('${OTHER}')`);
+    pairingIds = (await db.query<{ id: string }>("SELECT id FROM ayah_pairings ORDER BY id")).rows.map((row) => row.id);
+    await db.query("INSERT INTO journal_entries (user_id, pairing_id, content) VALUES ($1, $2, 'Before 023')", [USER, pairingIds[0]]);
+    for (const file of migrationFiles.filter((f) => f >= "023")) await db.exec(readMigration(file));
+  });
+
+  it("labels existing reflections with their pairing", async () => {
+    const { rows } = await db.query<{ content_key: string }>("SELECT content_key FROM journal_entries WHERE user_id = $1", [USER]);
+    expect(rows).toEqual([{ content_key: `pairing:${pairingIds[0]}` }]);
+  });
+
+  it("keeps one reflection per ayah, edited in place", async () => {
+    await write("ayah:2:255", "First thoughts");
+    await write("ayah:2:255", "Edited");
+    const { rows } = await db.query<{ content: string; pairing_id: string | null }>(
+      "SELECT content, pairing_id FROM journal_entries WHERE user_id = $1 AND content_key = 'ayah:2:255'",
+      [USER],
+    );
+    expect(rows).toEqual([{ content: "Edited", pairing_id: null }]);
+  });
+
+  it("links pairing reflections to the pairing, whichever column the app sends", async () => {
+    await write(`pairing:${pairingIds[1]}`, "By key");
+    expect(await count(db, `SELECT 1 FROM journal_entries WHERE pairing_id = '${pairingIds[1]}'`)).toBe(1);
+
+    // Older app versions upsert on pairing_id only.
+    await as(db, "authenticated", USER, () =>
+      db.query(
+        `INSERT INTO journal_entries (user_id, pairing_id, content) VALUES ($1, $2, 'Old app')
+         ON CONFLICT (user_id, pairing_id) DO UPDATE SET content = EXCLUDED.content`,
+        [USER, pairingIds[0]],
+      ),
+    );
+    const { rows } = await db.query<{ content: string }>("SELECT content FROM journal_entries WHERE content_key = $1", [`pairing:${pairingIds[0]}`]);
+    expect(rows).toEqual([{ content: "Old app" }]);
+  });
+
+  it("rejects malformed keys and other people's journals", async () => {
+    await expect(write("name:12", "Not an ayah")).rejects.toThrow(/journal_entries_content_key_format/);
+    await expect(write("ayah:two:255", "Bad")).rejects.toThrow(/journal_entries_content_key_format/);
+    await expect(
+      as(db, "authenticated", OTHER, () =>
+        db.query("INSERT INTO journal_entries (user_id, content_key, content) VALUES ($1, 'ayah:1:1', 'x')", [USER]),
+      ),
+    ).rejects.toThrow(/row-level security/);
+    expect(await as(db, "authenticated", OTHER, () => count(db, "SELECT 1 FROM journal_entries"))).toBe(0);
+  });
+
+  it("can be re-run without changing anything", async () => {
+    const before = await count(db, "SELECT 1 FROM journal_entries");
+    await db.exec(readMigration("023_journal_any_ayah.sql"));
+    expect(await count(db, "SELECT 1 FROM journal_entries")).toBe(before);
+  });
+});

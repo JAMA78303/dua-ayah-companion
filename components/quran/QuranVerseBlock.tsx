@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 
 import { AyahListenControls } from "@/components/AyahListenControls";
+import { JournalTextarea } from "@/components/JournalTextarea";
 import { SaveButton } from "@/components/SaveButton";
 import { ayahKey } from "@/lib/saves/contentKeys";
 import type { QfVerse } from "@/lib/quranFoundation/versesByChapter";
@@ -23,10 +25,15 @@ interface QuranVerseBlockProps {
   verse: QfVerse;
   surahNumber: number;
   playback: QuranVersePlayback;
+  /** The signed-in user has a journal reflection on this ayah. */
+  hasReflection: boolean;
+  onReflected: (contentKey: string) => void;
 }
 
-export function QuranVerseBlock({ verse, surahNumber, playback }: QuranVerseBlockProps) {
+export function QuranVerseBlock({ verse, surahNumber, playback, hasReflection, onReflected }: QuranVerseBlockProps) {
   const reflectHref = `/result?verseKey=${encodeURIComponent(verse.verseKey)}`;
+  const contentKey = ayahKey(surahNumber, verse.verseNumber);
+  const [journalOpen, setJournalOpen] = useState(false);
 
   return (
     <article
@@ -64,7 +71,19 @@ export function QuranVerseBlock({ verse, surahNumber, playback }: QuranVerseBloc
           />
 
           <div className="mt-3 flex flex-wrap items-center gap-3 text-xs">
-            <SaveButton contentKey={ayahKey(surahNumber, verse.verseNumber)} surah={surahNumber} ayahNumber={verse.verseNumber} compact />
+            <SaveButton contentKey={contentKey} surah={surahNumber} ayahNumber={verse.verseNumber} compact />
+            <button
+              type="button"
+              aria-expanded={journalOpen}
+              onClick={() => setJournalOpen((open) => !open)}
+              className={`rounded-full px-3 py-1 font-semibold transition ${
+                hasReflection
+                  ? "bg-[var(--accent-primary)]/12 text-[var(--accent-primary)] hover:bg-[var(--accent-primary)]/20"
+                  : "border border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent-primary)]"
+              }`}
+            >
+              {hasReflection ? "✎ Your reflection" : "✎ Journal"}
+            </button>
             <Link
               href={reflectHref}
               className="rounded-full bg-[var(--accent-primary)]/12 px-3 py-1 font-semibold text-[var(--accent-primary)] transition hover:bg-[var(--accent-primary)]/20"
@@ -72,6 +91,18 @@ export function QuranVerseBlock({ verse, surahNumber, playback }: QuranVerseBloc
               ✦ Reflect
             </Link>
           </div>
+          {journalOpen ? (
+            <div className="mt-3">
+              <JournalTextarea
+                contentKey={contentKey}
+                surah={surahNumber}
+                ayahNumber={verse.verseNumber}
+                onSavedChange={(saved) => {
+                  if (saved) onReflected(contentKey);
+                }}
+              />
+            </div>
+          ) : null}
         </div>
       </div>
     </article>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 
 import { AuthModal } from "@/components/AuthModal";
 import {
@@ -8,10 +9,11 @@ import {
   JOURNAL_ERR_TOO_LONG,
   JOURNAL_ERR_UNAUTHENTICATED,
   JOURNAL_ERR_UNSAVABLE_PAIRING,
+  journalDraftKey,
+  journalTarget,
   saveJournalEntry,
 } from "@/lib/journal/saveJournalEntry";
 import { createClient } from "@/lib/supabase/client";
-import { isUuid } from "@/lib/uuid";
 
 const SAVE_ERROR_MESSAGES: Record<string, string> = {
   [JOURNAL_ERR_EMPTY]: "Write something before saving.",
@@ -20,19 +22,28 @@ const SAVE_ERROR_MESSAGES: Record<string, string> = {
 };
 
 interface JournalTextareaProps {
-  pairingId: string;
+  /** What the reflection is about: `pairing:<uuid>` or `ayah:<surah>:<ayah>`. */
+  contentKey: string;
   surah?: number;
   ayahNumber?: number;
+  /** Called with whether a saved reflection exists, once known and after each save. */
+  onSavedChange?: (saved: boolean) => void;
 }
 
-export function JournalTextarea({ pairingId, surah, ayahNumber }: JournalTextareaProps) {
-  const canPersistJournal = isUuid(pairingId);
-  const draftKey = useMemo(() => `journal-draft-${pairingId}`, [pairingId]);
+export function JournalTextarea({ contentKey, surah, ayahNumber, onSavedChange }: JournalTextareaProps) {
+  const fieldId = useId();
+  const canPersistJournal = journalTarget(contentKey) !== null;
+  const draftKey = useMemo(() => journalDraftKey(contentKey), [contentKey]);
   const [content, setContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [hasSavedEntry, setHasSavedEntry] = useState(false);
+  // Latest callback without re-fetching the saved reflection every time the parent re-renders.
+  const onSavedChangeRef = useRef(onSavedChange);
+  useEffect(() => {
+    onSavedChangeRef.current = onSavedChange;
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -48,7 +59,7 @@ export function JournalTextarea({ pairingId, surah, ayahNumber }: JournalTextare
       };
     }
 
-    // Saving upserts one entry per pairing, so show the saved reflection to edit
+    // Saving upserts one entry per pairing or ayah, so show the saved reflection to edit
     // rather than an empty box that would silently overwrite it.
     void (async () => {
       const supabase = createClient();
@@ -60,10 +71,11 @@ export function JournalTextarea({ pairingId, surah, ayahNumber }: JournalTextare
         .from("journal_entries")
         .select("content")
         .eq("user_id", session.user.id)
-        .eq("pairing_id", pairingId)
+        .eq("content_key", contentKey)
         .maybeSingle();
       if (cancelled || !data?.content) return;
       setHasSavedEntry(true);
+      onSavedChangeRef.current?.(true);
       // A local draft (or anything typed meanwhile) is newer than the saved copy.
       setContent((prev) => (prev.trim() ? prev : data.content));
     })();
@@ -71,7 +83,7 @@ export function JournalTextarea({ pairingId, surah, ayahNumber }: JournalTextare
     return () => {
       cancelled = true;
     };
-  }, [draftKey, pairingId, canPersistJournal]);
+  }, [draftKey, contentKey, canPersistJournal]);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -89,10 +101,10 @@ export function JournalTextarea({ pairingId, surah, ayahNumber }: JournalTextare
     setIsSaving(true);
     setMessage(null);
     try {
-      await saveJournalEntry(pairingId, content, { surah, ayahNumber });
+      await saveJournalEntry(contentKey, content, { surah, ayahNumber });
       setHasSavedEntry(true);
+      onSavedChange?.(true);
       setMessage("Saved");
-      window.setTimeout(() => setMessage(null), 2000);
     } catch (error) {
       const msg = error instanceof Error ? error.message : "";
       if (msg === JOURNAL_ERR_UNAUTHENTICATED) {
@@ -106,22 +118,24 @@ export function JournalTextarea({ pairingId, surah, ayahNumber }: JournalTextare
     }
   }
 
-  // Journal entries belong to a curated pairing; ayat opened on their own can be saved but not journaled yet.
   if (!canPersistJournal) return null;
 
   return (
     <div className="space-y-2 rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)] p-3">
-      <label htmlFor="journal" className="text-sm font-medium text-[var(--text-primary)]">
-        Add a personal reflection
+      <label htmlFor={fieldId} className="text-sm font-medium text-[var(--text-primary)]">
+        {hasSavedEntry ? "Your reflection" : "Add a personal reflection"}
       </label>
       <textarea
-        id="journal"
+        id={fieldId}
         value={content}
-        onChange={(event) => setContent(event.target.value)}
+        onChange={(event) => {
+          setContent(event.target.value);
+          if (message === "Saved") setMessage(null);
+        }}
         maxLength={2000}
         rows={4}
         className="w-full rounded-md border border-[var(--border)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none ring-[var(--accent-primary)] focus:ring-2"
-        placeholder="Write your thoughts and dua intention..."
+        placeholder="What does this ayah say to you today? Write your thoughts and dua intention..."
       />
       <div className="flex items-center justify-between">
         {content.length > 1800 ? (
@@ -133,13 +147,24 @@ export function JournalTextarea({ pairingId, surah, ayahNumber }: JournalTextare
           type="button"
           onClick={() => void handleSave()}
           disabled={isSaving || content.trim().length === 0}
-          className="rounded-md bg-[var(--accent-primary)] px-3 py-1.5 text-sm text-white disabled:opacity-60"
+          className="rounded-md bg-[var(--accent-primary)] px-3 py-1.5 text-sm text-[var(--on-accent-text)] disabled:opacity-60"
         >
           {isSaving ? "Saving..." : hasSavedEntry ? "Update Reflection" : "Save Reflection"}
         </button>
       </div>
-      <p className="text-xs text-[var(--text-secondary)]">Saved reflections sync to your account when signed in.</p>
-      {message ? <p className="text-xs text-[var(--text-secondary)]">{message}</p> : null}
+      {message === "Saved" ? (
+        <p className="text-xs text-[var(--text-secondary)]">
+          {"Saved to "}
+          <Link href="/journal" className="font-medium text-[var(--accent-primary)] hover:opacity-80">
+            your journal
+          </Link>
+          .
+        </p>
+      ) : message ? (
+        <p className="text-xs text-[var(--text-secondary)]">{message}</p>
+      ) : (
+        <p className="text-xs text-[var(--text-secondary)]">Reflections are kept in your account, on every device.</p>
+      )}
 
       <AuthModal
         open={authOpen}
