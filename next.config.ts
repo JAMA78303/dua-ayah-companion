@@ -1,3 +1,5 @@
+import { networkInterfaces } from "node:os";
+
 import type { NextConfig } from "next";
 import withPWAInit from "@ducanh2912/next-pwa";
 
@@ -38,8 +40,15 @@ const withPWA = withPWAInit({
   },
 });
 
+/** This machine's addresses on the local network, so a phone on the same Wi-Fi can use the dev server. */
+const lanAddresses = Object.values(networkInterfaces())
+  .flat()
+  .filter((net) => net && net.family === "IPv4" && !net.internal)
+  .map((net) => net!.address);
+
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Development only: Next blocks dev assets requested from other origins unless they're listed.
+  allowedDevOrigins: lanAddresses,
 };
 
 export default withPWA(nextConfig);
