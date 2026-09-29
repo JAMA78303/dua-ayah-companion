@@ -5,6 +5,8 @@ import { useState } from "react";
 
 import { AyahListenControls } from "@/components/AyahListenControls";
 import { JournalTextarea } from "@/components/JournalTextarea";
+import { useRecitedWord } from "@/components/quran/recitationStore";
+import { RecitedArabic } from "@/components/RecitedArabic";
 import { SaveButton } from "@/components/SaveButton";
 import { ayahKey } from "@/lib/saves/contentKeys";
 import type { QfVerse } from "@/lib/quranFoundation/versesByChapter";
@@ -28,9 +30,12 @@ interface QuranVerseBlockProps {
   /** The signed-in user has a journal reflection on this ayah. */
   hasReflection: boolean;
   onReflected: (contentKey: string) => void;
+  /** This ayah is being recited: it glows, and so does the word being read. */
+  isReciting: boolean;
 }
 
-export function QuranVerseBlock({ verse, surahNumber, playback, hasReflection, onReflected }: QuranVerseBlockProps) {
+export function QuranVerseBlock({ verse, surahNumber, playback, hasReflection, onReflected, isReciting }: QuranVerseBlockProps) {
+  const recitedWord = useRecitedWord(verse.verseKey);
   const reflectHref = `/result?verseKey=${encodeURIComponent(verse.verseKey)}`;
   const contentKey = ayahKey(surahNumber, verse.verseNumber);
   const [journalOpen, setJournalOpen] = useState(false);
@@ -38,20 +43,19 @@ export function QuranVerseBlock({ verse, surahNumber, playback, hasReflection, o
   return (
     <article
       id={`verse-${verse.verseKey.replace(":", "-")}`}
-      className="scroll-mt-24 border-b border-[var(--border)] py-6 last:border-b-0"
+      data-active={isReciting}
+      className="recited-ayah -mx-2 scroll-mt-24 rounded-2xl border-b border-[var(--border)] px-2 py-6 last:border-b-0"
     >
       <div className="flex gap-3">
         <span className="mt-1 flex size-7 shrink-0 items-center justify-center rounded-full bg-[var(--accent-primary)]/15 text-xs font-semibold text-[var(--accent-primary)]">
           {verse.verseNumber}
         </span>
         <div className="min-w-0 flex-1">
-          <p
-            dir="rtl"
-            lang="ar"
+          <RecitedArabic
+            text={verse.textUthmani}
+            activeWordIndex={isReciting ? recitedWord : null}
             className="font-scheherazade text-right text-[28px] leading-[2] text-[var(--text-arabic)]"
-          >
-            {verse.textUthmani}
-          </p>
+          />
           {verse.translation ? (
             <p className="mt-2 text-left text-sm leading-relaxed text-[var(--text-secondary)]">
               {verse.translation}

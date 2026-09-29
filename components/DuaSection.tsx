@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { AyahAudioPlayer } from "@/components/AyahAudioPlayer";
+import type { ClipRange } from "@/lib/audio/clipPlayback";
 
 export type DuaSourceType = "quranic" | "prophetic_sunnah";
 
@@ -14,7 +15,8 @@ export interface DuaSectionProps {
   surah: number | null;
   ayah_number: number | null;
   hadith_source: string | null;
-  duaAudioUrl: string | null;
+  /** The dua's ayah recitation, when the dua is this ayah. */
+  duaAudio: ClipRange | null;
   duaVerseKey: string | null;
   reciterName: string;
   /** A Qur'anic dua quoted from another ayah: where it is from (links to that ayah). */
@@ -45,13 +47,13 @@ export function DuaSection({
   dua_transliteration,
   dua_translation,
   source_type,
-  duaAudioUrl,
+  duaAudio,
   duaVerseKey,
   reciterName,
   citation = null,
   compact = false,
 }: DuaSectionProps) {
-  const showAudio = source_type === "quranic" && Boolean(duaAudioUrl && duaVerseKey);
+  const showAudio = source_type === "quranic" && Boolean(duaAudio && duaVerseKey);
 
   return (
     <section className={compact ? "space-y-2" : "space-y-2"}>
@@ -81,7 +83,7 @@ export function DuaSection({
 
       {showAudio ? (
         <AyahAudioPlayer
-          audioUrl={duaAudioUrl}
+          clip={duaAudio}
           verseKey={duaVerseKey!}
           reciterName={reciterName}
         />

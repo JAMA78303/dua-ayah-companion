@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { AyahAudioPlayer } from "@/components/AyahAudioPlayer";
 import { DuaSection, type DuaSourceType } from "@/components/DuaSection";
 import { FeedCardActions } from "@/components/feed/FeedCardActions";
+import { RecitedArabic } from "@/components/RecitedArabic";
 import { useReciter } from "@/components/ReciterProvider";
 import { SurahReferencePill } from "@/components/SurahReferencePill";
+import { quranWords, recitedWordIndex } from "@/lib/audio/clipPlayback";
 import type { Pairing } from "@/lib/content/fetchPairings";
 import { getSurahName } from "@/lib/quran/surahNames";
 import { duaFromOtherAyah, verseRefHref, verseRefLabel } from "@/lib/quran/verseRef";
@@ -30,6 +32,8 @@ export function FeedCard({ pairing, index, total, isActive }: FeedCardProps) {
   const cardRef = useRef<HTMLDivElement | null>(null);
   const [qf, setQf] = useState<QfAyahBundle | null>(null);
   const [scrollHintVisible, setScrollHintVisible] = useState(index === 0);
+  /** The word being recited, which glows. */
+  const [activeWordIndex, setActiveWordIndex] = useState<number | null>(null);
 
   const sourceType: DuaSourceType =
     pairing.source_type === "prophetic_sunnah" ? "prophetic_sunnah" : "quranic";
@@ -55,15 +59,17 @@ export function FeedCard({ pairing, index, total, isActive }: FeedCardProps) {
           ayah: String(pairing.ayah_number),
           reciterId: String(reciterId),
         });
+        // v=2: responses cached before ayah audio became clips have no `audio`.
+        params.set("v", "2");
         const response = await fetch(`/api/qf/ayah?${params.toString()}`, { cache: "force-cache" });
         if (!response.ok) return;
         const data = (await response.json()) as Partial<QfAyahBundle>;
         if (cancelled) return;
-        if (data && (data.textUthmani || data.translation || data.audioUrl || data.tafsirText)) {
+        if (data && (data.textUthmani || data.translation || data.audio || data.tafsirText)) {
           setQf({
             textUthmani: data.textUthmani ?? null,
             translation: data.translation ?? null,
-            audioUrl: data.audioUrl ?? null,
+            audio: data.audio ?? null,
             tafsirText: data.tafsirText ?? null,
             words: data.words ?? null,
           });
@@ -84,6 +90,7 @@ export function FeedCard({ pairing, index, total, isActive }: FeedCardProps) {
   }, [index]);
 
   const arabicText = qf?.textUthmani ?? pairing.arabic_text;
+  const wordCount = useMemo(() => quranWords(arabicText).length, [arabicText]);
   const translation = qf?.translation ?? pairing.translation;
   const surahName = getSurahName(pairing.surah);
   const pillLabel =
@@ -129,21 +136,23 @@ export function FeedCard({ pairing, index, total, isActive }: FeedCardProps) {
               </span>
             </div>
 
-            <p
-              dir="rtl"
-              lang="ar"
+            <RecitedArabic
+              text={arabicText}
+              activeWordIndex={activeWordIndex}
               className="arabic-display text-[clamp(24px,6vw,34px)] leading-[2] text-[var(--text-arabic)] [text-shadow:0_0_30px_color-mix(in_srgb,var(--gold)_20%,transparent)]"
-            >
-              {arabicText}
-            </p>
+            />
             <hr className="gold-rule gold-rule-animate w-full shrink-0 border-0" aria-hidden />
 
             <p className="translation-text max-w-prose text-[16px] text-[var(--text-primary)]">{translation}</p>
-            {qf?.audioUrl ? (
+            {qf?.audio ? (
               <AyahAudioPlayer
-                audioUrl={qf.audioUrl}
+                clip={qf.audio}
                 verseKey={`${pairing.surah}:${pairing.ayah_number}`}
                 reciterName={reciterName}
+                onTimeUpdate={(positionMs) => setActiveWordIndex(recitedWordIndex(qf.audio!.words, positionMs, wordCount))}
+                onPlayingChange={(playing) => {
+                  if (!playing) setActiveWordIndex(null);
+                }}
               />
             ) : null}
 
@@ -156,7 +165,7 @@ export function FeedCard({ pairing, index, total, isActive }: FeedCardProps) {
                 surah={pairing.surah}
                 ayah_number={pairing.ayah_number}
                 hadith_source={pairing.hadith_source ?? null}
-                duaAudioUrl={null}
+                duaAudio={null}
                 duaVerseKey={duaVerseKey}
                 reciterName={reciterName}
                 citation={duaOtherAyah ? { label: verseRefLabel(duaOtherAyah), href: verseRefHref(duaOtherAyah) } : null}

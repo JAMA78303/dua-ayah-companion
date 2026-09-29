@@ -2,11 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { cueClip, reachedClipEnd, settleAtClipStart, type ClipRange } from "@/lib/audio/clipPlayback";
+import { usePlaybackTicker } from "@/lib/audio/usePlaybackTicker";
+
 interface MemoriseSheetProps {
   title: string;
   /** The ayah's words in order (pause marks attached to their word where possible). */
   words: string[];
-  audioUrl: string | null;
+  /** The ayah's recitation (its own file, or its part of a whole-surah file). */
+  clip: ClipRange | null;
   onClose: () => void;
 }
 
@@ -21,8 +25,9 @@ function isHidden(level: number, index: number) {
   return true;
 }
 
-export function MemoriseSheet({ title, words, audioUrl, onClose }: MemoriseSheetProps) {
+export function MemoriseSheet({ title, words, clip, onClose }: MemoriseSheetProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const loadedUrlRef = useRef<string | null>(null);
   const [level, setLevel] = useState(0);
   const [revealed, setRevealed] = useState<Set<number>>(new Set());
   const [repeat, setRepeat] = useState<(typeof REPEATS)[number]>(3);
@@ -44,14 +49,15 @@ export function MemoriseSheet({ title, words, audioUrl, onClose }: MemoriseSheet
 
   async function play() {
     const audio = audioRef.current;
-    if (!audio || !audioUrl) return;
+    if (!audio || !clip) return;
     if (playing) {
       audio.pause();
       setPlaying(false);
       return;
     }
     setPlayed(0);
-    audio.currentTime = 0;
+    loadedUrlRef.current = cueClip(audio, clip, loadedUrlRef.current);
+    if (loadedUrlRef.current === clip.url && clip.startMs === 0) audio.currentTime = 0;
     try {
       await audio.play();
       setPlaying(true);
@@ -60,16 +66,26 @@ export function MemoriseSheet({ title, words, audioUrl, onClose }: MemoriseSheet
     }
   }
 
-  function onEnded() {
+  /** The ayah finished: go again from its start until the repeats are done. */
+  function onClipEnd() {
+    const audio = audioRef.current;
     const count = played + 1;
     setPlayed(count);
-    if (count < repeat && audioRef.current) {
-      audioRef.current.currentTime = 0;
-      void audioRef.current.play();
+    if (count < repeat && audio && clip) {
+      audio.currentTime = clip.startMs / 1000;
+      void audio.play();
     } else {
+      audio?.pause();
       setPlaying(false);
     }
   }
+
+  // A whole-surah file doesn't end with the ayah, so watch for the ayah's end while playing.
+  const checkClipEnd = () => {
+    const audio = audioRef.current;
+    if (audio && clip && !audio.paused && reachedClipEnd(clip, audio.currentTime * 1000)) onClipEnd();
+  };
+  usePlaybackTicker(playing, checkClipEnd);
 
   return (
     <div className="fixed inset-0 z-[80] flex flex-col justify-end" role="presentation">
@@ -134,7 +150,7 @@ export function MemoriseSheet({ title, words, audioUrl, onClose }: MemoriseSheet
           ))}
         </div>
 
-        {audioUrl ? (
+        {clip ? (
           <div className="flex flex-wrap items-center justify-center gap-3 border-t border-[var(--border)] pt-4">
             <button
               type="button"
@@ -157,7 +173,16 @@ export function MemoriseSheet({ title, words, audioUrl, onClose }: MemoriseSheet
                 ))}
               </select>
             </label>
-            <audio ref={audioRef} src={audioUrl} preload="none" onEnded={onEnded} className="hidden" />
+            <audio
+              ref={audioRef}
+              preload="none"
+              onLoadedMetadata={() => {
+                if (audioRef.current) settleAtClipStart(audioRef.current, clip);
+              }}
+              onEnded={onClipEnd}
+              onTimeUpdate={checkClipEnd}
+              className="hidden"
+            />
           </div>
         ) : null}
       </div>
