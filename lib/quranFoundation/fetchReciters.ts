@@ -12,6 +12,12 @@ export const PINNED_RECITER_IDS = [7, 9] as const;
 
 export const DEFAULT_RECITER_ID = 7;
 
+/**
+ * Listed by the API but not offered: 173 is a second Mishari al-Afasy set ("streaming") whose ayah timings
+ * are broken (zero-length in Al-Fatihah) and which has no per-ayah files. His main recording, 7, is listed.
+ */
+export const HIDDEN_RECITER_IDS: readonly number[] = [173];
+
 let recitersCache: QfReciter[] | null = null;
 let inflightReciters: Promise<QfReciter[]> | null = null;
 let loggedReciterList = false;
@@ -128,7 +134,7 @@ async function fetchRecitersUncached(): Promise<QfReciter[]> {
       .map((item) =>
         item && typeof item === "object" ? normalizeReciter(item as Record<string, unknown>) : null,
       )
-      .filter((r): r is QfReciter => r !== null);
+      .filter((r): r is QfReciter => r !== null && !HIDDEN_RECITER_IDS.includes(r.id));
 
     const list = parsed.length > 0 ? sortRecitersForDisplay(parsed) : FALLBACK_RECITERS;
 

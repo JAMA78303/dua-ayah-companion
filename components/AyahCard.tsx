@@ -14,7 +14,8 @@ import { getSurahName } from "@/lib/quran/surahNames";
 import { duaFromOtherAyah, verseRefHref, verseRefLabel } from "@/lib/quran/verseRef";
 import { ayahKey, pairingKey } from "@/lib/saves/contentKeys";
 import { isUuid } from "@/lib/uuid";
-import { normalizeAudioUrl } from "@/lib/quranFoundation/fetchAudio";
+import { quranWords, recitedWordIndex } from "@/lib/audio/clipPlayback";
+import { normalizeAudioUrl, type AyahClip } from "@/lib/quranFoundation/fetchAudio";
 import type { QfWord } from "@/lib/quranFoundation/fetchAyah";
 import { toneGradientVar, type ToneTag } from "@/lib/theme/toneGradient";
 import Link from "next/link";
@@ -39,7 +40,8 @@ interface AyahCardProps {
   /** Ayah the dua is quoted from, when not this one (pairing.dua_verse_key). */
   duaSourceKey?: string | null;
   qfTafsirLong?: string | null;
-  qfAudioUrl?: string | null;
+  /** The ayah's recitation for the default reciter, fetched with the page. */
+  qfAudio?: AyahClip | null;
   /** Word-by-word data for `arabicText`, when it's the Quran Foundation text. */
   qfWords?: QfWord[] | null;
   /** When true, pause QF recitation (e.g. feed card scrolled out of view). */
@@ -63,8 +65,6 @@ interface RelatedDua {
   dua_verse_key?: string | null;
 }
 
-/** Quran.com word timing: [wordIndex (0-based), wordPosition, startMs, endMs]. */
-type AudioSegment = [number, number, number, number];
 interface VerseWord {
   transliteration?: { text?: string | null };
 }
@@ -92,7 +92,7 @@ export function AyahCard({
   hadithSource,
   duaSourceKey,
   qfTafsirLong,
-  qfAudioUrl,
+  qfAudio,
   qfWords,
   shouldPauseAudio,
   expandPropheticStory = false,
@@ -102,7 +102,8 @@ export function AyahCard({
     sourceTypeProp === "prophetic_sunnah" ? "prophetic_sunnah" : "quranic";
   const pauseAudio = shouldPauseAudio ?? false;
   const { reciterId, reciterName } = useReciter();
-  const [clientAudioUrl, setClientAudioUrl] = useState<string | null>(qfAudioUrl ?? null);
+  /** This reciter's clip for the ayah, from our audio route (every reciter, with word timings). */
+  const [reciterClip, setReciterClip] = useState<AyahClip | null>(qfAudio ?? null);
 
   // A dua quoted from another ayah is cited and linked; its audio lives on that ayah's page.
   const duaOtherAyah = sourceType === "quranic" ? duaFromOtherAyah(duaSourceKey, surah, ayahNumber) : null;
@@ -116,18 +117,18 @@ export function AyahCard({
     let cancelled = false;
     void (async () => {
       try {
-        const res = await fetch(`/api/quran/${surah}/audio?reciterId=${reciterId}`, {
+        const res = await fetch(`/api/quran/${surah}/audio?reciterId=${reciterId}&verse=${ayahNumber}`, {
           cache: "no-store",
         });
         if (!res.ok) {
-          if (!cancelled) setClientAudioUrl(null);
+          if (!cancelled) setReciterClip(null);
           return;
         }
-        const json = (await res.json()) as { audioByVerseKey?: Record<string, string> };
+        const json = (await res.json()) as { clips?: Record<string, AyahClip> };
         const key = `${surah}:${ayahNumber}`;
-        if (!cancelled) setClientAudioUrl(json.audioByVerseKey?.[key] ?? null);
+        if (!cancelled) setReciterClip(json.clips?.[key] ?? null);
       } catch {
-        if (!cancelled) setClientAudioUrl(null);
+        if (!cancelled) setReciterClip(null);
       }
     })();
     return () => {
@@ -151,9 +152,8 @@ export function AyahCard({
   const surahPadded = String(surah).padStart(3, "0");
   const ayahPadded = String(ayahNumber).padStart(3, "0");
   const fallbackRecitationUrl = `https://everyayah.com/data/Alafasy_128kbps/${surahPadded}${ayahPadded}.mp3`;
-  const [recitationUrl, setRecitationUrl] = useState(fallbackRecitationUrl);
-  /** Word timings, tagged with the recording they belong to. */
-  const [timedSegments, setTimedSegments] = useState<{ url: string; segments: AudioSegment[] } | null>(null);
+  /** Fallback when our audio route has nothing: Quran.com's per-ayah file, with its word timings. */
+  const [verseFileClip, setVerseFileClip] = useState<AyahClip | null>(null);
   const [ayahTransliteration, setAyahTransliteration] = useState<string | null>(null);
   const [activeWordIndex, setActiveWordIndex] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -164,10 +164,7 @@ export function AyahCard({
   const surahName = getSurahName(surah);
   // Real words, not space-separated tokens: pause marks are separate tokens in the text and would shift
   // the highlight by one after each mark.
-  const totalWords = useMemo(
-    () => qfWords?.length ?? arabicText.trim().split(/\s+/).filter(Boolean).length,
-    [arabicText, qfWords],
-  );
+  const totalWords = useMemo(() => qfWords?.length ?? quranWords(arabicText).length, [arabicText, qfWords]);
   const supplicationMatchesAyah =
     normalizeComparableText(duaText) === normalizeComparableText(arabicText);
 
@@ -182,8 +179,7 @@ export function AyahCard({
           { signal: controller.signal },
         );
         if (!response.ok) {
-          setRecitationUrl(fallbackRecitationUrl);
-          setTimedSegments(null);
+          setVerseFileClip(null);
           setAyahTransliteration(null);
           return;
         }
@@ -192,16 +188,12 @@ export function AyahCard({
           verse?: { audio?: { url?: string; segments?: number[][] }; words?: VerseWord[] };
         };
         const audioPath = payload.verse?.audio?.url;
-        const normalizedUrl = audioPath ? normalizeAudioUrl(audioPath) : fallbackRecitationUrl;
-        setRecitationUrl(normalizedUrl);
-        const rawSegments = payload.verse?.audio?.segments ?? [];
-        const normalizedSegments = rawSegments.filter(
-          (segment): segment is AudioSegment =>
-            Array.isArray(segment) &&
-            segment.length === 4 &&
-            segment.every((value) => Number.isFinite(value)),
-        );
-        setTimedSegments(audioPath ? { url: normalizedUrl, segments: normalizedSegments } : null);
+        // Quran.com's timings are [word index from 0, position, start, end]; ours are [position from 1, start, end].
+        const words = (payload.verse?.audio?.segments ?? [])
+          .map((segment) => segment.map(Number))
+          .filter((segment) => segment.length === 4 && segment.every((value) => Number.isFinite(value)))
+          .map(([index, , start, end]) => [index! + 1, start!, end!] as [number, number, number]);
+        setVerseFileClip(audioPath ? { url: normalizeAudioUrl(audioPath), startMs: 0, endMs: null, words } : null);
 
         const transliteration = (payload.verse?.words ?? [])
           .map((word) => word.transliteration?.text?.trim() ?? "")
@@ -209,8 +201,7 @@ export function AyahCard({
           .join(" ");
         setAyahTransliteration(transliteration || null);
       } catch {
-        setRecitationUrl(fallbackRecitationUrl);
-        setTimedSegments(null);
+        setVerseFileClip(null);
         setAyahTransliteration(null);
       }
     }
@@ -218,12 +209,13 @@ export function AyahCard({
     void fetchVerseSpecificRecitation();
 
     return () => controller.abort();
-  }, [surah, ayahNumber, reciterId, fallbackRecitationUrl]);
+  }, [surah, ayahNumber, reciterId]);
 
-  // One recording drives both players: QF chapter audio first, Quran.com verse audio as fallback.
-  const playerAudioUrl = clientAudioUrl ?? recitationUrl;
-  const duaAudioUrl = duaVerseKey ? playerAudioUrl : null;
-  const audioSegments = timedSegments?.url === playerAudioUrl ? timedSegments.segments : [];
+  // One recording drives every player on the card: this reciter's clip, Quran.com's per-ayah file, then
+  // Mishari al-Afasy's as a last resort.
+  const playerClip: AyahClip = reciterClip ??
+    verseFileClip ?? { url: fallbackRecitationUrl, startMs: 0, endMs: null, words: [] };
+  const duaClip = duaVerseKey ? playerClip : null;
 
   useEffect(() => {
     if (!supplicationMatchesAyah) {
@@ -257,27 +249,13 @@ export function AyahCard({
     return () => controller.abort();
   }, [supplicationMatchesAyah, pairingId, duaText]);
 
-  const updateWordHighlight = (currentTime: number, duration: number) => {
-    if (audioSegments.length > 0) {
-      const currentTimeMs = currentTime * 1000;
-      const segment = audioSegments.find(
-        ([, , startMs, endMs]) => currentTimeMs >= startMs && currentTimeMs <= endMs,
-      );
-      if (segment) {
-        const segmentWordIndex = Math.max(0, Math.min(segment[0], totalWords - 1));
-        setActiveWordIndex(segmentWordIndex);
-        return;
-      }
-    }
-
-    if (!Number.isFinite(duration) || duration <= 0 || totalWords === 0) {
-      setActiveWordIndex(null);
+  const updateWordHighlight = (positionMs: number, progress: number) => {
+    if (playerClip.words.length > 0) {
+      setActiveWordIndex(recitedWordIndex(playerClip.words, positionMs, totalWords));
       return;
     }
-
-    const progress = Math.min(Math.max(currentTime / duration, 0), 1);
-    const nextWordIndex = Math.min(Math.floor(progress * totalWords), totalWords - 1);
-    setActiveWordIndex(nextWordIndex);
+    // No word timings for this recording: move through the words evenly.
+    setActiveWordIndex(totalWords > 0 ? Math.min(Math.floor(progress * totalWords), totalWords - 1) : null);
   };
 
   const pillLabel =
@@ -318,7 +296,7 @@ export function AyahCard({
       ) : null}
 
       <AyahAudioPlayer
-        audioUrl={playerAudioUrl}
+        clip={playerClip}
         verseKey={`${surah}:${ayahNumber}`}
         reciterName={reciterName}
         shouldPause={pauseAudio}
@@ -350,8 +328,8 @@ export function AyahCard({
       {memoriseOpen ? (
         <MemoriseSheet
           title={`${surahName} ${surah}:${ayahNumber}`}
-          words={qfWords?.map((word) => word.arabic) ?? arabicText.trim().split(/\s+/).filter(Boolean)}
-          audioUrl={playerAudioUrl}
+          words={qfWords?.map((word) => word.arabic) ?? quranWords(arabicText)}
+          clip={playerClip}
           onClose={() => setMemoriseOpen(false)}
         />
       ) : null}
@@ -436,7 +414,7 @@ export function AyahCard({
           surah={surah}
           ayah_number={ayahNumber}
           hadith_source={hadithSource ?? null}
-          duaAudioUrl={duaAudioUrl}
+          duaAudio={duaClip}
           duaVerseKey={duaVerseKey}
           reciterName={reciterName}
           citation={duaCitation}

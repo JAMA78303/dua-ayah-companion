@@ -28,7 +28,7 @@ export default async function ProphetDetailPage({
         arabicText: qf?.textUthmani ?? pairing.arabic_text,
         translation: qf?.translation ?? pairing.translation,
         qfTafsirLong: qf?.tafsirText ?? null,
-        qfAudioUrl: qf?.audioUrl ?? null,
+        qfAudio: qf?.audio ?? null,
         qfWords: qf?.textUthmani ? qf.words : null,
       };
     }),
@@ -63,7 +63,7 @@ export default async function ProphetDetailPage({
         ) : null}
       </header>
 
-      {enriched.map(({ pairing, arabicText, translation, qfTafsirLong, qfAudioUrl, qfWords }) => (
+      {enriched.map(({ pairing, arabicText, translation, qfTafsirLong, qfAudio, qfWords }) => (
         <AyahCard
           key={pairing.id}
           pairingId={pairing.id}
@@ -83,7 +83,7 @@ export default async function ProphetDetailPage({
           hadithSource={pairing.hadith_source}
           duaSourceKey={pairing.dua_verse_key}
           qfTafsirLong={qfTafsirLong}
-          qfAudioUrl={qfAudioUrl}
+          qfAudio={qfAudio}
           qfWords={qfWords}
           expandPropheticStory
         />

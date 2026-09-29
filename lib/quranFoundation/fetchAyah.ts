@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 
-import { DEFAULT_RECITER_ID, fetchVerseAudioUrl } from "@/lib/quranFoundation/fetchAudio";
+import { DEFAULT_RECITER_ID, fetchVerseClip, type AyahClip } from "@/lib/quranFoundation/fetchAudio";
 import { qfContentGet } from "@/lib/quranFoundation/client";
 
 /**
@@ -23,7 +23,8 @@ export type QfWord = {
 export type QfAyahBundle = {
   textUthmani: string | null;
   translation: string | null;
-  audioUrl: string | null;
+  /** The ayah's recitation for the reciter: its own file, or its part of a whole-surah file. */
+  audio: AyahClip | null;
   tafsirText: string | null;
   /** Aligned with `textUthmani`'s words (pause marks stay attached to their word). */
   words: QfWord[] | null;
@@ -167,11 +168,11 @@ export async function fetchAyahFromQF(
 
   // Audio has its own per-chapter cache (which skips failures), so keep it out of the 24h text cache.
   // Tafsir is optional: its failure must not hide the verse.
-  const [text, tafsirText, audioUrl] = await Promise.all([
+  const [text, tafsirText, audio] = await Promise.all([
     cachedText().catch(() => null),
     cachedTafsir().catch(() => null),
-    fetchVerseAudioUrl(surah, ayah, reciterId),
+    fetchVerseClip(surah, ayah, reciterId).catch(() => null),
   ]);
   if (!text) return null;
-  return { ...text, tafsirText, audioUrl };
+  return { ...text, tafsirText, audio };
 }

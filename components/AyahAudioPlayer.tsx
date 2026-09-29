@@ -2,10 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { clipProgress, cueClip, reachedClipEnd, settleAtClipStart, type ClipRange } from "@/lib/audio/clipPlayback";
 import { cyclePlaybackSpeed, readPlaybackSpeed } from "@/lib/audio/playbackSpeed";
+import { usePlaybackTicker } from "@/lib/audio/usePlaybackTicker";
 
 interface AyahAudioPlayerProps {
-  audioUrl: string | null;
+  /** The ayah's recitation: its own file, or its part of the reciter's whole-surah file. */
+  clip: ClipRange | null;
   verseKey: string;
   reciterName: string;
   /** Pause when another ayah is playing (Qur'an reader list). */
@@ -14,13 +17,16 @@ interface AyahAudioPlayerProps {
   autoPlay?: boolean;
   onPlayStart?: () => void;
   onEnded?: () => void;
-  /** Playback position, e.g. for word highlighting. */
-  onTimeUpdate?: (currentTime: number, duration: number) => void;
+  /**
+   * Every frame while playing, e.g. for word highlighting: the position in the file (ms) and how far
+   * through the ayah that is (0 to 1).
+   */
+  onTimeUpdate?: (positionMs: number, progress: number) => void;
   onPlayingChange?: (playing: boolean) => void;
 }
 
 export function AyahAudioPlayer({
-  audioUrl,
+  clip,
   verseKey,
   reciterName,
   shouldPause = false,
@@ -36,14 +42,18 @@ export function AyahAudioPlayer({
   const [progress, setProgress] = useState(0);
   const [speed, setSpeed] = useState(1);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const onPlayingChangeRef = useRef(onPlayingChange);
+  /** The file the element has loaded (its src may carry a #t= fragment). */
+  const loadedUrlRef = useRef<string | null>(null);
+  const clipRef = useRef(clip);
+  const callbacksRef = useRef({ onPlayingChange, onTimeUpdate, onEnded });
 
   useEffect(() => {
-    onPlayingChangeRef.current = onPlayingChange;
+    clipRef.current = clip;
+    callbacksRef.current = { onPlayingChange, onTimeUpdate, onEnded };
   });
 
   useEffect(() => {
-    onPlayingChangeRef.current?.(playing);
+    callbacksRef.current.onPlayingChange?.(playing);
   }, [playing]);
 
   useEffect(() => {
@@ -51,39 +61,42 @@ export function AyahAudioPlayer({
     queueMicrotask(() => setSpeed(readPlaybackSpeed()));
   }, []);
 
-  function pausePlayback() {
+  function unload() {
     if (audioRef.current) {
       // Unload without `src = ""` — an empty src fires `error`, which would hide the player.
       audioRef.current.pause();
       audioRef.current.removeAttribute("src");
       audioRef.current.load();
     }
+    loadedUrlRef.current = null;
     setPlaying(false);
     setProgress(0);
   }
 
+  function finish() {
+    audioRef.current?.pause();
+    setPlaying(false);
+    setProgress(0);
+    callbacksRef.current.onEnded?.();
+  }
+
+  const clipKey = clip ? `${clip.url}|${clip.startMs}|${clip.endMs}` : null;
+
   useEffect(() => {
-    if (!audioUrl) {
-      queueMicrotask(() => {
-        pausePlayback();
-        setLoading(false);
-        setError(false);
-      });
-      return;
-    }
     queueMicrotask(() => {
+      if (!clipKey) unload();
       setLoading(false);
       setError(false);
     });
-  }, [verseKey, audioUrl]);
+  }, [verseKey, clipKey]);
 
   useEffect(() => {
     if (!shouldPause) return;
-    queueMicrotask(() => pausePlayback());
+    queueMicrotask(() => unload());
   }, [shouldPause]);
 
   useEffect(() => {
-    const onReciterChanged = () => pausePlayback();
+    const onReciterChanged = () => unload();
     window.addEventListener("reciter-changed", onReciterChanged);
     return () => window.removeEventListener("reciter-changed", onReciterChanged);
   }, []);
@@ -92,22 +105,35 @@ export function AyahAudioPlayer({
     const card = audioRef.current?.closest("[data-feed-card]");
     if (!card) return;
 
-    const onDeactivated = () => pausePlayback();
+    const onDeactivated = () => unload();
     card.addEventListener("feed-card-deactivated", onDeactivated);
     return () => card.removeEventListener("feed-card-deactivated", onDeactivated);
-  }, [audioUrl]);
+  }, [clipKey]);
+
+  /** Report the position and stop at the end of the ayah (a whole-surah file would run on into the next). */
+  const follow = () => {
+    const el = audioRef.current;
+    const current = clipRef.current;
+    if (!el || !current || el.paused) return;
+    const positionMs = el.currentTime * 1000;
+    callbacksRef.current.onTimeUpdate?.(positionMs, clipProgress(current, positionMs, el.duration * 1000));
+    if (reachedClipEnd(current, positionMs)) finish();
+  };
+  usePlaybackTicker(playing, follow);
 
   async function startPlayback() {
-    if (!audioRef.current || !audioUrl) return;
+    const el = audioRef.current;
+    if (!el || !clip) return;
 
     setLoading(true);
     try {
-      // Resume a paused clip; only (re)load when the source changed or was unloaded.
-      if (audioRef.current.getAttribute("src") !== audioUrl) {
-        audioRef.current.src = audioUrl;
-      }
-      audioRef.current.playbackRate = speed;
-      await audioRef.current.play();
+      // Resume where it was paused inside the ayah; otherwise start the ayah from the beginning.
+      const positionMs = el.currentTime * 1000;
+      const insideClip =
+        loadedUrlRef.current === clip.url && positionMs >= clip.startMs && !reachedClipEnd(clip, positionMs) && positionMs > 0;
+      if (!insideClip) loadedUrlRef.current = cueClip(el, clip, loadedUrlRef.current);
+      el.playbackRate = speed;
+      await el.play();
       setPlaying(true);
       onPlayStart?.();
     } catch {
@@ -118,12 +144,12 @@ export function AyahAudioPlayer({
   }
 
   useEffect(() => {
-    if (!autoPlay || shouldPause || !audioUrl || playing || loading) return;
+    if (!autoPlay || shouldPause || !clip || playing || loading) return;
     queueMicrotask(() => void startPlayback());
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to autoPlay request
-  }, [autoPlay, audioUrl, shouldPause]);
+  }, [autoPlay, clipKey, shouldPause]);
 
-  if (!audioUrl || error) return null;
+  if (!clip || error) return null;
 
   async function handlePlay() {
     if (!audioRef.current) return;
@@ -175,7 +201,7 @@ export function AyahAudioPlayer({
         <div className="h-0.5 w-full overflow-hidden rounded-full bg-[var(--border)]">
           <div
             className="h-full rounded-full bg-[var(--accent-primary)] transition-all duration-100"
-            style={{ width: `${progress}%` }}
+            style={{ width: `${progress * 100}%` }}
           />
         </div>
       )}
@@ -184,22 +210,19 @@ export function AyahAudioPlayer({
         ref={audioRef}
         preload="none"
         className="hidden"
-        onEnded={() => {
-          setPlaying(false);
-          setProgress(0);
-          onEnded?.();
+        onLoadedMetadata={() => {
+          if (audioRef.current && clip) settleAtClipStart(audioRef.current, clip);
         }}
+        onEnded={finish}
         onError={() => {
           // Only a real load failure should hide the player, not an unloaded element.
           if (audioRef.current?.getAttribute("src")) setError(true);
         }}
         onTimeUpdate={() => {
-          if (!audioRef.current) return;
-          const { currentTime, duration } = audioRef.current;
-          if (duration > 0) {
-            setProgress((currentTime / duration) * 100);
-          }
-          onTimeUpdate?.(currentTime, duration);
+          follow();
+          const el = audioRef.current;
+          if (!el || !clip) return;
+          setProgress(clipProgress(clip, el.currentTime * 1000, el.duration * 1000));
         }}
       />
     </div>

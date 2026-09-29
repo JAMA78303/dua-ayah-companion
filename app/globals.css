@@ -393,3 +393,38 @@ body {
 .theme-swatch-preview {
   background: var(--swatch-gradient);
 }
+
+/* Recitation: the ayah being recited, and the word within it. The word takes the theme's gold, mixed
+   with its Arabic text colour so it stays readable on the light themes. */
+.recited-ayah {
+  transition:
+    background-color 300ms ease,
+    box-shadow 300ms ease;
+}
+
+.recited-ayah[data-active="true"] {
+  background-color: color-mix(in srgb, var(--gold) 7%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--gold) 30%, transparent),
+    0 0 32px color-mix(in srgb, var(--gold) 16%, transparent);
+}
+
+.recited-word {
+  transition:
+    color 200ms ease,
+    text-shadow 200ms ease;
+}
+
+.recited-word[data-active="true"] {
+  color: color-mix(in srgb, var(--gold) 75%, var(--text-arabic));
+  text-shadow:
+    0 0 10px color-mix(in srgb, var(--gold) 70%, transparent),
+    0 0 24px color-mix(in srgb, var(--gold) 40%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recited-ayah,
+  .recited-word {
+    transition: none;
+  }
+}

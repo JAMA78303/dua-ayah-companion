@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { RecitedArabic } from "@/components/RecitedArabic";
 import type { QfWord } from "@/lib/quranFoundation/fetchAyah";
 
 interface ArabicAyahTextProps {
@@ -12,26 +13,15 @@ interface ArabicAyahTextProps {
   words?: QfWord[] | null;
 }
 
-const ACTIVE = "rounded bg-[var(--accent-gold)]/35 px-1 text-[var(--text-arabic)] transition-colors";
+/** A word tapped for its meaning. */
+const SELECTED = "bg-[var(--accent-gold)]/35";
 
 export function ArabicAyahText({ text, activeWordIndex = null, className = "", words = null }: ArabicAyahTextProps) {
   const [selected, setSelected] = useState<number | null>(null);
   const textClass = `arabic-display text-[2rem] leading-[2.2] text-[var(--text-arabic)] md:text-[2.5rem] [text-shadow:0_0_30px_color-mix(in_srgb,var(--gold)_20%,transparent)] ${className}`;
 
   if (!words?.length) {
-    const tokens = text.trim().split(/\s+/).filter(Boolean);
-    return (
-      <p dir="rtl" lang="ar" className={textClass}>
-        {tokens.length > 0
-          ? tokens.map((word, index) => (
-              <span key={`${word}-${index}`} className={activeWordIndex === index ? ACTIVE : "transition-colors"}>
-                {word}
-                {index < tokens.length - 1 ? " " : ""}
-              </span>
-            ))
-          : text}
-      </p>
-    );
+    return <RecitedArabic text={text} activeWordIndex={activeWordIndex} className={textClass} />;
   }
 
   const chosen = selected !== null ? words[selected] : undefined;
@@ -46,8 +36,9 @@ export function ArabicAyahText({ text, activeWordIndex = null, className = "", w
               onClick={() => setSelected(selected === index ? null : index)}
               aria-pressed={selected === index}
               aria-label={word.meaning ? `${word.arabic}: ${word.meaning}` : word.arabic}
-              className={`cursor-pointer rounded transition-colors hover:bg-[var(--accent-gold)]/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent-primary)] ${
-                activeWordIndex === index || selected === index ? ACTIVE : ""
+              data-active={activeWordIndex === index}
+              className={`recited-word cursor-pointer rounded hover:bg-[var(--accent-gold)]/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent-primary)] ${
+                selected === index ? SELECTED : ""
               }`}
             >
               {word.arabic}
