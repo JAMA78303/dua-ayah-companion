@@ -1,6 +1,10 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import { ADHKAR, adhkarFor } from "@/lib/content/adhkar";
+import { DUA_GUIDE, GUIDE_AYAH } from "@/lib/content/duaGuide";
 import { NAMES_OF_ALLAH, nameOfTheDay } from "@/lib/content/namesOfAllah";
 import { PROPHET_STORIES } from "@/lib/content/prophetStories";
 import { prophetArabicName } from "@/lib/prophets/displayNames";
@@ -65,5 +69,30 @@ describe("adhkar", () => {
   it("splits morning-only and evening-only items correctly", () => {
     expect(adhkarFor("morning").some((d) => d.time === "evening")).toBe(false);
     expect(adhkarFor("evening").some((d) => d.time === "morning")).toBe(false);
+  });
+});
+
+describe("how to make dua", () => {
+  const sunnahDuasSql = readFileSync(join(process.cwd(), "supabase/migrations/021_sunnah_duas.sql"), "utf8");
+
+  it("has unique section ids and point titles", () => {
+    expect(new Set(DUA_GUIDE.map((s) => s.id)).size).toBe(DUA_GUIDE.length);
+    for (const section of DUA_GUIDE) {
+      expect(section.points.length, section.id).toBeGreaterThan(0);
+      expect(new Set(section.points.map((p) => p.title)).size, section.id).toBe(section.points.length);
+    }
+  });
+
+  it("cites real ayat, sunnah.com hadith and duas that exist in the app", () => {
+    expect(isValidAyahRef(GUIDE_AYAH.verseKey)).toBe(true);
+    for (const section of DUA_GUIDE) {
+      for (const point of section.points) {
+        for (const ref of point.refs) {
+          if (ref.kind === "ayah") expect(isValidAyahRef(ref.verseKey), point.title).toBe(true);
+          if (ref.kind === "hadith") expect(ref.url, point.title).toMatch(/^https:\/\/sunnah\.com\/[a-z]+:\d+[a-z]?$/);
+          if (ref.kind === "dua") expect(sunnahDuasSql, point.title).toContain(`\n    '${ref.id}',\n`);
+        }
+      }
+    }
   });
 });
