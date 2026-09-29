@@ -41,6 +41,13 @@ describe("mood matching", () => {
     expect(match("I want to repent")).toBe("forgiveness");
   });
 
+  it("recognises anger", () => {
+    expect(match("I'm so angry at my brother")).toBe("anger");
+    expect(match("I lost my temper with my kids")).toBe("anger");
+    expect(match("I feel so frustrated and resentful")).toBe("anger");
+    expect(match("I'm not angry, just really sad")).toBe("sadness");
+  });
+
   it("returns null when nothing matches", () => {
     expect(match("the weather is nice")).toBeNull();
     expect(match("   ")).toBeNull();

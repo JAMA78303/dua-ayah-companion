@@ -9,6 +9,7 @@ export const EMOTION_CATEGORIES = [
   "hope",
   "forgiveness",
   "loneliness",
+  "anger",
 ] as const;
 
 export type EmotionCategory = (typeof EMOTION_CATEGORIES)[number];

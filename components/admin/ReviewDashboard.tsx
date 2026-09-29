@@ -3,9 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 
-import { reviewContent, reviewPairing, type PairingReviewInput } from "@/app/actions/review";
+import { reviewContent, reviewPairing, reviewSunnahDua, type PairingReviewInput, type SunnahDuaReviewInput } from "@/app/actions/review";
 import { NAMES_OF_ALLAH } from "@/lib/content/namesOfAllah";
 import { PROPHET_STORIES } from "@/lib/content/prophetStories";
+import { situationTitle } from "@/lib/content/sunnahSituations";
+import type { SunnahDua } from "@/lib/content/sunnahDuas";
 import { getSurahName } from "@/lib/quran/surahNames";
 import { duaFromOtherAyah, verseRefLabel } from "@/lib/quran/verseRef";
 import { prophetEnglishLabel } from "@/lib/prophets/displayNames";
@@ -32,6 +34,11 @@ export interface ReviewPairing {
   status: "pending" | "approved" | "rejected";
   reviewer_notes: string | null;
   reviewed_at: string | null;
+}
+
+export interface ReviewSunnahDua extends SunnahDua {
+  status: "pending" | "approved" | "rejected";
+  reviewer_notes: string | null;
 }
 
 export interface ContentReview {
@@ -190,6 +197,95 @@ function PairingReviewCard({ pairing }: { pairing: ReviewPairing }) {
   );
 }
 
+function SunnahReviewCard({ dua }: { dua: ReviewSunnahDua }) {
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState<SunnahDuaReviewInput>({
+    status: dua.status,
+    reviewerNotes: dua.reviewer_notes ?? "",
+    source: dua.source ?? "",
+    sourceUrl: dua.source_url ?? "",
+    grade: dua.grade ?? "",
+    transliteration: dua.transliteration ?? "",
+    translation: dua.translation,
+    note: dua.note ?? "",
+  });
+  const { pending, message, save } = useSaver();
+  const set = <K extends keyof SunnahDuaReviewInput>(key: K, value: SunnahDuaReviewInput[K]) => setForm((prev) => ({ ...prev, [key]: value }));
+  const submit = (status: SunnahDuaReviewInput["status"]) => save(() => reviewSunnahDua(dua.id, { ...form, status }));
+
+  return (
+    <li className="card-elevated space-y-3 p-4">
+      <button type="button" onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between gap-3 text-left">
+        <span className="text-sm font-semibold text-[var(--text-primary)]">
+          {situationTitle(dua.situation)}
+          <span className="ml-2 font-normal text-[var(--text-secondary)]">
+            {[dua.source ?? "reference needed", dua.feelings.join(", ")].join(" · ")}
+          </span>
+        </span>
+        <StatusBadge status={dua.status} />
+      </button>
+
+      {open ? (
+        <div className="space-y-3">
+          <p dir="rtl" lang="ar" className="font-scheherazade text-right text-2xl leading-loose text-[var(--text-arabic)]">
+            {dua.arabic}
+          </p>
+          <p className="text-xs text-[var(--text-secondary)]">
+            {`From ${dua.book}${dua.repeat > 1 ? ` · said ${dua.repeat} times` : ""}. The Arabic is taken from the cited hadith and isn't editable here.`}
+            {dua.source_url ? (
+              <>
+                {" "}
+                <a href={dua.source_url} target="_blank" rel="noopener noreferrer" className="font-medium text-[var(--accent-primary)]">
+                  Check on sunnah.com
+                </a>
+              </>
+            ) : null}
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="space-y-1 text-xs text-[var(--text-secondary)]">
+              Reference
+              <input value={form.source} onChange={(e) => set("source", e.target.value)} className={inputClass} />
+            </label>
+            <label className="space-y-1 text-xs text-[var(--text-secondary)]">
+              Grade
+              <input value={form.grade} onChange={(e) => set("grade", e.target.value)} className={inputClass} />
+            </label>
+          </div>
+          <label className="block space-y-1 text-xs text-[var(--text-secondary)]">
+            sunnah.com link (optional)
+            <input value={form.sourceUrl} onChange={(e) => set("sourceUrl", e.target.value)} className={inputClass} />
+          </label>
+          {(
+            [
+              ["transliteration", "Transliteration", 2],
+              ["translation", "Translation", 3],
+              ["note", "Note shown with the dua", 2],
+              ["reviewerNotes", "Reviewer notes (not shown to users)", 2],
+            ] as const
+          ).map(([key, label, rows]) => (
+            <label key={key} className="block space-y-1 text-xs text-[var(--text-secondary)]">
+              {label}
+              <textarea rows={rows} value={form[key]} onChange={(e) => set(key, e.target.value)} className={inputClass} />
+            </label>
+          ))}
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="button" disabled={pending} onClick={() => submit("approved")} className={chipClass(true)}>
+              Save &amp; approve
+            </button>
+            <button type="button" disabled={pending} onClick={() => submit("rejected")} className={chipClass(false)}>
+              Reject
+            </button>
+            <button type="button" disabled={pending} onClick={() => submit("pending")} className={chipClass(false)}>
+              Save as pending
+            </button>
+            {message ? <span className="text-xs text-[var(--text-secondary)]">{message}</span> : null}
+          </div>
+        </div>
+      ) : null}
+    </li>
+  );
+}
+
 function ContentReviewRow({
   contentKey,
   heading,
@@ -235,9 +331,17 @@ function ContentReviewRow({
   );
 }
 
-type Tab = "duas" | "stories" | "names";
+type Tab = "duas" | "sunnah" | "stories" | "names";
 
-export function ReviewDashboard({ pairings, reviews }: { pairings: ReviewPairing[]; reviews: ContentReview[] }) {
+export function ReviewDashboard({
+  pairings,
+  sunnahDuas,
+  reviews,
+}: {
+  pairings: ReviewPairing[];
+  sunnahDuas: ReviewSunnahDua[];
+  reviews: ContentReview[];
+}) {
   const [tab, setTab] = useState<Tab>("duas");
   const [statusFilter, setStatusFilter] = useState<"all" | ReviewPairing["status"]>("all");
   const byKey = useMemo(() => new Map(reviews.map((r) => [r.content_key, r])), [reviews]);
@@ -249,6 +353,7 @@ export function ReviewDashboard({ pairings, reviews }: { pairings: ReviewPairing
     return `${approved} approved · ${hidden} hidden · ${keys.length - approved - hidden} to review`;
   };
   const visiblePairings = pairings.filter((p) => statusFilter === "all" || p.status === statusFilter);
+  const visibleSunnah = sunnahDuas.filter((d) => statusFilter === "all" || d.status === statusFilter);
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-8 md:px-8">
@@ -264,6 +369,7 @@ export function ReviewDashboard({ pairings, reviews }: { pairings: ReviewPairing
         {(
           [
             ["duas", `Duas (${pairings.length})`],
+            ["sunnah", `Sunnah duas (${sunnahDuas.length})`],
             ["stories", `Stories (${storyKeys.length})`],
             ["names", "Names (99)"],
           ] as const
@@ -286,6 +392,23 @@ export function ReviewDashboard({ pairings, reviews }: { pairings: ReviewPairing
           <ul className="space-y-3">
             {visiblePairings.map((pairing) => (
               <PairingReviewCard key={pairing.id} pairing={pairing} />
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {tab === "sunnah" ? (
+        <section className="space-y-3">
+          <div className="flex flex-wrap gap-2">
+            {(["all", "pending", "approved", "rejected"] as const).map((s) => (
+              <button key={s} type="button" onClick={() => setStatusFilter(s)} className={chipClass(statusFilter === s)}>
+                {`${s[0]!.toUpperCase()}${s.slice(1)} (${s === "all" ? sunnahDuas.length : sunnahDuas.filter((d) => d.status === s).length})`}
+              </button>
+            ))}
+          </div>
+          <ul className="space-y-3">
+            {visibleSunnah.map((dua) => (
+              <SunnahReviewCard key={dua.id} dua={dua} />
             ))}
           </ul>
         </section>

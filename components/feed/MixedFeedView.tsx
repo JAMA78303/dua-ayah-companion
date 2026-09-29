@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { EmotionInput } from "@/components/EmotionInput";
 import { AdhkarFeedCard } from "@/components/feed/AdhkarFeedCard";
 import { FeedCard } from "@/components/feed/FeedCard";
+import { DuaFeedCard } from "@/components/feed/DuaFeedCard";
 import { NameFeedCard } from "@/components/feed/NameFeedCard";
 import { StoryFeedCard } from "@/components/feed/StoryFeedCard";
 import { ZeroResultState } from "@/components/ZeroResultState";
@@ -55,6 +56,8 @@ function FeedItemCard({ item, index, isActive }: { item: FeedItem; index: number
       return <StoryFeedCard item={item} />;
     case "name":
       return <NameFeedCard item={item} />;
+    case "dua":
+      return <DuaFeedCard item={item} />;
   }
 }
 

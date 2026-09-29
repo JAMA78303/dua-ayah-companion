@@ -1,11 +1,13 @@
 import Link from "next/link";
 
 import { AyahCard } from "@/components/AyahCard";
+import { SunnahDuaCard } from "@/components/duas/SunnahDuaCard";
 import {
   fetchPairingById,
   fetchPairingByVerseKey,
   fetchPairingsForCategory,
 } from "@/lib/content/fetchPairings";
+import { fetchApprovedSunnahDuas, pickSunnahDuas } from "@/lib/content/sunnahDuas";
 import { getSurahName } from "@/lib/quran/surahNames";
 import { fetchAyahFromQF } from "@/lib/quranFoundation/fetchAyah";
 import { isEmotionCategory } from "@/types/emotions";
@@ -175,14 +177,14 @@ export default async function ResultPage({ searchParams }: ResultPageProps) {
     );
   }
 
-  const pairing = await fetchPairingsForCategory(category);
+  const [pairing, sunnahDuas] = await Promise.all([fetchPairingsForCategory(category), fetchApprovedSunnahDuas(category)]);
 
-  if (!pairing) {
+  if (!pairing && sunnahDuas.length === 0) {
     return (
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-4 py-10 md:px-8">
-        <h1 className="text-xl font-semibold text-[var(--text-primary)]">No approved pairings yet</h1>
+        <h1 className="text-xl font-semibold text-[var(--text-primary)]">Nothing here yet</h1>
         <p className="text-sm text-[var(--text-secondary)]">
-          We couldn&apos;t find approved content for this category yet. Please try another one.
+          Ayat and duas for this feeling are still being reviewed. Please try another one for now.
         </p>
         <Link href="/discover" className="text-sm font-medium text-[var(--accent-primary)] hover:opacity-80">
           Back to Discover
@@ -191,21 +193,21 @@ export default async function ResultPage({ searchParams }: ResultPageProps) {
     );
   }
 
-  const qf = await fetchAyahFromQF(pairing.surah, pairing.ayah_number);
-  const arabicText = qf?.textUthmani ?? pairing.arabic_text;
-  const translation = qf?.translation ?? pairing.translation;
+  const qf = pairing ? await fetchAyahFromQF(pairing.surah, pairing.ayah_number) : null;
+  const shownDuas = pickSunnahDuas(sunnahDuas, 3);
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-10 md:px-8">
       <Link href="/discover" className="text-sm font-medium text-[var(--accent-primary)] hover:opacity-80">
         Back
       </Link>
+      {pairing ? (
       <AyahCard
         pairingId={pairing.id}
         surah={pairing.surah}
         ayahNumber={pairing.ayah_number}
-        arabicText={arabicText}
-        translation={translation}
+        arabicText={qf?.textUthmani ?? pairing.arabic_text}
+        translation={qf?.translation ?? pairing.translation}
         tafsirSummary={pairing.tafsir_summary}
         reflectionPrompts={pairing.reflection_prompts}
         propheticStory={pairing.prophetic_story}
@@ -221,6 +223,23 @@ export default async function ResultPage({ searchParams }: ResultPageProps) {
         qfAudioUrl={qf?.audioUrl ?? null}
         qfWords={qf?.textUthmani ? qf.words : null}
       />
+      ) : null}
+
+      {shownDuas.length > 0 ? (
+        <section aria-labelledby="sunnah-duas-heading" className="space-y-4">
+          <h2 id="sunnah-duas-heading" className="font-playfair text-lg font-semibold text-[var(--text-primary)]">
+            Duas from the Sunnah
+          </h2>
+          {shownDuas.map((dua) => (
+            <SunnahDuaCard key={dua.id} dua={dua} showSituation />
+          ))}
+          {sunnahDuas.length > shownDuas.length ? (
+            <Link href={`/duas?feeling=${category}`} className="block text-sm font-medium text-[var(--accent-primary)] hover:opacity-80">
+              {`All ${sunnahDuas.length} duas for ${category} →`}
+            </Link>
+          ) : null}
+        </section>
+      ) : null}
     </main>
   );
 }

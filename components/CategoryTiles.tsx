@@ -19,6 +19,7 @@ const CATEGORIES: {
   { id: "hope", label: "Hope", description: "Waiting for ease, light ahead" },
   { id: "forgiveness", label: "Forgiveness", description: "Repentance, mercy, return" },
   { id: "loneliness", label: "Loneliness", description: "Alone, unseen, disconnected" },
+  { id: "anger", label: "Anger", description: "Frustration, resentment, losing your temper" },
 ];
 
 function EmotionGlyph({ category }: { category: EmotionCategory }) {
@@ -125,6 +126,16 @@ function EmotionGlyph({ category }: { category: EmotionCategory }) {
         <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden>
           <path d="M12 7v11" strokeWidth="1.5" strokeLinecap="round" />
           <circle cx="12" cy="6" r="1.3" strokeWidth="1.5" />
+        </svg>
+      );
+    case "anger":
+      return (
+        <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path
+            d="M12 4c.6 2.6 4.5 4.6 4.5 9a4.5 4.5 0 0 1-9 0c0-2 1-3.4 2-4.3.2 1.4.8 2.3 1.7 2.8C11 9 11.2 6.4 12 4z"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
         </svg>
       );
     default:

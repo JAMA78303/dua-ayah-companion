@@ -129,7 +129,8 @@ export async function fetchPairingsForCategory(category: EmotionCategory): Promi
       .eq("status", "approved");
 
     if (countError) throw countError;
-    if (!count) return fallbackForCategory(category);
+    // Nothing approved for this feeling yet (e.g. a newly added one): say so rather than show another feeling's ayah.
+    if (!count) return null;
 
     const offset = Math.floor(Math.random() * count);
     const { data, error } = await supabase
