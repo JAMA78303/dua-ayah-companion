@@ -76,6 +76,18 @@ export default function DiscoverPage() {
               →
             </span>
           </Link>
+          <Link
+            href="/journal"
+            className="card-elevated flex items-center justify-between gap-4 p-5 transition hover:border-[var(--accent-primary)]"
+          >
+            <span>
+              <span className="block font-playfair text-lg font-semibold text-[var(--text-primary)]">My journal</span>
+              <span className="block text-xs text-[var(--text-secondary)]">Your reflections on any ayah, in one place.</span>
+            </span>
+            <span className="text-sm font-semibold text-[var(--accent-primary)]" aria-hidden>
+              →
+            </span>
+          </Link>
           <StreakDisplay />
           <p className="text-center text-xs italic text-[var(--text-secondary)]">{SUPPORTER_MISSION_LINE}</p>
 

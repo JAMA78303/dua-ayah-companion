@@ -46,6 +46,11 @@ interface AyahCardProps {
   shouldPauseAudio?: boolean;
   /** Prophets tab: show prophetic story expanded by default. */
   expandPropheticStory?: boolean;
+  /**
+   * What the reflection box writes to. Defaults to the pairing (or the ayah, when there is none);
+   * an ayah opened from the Qur'an reader passes its own key so it matches the reader's reflection.
+   */
+  journalContentKey?: string;
 }
 
 interface RelatedDua {
@@ -91,6 +96,7 @@ export function AyahCard({
   qfWords,
   shouldPauseAudio,
   expandPropheticStory = false,
+  journalContentKey,
 }: AyahCardProps) {
   const sourceType: DuaSourceType =
     sourceTypeProp === "prophetic_sunnah" ? "prophetic_sunnah" : "quranic";
@@ -446,7 +452,11 @@ export function AyahCard({
           />
         </div>
         <ResonanceSurvey pairingId={pairingId} revealTargetId={reflectionAnchorId} />
-        <JournalTextarea pairingId={pairingId} surah={surah} ayahNumber={ayahNumber} />
+        <JournalTextarea
+          contentKey={journalContentKey ?? (isUuid(pairingId) ? pairingKey(pairingId) : ayahKey(surah, ayahNumber))}
+          surah={surah}
+          ayahNumber={ayahNumber}
+        />
       </section>
       </div>
     </article>
