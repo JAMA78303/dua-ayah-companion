@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import { moonAge, moonIllumination, moonLitPath, moonPhaseName } from "@/lib/prayer/moon";
-import { arcPoint, moonProgress, skyPeriod, sunProgress } from "@/lib/prayer/sky";
-import { minutesOf } from "@/lib/prayer/prayerTimes";
+import { PRAYER_HADITH } from "@/lib/prayer/prayerHadith";
+import { arcPoint, moonProgress, prayerMoment, previewMinutes, skyPeriod, sunProgress, type PrayerMoment } from "@/lib/prayer/sky";
+import { duhaWindow, minutesOf } from "@/lib/prayer/prayerTimes";
 
 const timings = { Fajr: "05:05", Sunrise: "06:58", Dhuhr: "12:51", Asr: "16:01", Maghrib: "18:43", Isha: "20:28" };
 
@@ -70,5 +71,40 @@ describe("the sky", () => {
     const box = { left: 20, right: 300, horizon: 110, peak: 20 };
     expect(arcPoint(0, box)).toEqual({ x: 20, y: 110 });
     expect(arcPoint(0.5, box)).toEqual({ x: 160, y: 20 });
+  });
+});
+
+describe("Duha and the moment of each prayer", () => {
+  it("puts Duha from once the sun is up until shortly before Dhuhr, best halfway", () => {
+    expect(duhaWindow(timings)).toEqual({ start: "07:13", best: "09:55", end: "12:41" });
+  });
+
+  it("names the moment, with sunrise, Duha and the last third of the night", () => {
+    const at = (hhmm: string) => prayerMoment(timings, minutesOf(hhmm), "02:53");
+    expect(at("23:00")).toBe("Isha");
+    expect(at("03:00")).toBe("LastThird");
+    expect(at("05:30")).toBe("Fajr");
+    expect(at("07:05")).toBe("Sunrise");
+    expect(at("10:00")).toBe("Duha");
+    expect(at("13:00")).toBe("Dhuhr");
+    expect(at("17:00")).toBe("Asr");
+    expect(at("19:00")).toBe("Maghrib");
+    expect(prayerMoment(timings, minutesOf("03:00"), null)).toBe("Isha");
+    // Far north in summer the last third can begin before midnight.
+    expect(prayerMoment(timings, minutesOf("23:50"), "23:30")).toBe("LastThird");
+  });
+
+  it("shows each tapped prayer's own sky", () => {
+    for (const moment of ["Fajr", "Sunrise", "Duha", "Dhuhr", "Asr", "Maghrib", "Isha"] as const) {
+      expect(prayerMoment(timings, previewMinutes(moment, timings), null)).toBe(moment);
+    }
+  });
+
+  it("has a hadith for every moment, linked to sunnah.com", () => {
+    const moments: PrayerMoment[] = ["Fajr", "Sunrise", "Duha", "Dhuhr", "Asr", "Maghrib", "Isha", "LastThird"];
+    for (const moment of moments) {
+      expect(PRAYER_HADITH[moment].length, moment).toBeGreaterThan(0);
+      for (const hadith of PRAYER_HADITH[moment]) expect(hadith.url, hadith.source).toMatch(/^https:\/\/sunnah\.com\/[a-z]+:\d+[a-z]?$/);
+    }
   });
 });

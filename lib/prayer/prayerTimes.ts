@@ -191,3 +191,27 @@ export function nextPrayer(timings: Record<PrayerName, string>, nowHHMM: string)
   }
   return null;
 }
+
+const hhmm = (totalMinutes: number) => {
+  const m = ((Math.round(totalMinutes) % 1440) + 1440) % 1440;
+  return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+};
+
+/** Minutes after sunrise before Duha begins: the sun must have risen and be up (Sahih Muslim 832). */
+export const DUHA_AFTER_SUNRISE_MINUTES = 15;
+/** Minutes before Dhuhr that Duha ends: no prayer while the sun is at its height (Sahih Muslim 832). */
+export const DUHA_BEFORE_DHUHR_MINUTES = 10;
+
+/**
+ * The voluntary Duha prayer: from once the sun is up until shortly before Dhuhr, best when the sun is hot
+ * (Sahih Muslim 748), taken as halfway between sunrise and Dhuhr. All three are approximate.
+ */
+export function duhaWindow(timings: Record<PrayerName, string>): { start: string; best: string; end: string } {
+  const sunrise = minutesOf(timings.Sunrise);
+  const dhuhr = minutesOf(timings.Dhuhr);
+  return {
+    start: hhmm(sunrise + DUHA_AFTER_SUNRISE_MINUTES),
+    best: hhmm((sunrise + dhuhr) / 2),
+    end: hhmm(dhuhr - DUHA_BEFORE_DHUHR_MINUTES),
+  };
+}
