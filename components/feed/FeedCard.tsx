@@ -98,13 +98,6 @@ export function FeedCard({ pairing, index, total, isActive }: FeedCardProps) {
       ? `From the Sunnah · ${pairing.hadith_source?.trim() || "Hadith"}`
       : `Surah ${surahName} · Ayah ${pairing.ayah_number}`;
 
-  const toneDotClass =
-    pairing.tone_tag === "comfort"
-      ? "bg-teal-600"
-      : pairing.tone_tag === "balance"
-        ? "bg-gold-400"
-        : "bg-rose-400";
-
   return (
     <div
       ref={cardRef}
@@ -129,12 +122,12 @@ export function FeedCard({ pairing, index, total, isActive }: FeedCardProps) {
           {/* my-auto centres when it fits and top-aligns when it overflows (justify-center would clip the top). */}
           <div className="my-auto flex flex-col items-center gap-3">
             <SurahReferencePill>{pillLabel}</SurahReferencePill>
-            <div className="flex items-center gap-2">
-              <span className={`size-2 shrink-0 rounded-full ${toneDotClass}`} aria-hidden />
+            {/* The feeling it was chosen for; the tone only sets the card's colour. */}
+            {pairing.emotion_category ? (
               <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--text-secondary)]">
-                {pairing.tone_tag}
+                {`For ${pairing.emotion_category}`}
               </span>
-            </div>
+            ) : null}
 
             <RecitedArabic
               text={arabicText}

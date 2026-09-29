@@ -18,6 +18,7 @@ import { quranWords, recitedWordIndex } from "@/lib/audio/clipPlayback";
 import { normalizeAudioUrl, type AyahClip } from "@/lib/quranFoundation/fetchAudio";
 import type { QfWord } from "@/lib/quranFoundation/fetchAyah";
 import { toneGradientVar, type ToneTag } from "@/lib/theme/toneGradient";
+import type { EmotionCategory } from "@/types/emotions";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
@@ -34,7 +35,10 @@ interface AyahCardProps {
   duaText: string;
   duaTransliteration?: string | null;
   duaTranslation: string;
+  /** Sets the card's colour. */
   toneTag: ToneTag;
+  /** The feeling this ayah was chosen for, shown at the top; none for an ayah opened on its own. */
+  feeling?: EmotionCategory | null;
   sourceType?: string | null;
   hadithSource?: string | null;
   /** Ayah the dua is quoted from, when not this one (pairing.dua_verse_key). */
@@ -88,6 +92,7 @@ export function AyahCard({
   duaTransliteration,
   duaTranslation,
   toneTag,
+  feeling,
   sourceType: sourceTypeProp,
   hadithSource,
   duaSourceKey,
@@ -272,9 +277,9 @@ export function AyahCard({
       }}
     >
       <header className="px-5 pt-5 md:px-8 md:pt-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--accent-primary)]">
-          {toneTag}
-        </p>
+        {feeling ? (
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--accent-primary)]">{`For ${feeling}`}</p>
+        ) : null}
       </header>
 
       <div className="px-5 pb-2 pt-2 md:px-8">
