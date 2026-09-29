@@ -16,7 +16,7 @@ interface UpgradeModalProps {
 export function UpgradeModal({
   open,
   onClose,
-  title = "You've saved 10 ayahs",
+  title = "You've used your 10 free saves",
   description = "Become a Supporter for unlimited saves, and help fund Islamic causes.",
 }: UpgradeModalProps) {
   useEffect(() => {

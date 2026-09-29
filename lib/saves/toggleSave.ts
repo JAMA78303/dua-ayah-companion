@@ -1,18 +1,21 @@
 import { createClient } from "@/lib/supabase/client";
 
 import { getUserWithTimeout } from "@/lib/auth/getUserWithTimeout";
+import { parseContentKey } from "@/lib/saves/contentKeys";
+import { FREE_SAVE_CAP } from "@/lib/saves/limits";
 
 export const SAVE_ERR_UNAUTHENTICATED = "UNAUTHENTICATED";
 export const SAVE_ERR_LIMIT_REACHED = "LIMIT_REACHED";
 
-const FREE_SAVE_CAP = 10;
-
 export type ToggleSaveResult = "saved" | "removed";
 
 /**
- * Toggle `saved_items` for the signed-in user. RULE-005: explicit selects only.
+ * Toggle a save (any content key: pairing, ayah, adhkar, Name, story chapter) for the signed-in
+ * user. RULE-005: explicit selects only.
  */
-export async function toggleSave(pairingId: string): Promise<ToggleSaveResult> {
+export async function toggleSave(contentKey: string): Promise<ToggleSaveResult> {
+  if (!parseContentKey(contentKey)) throw new Error(`Invalid content key: ${contentKey}`);
+
   const user = await getUserWithTimeout();
   if (!user) {
     throw new Error(SAVE_ERR_UNAUTHENTICATED);
@@ -36,7 +39,7 @@ export async function toggleSave(pairingId: string): Promise<ToggleSaveResult> {
     .from("saved_items")
     .select("id")
     .eq("user_id", user.id)
-    .eq("pairing_id", pairingId)
+    .eq("content_key", contentKey)
     .maybeSingle();
 
   if (existingError) {
@@ -61,9 +64,10 @@ export async function toggleSave(pairingId: string): Promise<ToggleSaveResult> {
     }
   }
 
+  // The database fills pairing_id for pairing saves (migration 019).
   const { error: insertError } = await supabase.from("saved_items").insert({
     user_id: user.id,
-    pairing_id: pairingId,
+    content_key: contentKey,
   });
 
   if (insertError) {

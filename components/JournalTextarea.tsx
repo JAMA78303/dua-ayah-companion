@@ -106,6 +106,9 @@ export function JournalTextarea({ pairingId, surah, ayahNumber }: JournalTextare
     }
   }
 
+  // Journal entries belong to a curated pairing; ayat opened on their own can be saved but not journaled yet.
+  if (!canPersistJournal) return null;
+
   return (
     <div className="space-y-2 rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)] p-3">
       <label htmlFor="journal" className="text-sm font-medium text-[var(--text-primary)]">
@@ -129,25 +132,13 @@ export function JournalTextarea({ pairingId, surah, ayahNumber }: JournalTextare
         <button
           type="button"
           onClick={() => void handleSave()}
-          disabled={isSaving || content.trim().length === 0 || !canPersistJournal}
+          disabled={isSaving || content.trim().length === 0}
           className="rounded-md bg-[var(--accent-primary)] px-3 py-1.5 text-sm text-white disabled:opacity-60"
         >
-          {!canPersistJournal
-            ? "Save unavailable"
-            : isSaving
-              ? "Saving..."
-              : hasSavedEntry
-                ? "Update Reflection"
-                : "Save Reflection"}
+          {isSaving ? "Saving..." : hasSavedEntry ? "Update Reflection" : "Save Reflection"}
         </button>
       </div>
-      {!canPersistJournal ? (
-        <p className="text-xs text-[var(--text-secondary)]">
-          This reflection is temporary and cannot be saved to your journal yet.
-        </p>
-      ) : (
-        <p className="text-xs text-[var(--text-secondary)]">Saved reflections sync to your account when signed in.</p>
-      )}
+      <p className="text-xs text-[var(--text-secondary)]">Saved reflections sync to your account when signed in.</p>
       {message ? <p className="text-xs text-[var(--text-secondary)]">{message}</p> : null}
 
       <AuthModal

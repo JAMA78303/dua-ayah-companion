@@ -156,7 +156,7 @@ export function CategoryTiles() {
           <span className="text-xs leading-snug text-[var(--text-secondary)]">{category.description}</span>
         </button>
       ))}
-      <button type="button" onClick={() => router.push("/favourites")} className={tileClass}>
+      <button type="button" onClick={() => router.push("/saved")} className={tileClass}>
         <svg
           className="size-6 stroke-[var(--accent-primary)]"
           viewBox="0 0 24 24"
@@ -169,8 +169,8 @@ export function CategoryTiles() {
             strokeLinejoin="round"
           />
         </svg>
-        <span className="font-nunito text-sm font-semibold text-[var(--text-primary)]">Favourite Tabs</span>
-        <span className="text-xs leading-snug text-[var(--text-secondary)]">Most selected reflections</span>
+        <span className="font-nunito text-sm font-semibold text-[var(--text-primary)]">Saved</span>
+        <span className="text-xs leading-snug text-[var(--text-secondary)]">Duas, ayat and stories you kept</span>
       </button>
     </div>
   );

@@ -1,7 +1,8 @@
+import { SAVED_KEYS_STORAGE_KEYS } from "@/lib/local/savedKeys";
 import { createClient } from "@/lib/supabase/client";
 
 /** Per-user data mirrored on this device. Device preferences (theme, reciter, speed) are kept. */
-const USER_STORAGE_KEYS = ["dua-app:favourite-pairing-ids", "dua-app:journal-entries"];
+const USER_STORAGE_KEYS = [...SAVED_KEYS_STORAGE_KEYS, "dua-app:journal-entries"];
 const USER_STORAGE_PREFIXES = ["journal-draft-"];
 
 function clearLocalUserData() {

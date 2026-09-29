@@ -11,6 +11,8 @@ import { ResonanceSurvey } from "@/components/ResonanceSurvey";
 import { SaveButton } from "@/components/SaveButton";
 import { SurahReferencePill } from "@/components/SurahReferencePill";
 import { getSurahName } from "@/lib/quran/surahNames";
+import { ayahKey, pairingKey } from "@/lib/saves/contentKeys";
+import { isUuid } from "@/lib/uuid";
 import { normalizeAudioUrl } from "@/lib/quranFoundation/fetchAudio";
 import type { QfWord } from "@/lib/quranFoundation/fetchAyah";
 import { toneGradientVar, type ToneTag } from "@/lib/theme/toneGradient";
@@ -426,7 +428,11 @@ export function AyahCard({
 
       <section className="space-y-3 border-t border-[var(--border)] pt-4">
         <div className="flex items-center gap-2">
-          <SaveButton pairingId={pairingId} surah={surah} ayahNumber={ayahNumber} />
+          <SaveButton
+            contentKey={isUuid(pairingId) ? pairingKey(pairingId) : ayahKey(surah, ayahNumber)}
+            surah={surah}
+            ayahNumber={ayahNumber}
+          />
         </div>
         <ResonanceSurvey pairingId={pairingId} revealTargetId={reflectionAnchorId} />
         <JournalTextarea pairingId={pairingId} surah={surah} ayahNumber={ayahNumber} />

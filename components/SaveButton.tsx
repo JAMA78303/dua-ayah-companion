@@ -4,40 +4,32 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AuthModal } from "@/components/AuthModal";
 import { UpgradeModal } from "@/components/UpgradeModal";
-import { getUserWithTimeout } from "@/lib/auth/getUserWithTimeout";
-import { isFavouritePairing, toggleFavouritePairing } from "@/lib/local/favouritePairings";
+import { SAVED_KEYS_EVENT, isSavedLocally, setSavedLocally } from "@/lib/local/savedKeys";
+import { accountSavedKeys, noteAccountSave } from "@/lib/saves/accountSavedKeys";
+import { parseContentKey } from "@/lib/saves/contentKeys";
 import {
   SAVE_ERR_LIMIT_REACHED,
   SAVE_ERR_UNAUTHENTICATED,
   toggleSave,
 } from "@/lib/saves/toggleSave";
-import { createClient } from "@/lib/supabase/client";
-import { isUuid } from "@/lib/uuid";
 
 interface SaveButtonProps {
-  pairingId: string;
+  /** What is saved: see lib/saves/contentKeys.ts. */
+  contentKey: string;
+  /** For ayat: also bookmarked on Quran.com when the account is linked. */
   surah?: number;
   ayahNumber?: number;
-  /** Feed cards: just the button, no helper text. */
+  /** Cards and lists: just the button, no helper text. */
   compact?: boolean;
 }
 
-function syncLocalMirror(pairingId: string, shouldBeSaved: boolean) {
-  const has = isFavouritePairing(pairingId);
-  if (shouldBeSaved && !has) {
-    toggleFavouritePairing(pairingId);
-  } else if (!shouldBeSaved && has) {
-    toggleFavouritePairing(pairingId);
-  }
-}
-
-export function SaveButton({ pairingId, surah, ayahNumber, compact = false }: SaveButtonProps) {
+export function SaveButton({ contentKey, surah, ayahNumber, compact = false }: SaveButtonProps) {
   const [isSaved, setIsSaved] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const canPersistSave = isUuid(pairingId);
+  const canPersistSave = parseContentKey(contentKey) !== null;
   const isSavedRef = useRef(isSaved);
 
   useEffect(() => {
@@ -47,23 +39,23 @@ export function SaveButton({ pairingId, surah, ayahNumber, compact = false }: Sa
   useEffect(() => {
     if (!canPersistSave) return;
     let cancelled = false;
-    void (async () => {
-      setIsSaved(isFavouritePairing(pairingId));
-      const user = await getUserWithTimeout();
-      if (!user || cancelled) return;
-      const supabase = createClient();
-      const { data } = await supabase
-        .from("saved_items")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("pairing_id", pairingId)
-        .maybeSingle();
-      if (!cancelled && data?.id) setIsSaved(true);
-    })();
+    // This device's copy first (instant), then the account's saves when signed in.
+    queueMicrotask(() => {
+      if (!cancelled) setIsSaved(isSavedLocally(contentKey));
+    });
+    void accountSavedKeys()
+      .then((keys) => {
+        if (keys && !cancelled) setIsSaved(keys.has(contentKey));
+      })
+      .catch(() => {});
+    // Another button for the same item was toggled.
+    const onChange = () => setIsSaved(isSavedLocally(contentKey));
+    window.addEventListener(SAVED_KEYS_EVENT, onChange);
     return () => {
       cancelled = true;
+      window.removeEventListener(SAVED_KEYS_EVENT, onChange);
     };
-  }, [pairingId, canPersistSave]);
+  }, [contentKey, canPersistSave]);
 
   const performToggle = useCallback(
     async (opts?: { skipOptimistic?: boolean }) => {
@@ -77,9 +69,10 @@ export function SaveButton({ pairingId, surah, ayahNumber, compact = false }: Sa
       setIsBusy(true);
       setToast(null);
       try {
-        const next = await toggleSave(pairingId);
+        const next = await toggleSave(contentKey);
         setIsSaved(next === "saved");
-        syncLocalMirror(pairingId, next === "saved");
+        noteAccountSave(contentKey, next === "saved");
+        setSavedLocally(contentKey, next === "saved");
         if (next === "saved" && typeof surah === "number" && typeof ayahNumber === "number") {
           const verseKey = `${surah}:${ayahNumber}`;
           void fetch("/api/qf/bookmark", {
@@ -109,15 +102,17 @@ export function SaveButton({ pairingId, surah, ayahNumber, compact = false }: Sa
         window.setTimeout(() => setIsBusy(false), wait);
       }
     },
-    [ayahNumber, canPersistSave, isBusy, pairingId, surah],
+    [ayahNumber, canPersistSave, contentKey, isBusy, surah],
   );
+
+  if (!canPersistSave) return null;
 
   return (
     <>
       <button
         type="button"
         onClick={() => void performToggle()}
-        disabled={isBusy || !canPersistSave}
+        disabled={isBusy}
         aria-pressed={isSaved}
         className={
           compact
@@ -125,21 +120,9 @@ export function SaveButton({ pairingId, surah, ayahNumber, compact = false }: Sa
             : "rounded-md border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--text-primary)] transition hover:bg-[var(--bg-subtle)] disabled:opacity-50"
         }
       >
-        {compact
-          ? isSaved
-            ? "♥ Saved"
-            : "♡ Save"
-          : !canPersistSave
-            ? "Save unavailable"
-            : isSaved
-              ? "In favourites"
-              : "Add to favourites"}
+        {isSaved ? "♥ Saved" : "♡ Save"}
       </button>
-      {compact ? null : !canPersistSave ? (
-        <p className="text-xs text-[var(--text-secondary)]">
-          This reflection is temporary and cannot be saved yet.
-        </p>
-      ) : (
+      {compact ? null : (
         <p className="text-xs text-[var(--text-secondary)]">
           Signed-in saves sync to your account; this device keeps a local copy for offline browsing.
         </p>

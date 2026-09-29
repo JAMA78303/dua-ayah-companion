@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { SaveButton } from "@/components/SaveButton";
 import { fetchProphetsOfAllah } from "@/lib/content/fetchProphetFigures";
 import { PROPHET_STORIES, getProphetStory } from "@/lib/content/prophetStories";
 import { getSurahName } from "@/lib/quran/surahNames";
 import { prophetArabicName, prophetEnglishLabel } from "@/lib/prophets/displayNames";
+import { storyKey } from "@/lib/saves/contentKeys";
 
 interface StoryPageProps {
   params: Promise<{ slug: string }>;
@@ -85,6 +87,9 @@ export default async function StoryPage({ params }: StoryPageProps) {
                 );
               })}
             </ul>
+            <div className="flex justify-end">
+              <SaveButton contentKey={storyKey(story.slug, chapterIndex)} compact />
+            </div>
           </li>
         ))}
       </ol>

@@ -33,7 +33,7 @@ GRANT UPDATE (theme_preference, reciter_id, updated_at) ON public.profiles TO au
 
 DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
 
--- Free accounts are capped at 10 saved items (mirrors FREE_SAVE_CAP in lib/saves/toggleSave.ts).
+-- Free accounts are capped at 10 saved items (mirrors FREE_SAVE_CAP in lib/saves/limits.ts).
 CREATE OR REPLACE FUNCTION public.enforce_free_save_cap()
 RETURNS TRIGGER
 LANGUAGE plpgsql

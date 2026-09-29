@@ -1,5 +1,6 @@
-import { FavouritesPageClient } from "@/components/favourites/FavouritesPageClient";
+import { redirect } from "next/navigation";
 
+/** Favourites and Saved are the same list now. */
 export default function FavouritesPage() {
-  return <FavouritesPageClient />;
+  redirect("/saved");
 }

@@ -61,6 +61,7 @@ export function StoryFeedCard({ item }: { item: StoryItem }) {
             body: item.chapter.body,
             footnote: item.chapter.refs.map((ref) => `${getSurahName(Number(ref.split(":")[0]))} ${ref.replace("-", "–")}`).join(" · "),
           }}
+          save={{ contentKey: item.id }}
         />
       </div>
     </div>
