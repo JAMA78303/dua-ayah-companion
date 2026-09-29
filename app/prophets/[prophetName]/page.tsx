@@ -79,6 +79,7 @@ export default async function ProphetDetailPage({
           duaTransliteration={pairing.dua_transliteration}
           duaTranslation={pairing.dua_translation}
           toneTag={pairing.tone_tag}
+          feeling={pairing.emotion_category ?? null}
           sourceType={pairing.source_type}
           hadithSource={pairing.hadith_source}
           duaSourceKey={pairing.dua_verse_key}

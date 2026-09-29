@@ -25,7 +25,7 @@ export interface Pairing {
 }
 
 const PAIRING_COLUMNS =
-  "id, surah, ayah_number, arabic_text, translation, tafsir_summary, reflection_prompts, prophetic_story, prophet_name, tone_tag, dua_text, dua_transliteration, dua_translation, dua_verse_key, qf_verse_key, source_type, hadith_source";
+  "id, surah, ayah_number, arabic_text, translation, tafsir_summary, reflection_prompts, prophetic_story, prophet_name, tone_tag, emotion_category, dua_text, dua_transliteration, dua_translation, dua_verse_key, qf_verse_key, source_type, hadith_source";
 
 function dedupePairingsByAyah(pairings: Pairing[]): Pairing[] {
   const seen = new Set<string>();
@@ -40,6 +40,7 @@ function dedupePairingsByAyah(pairings: Pairing[]): Pairing[] {
 const FALLBACK_PAIRINGS: Pairing[] = [
   {
     id: "fallback-guidance-1",
+    emotion_category: "guidance",
     surah: 1,
     ayah_number: 6,
     arabic_text: "اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ",
@@ -58,6 +59,7 @@ const FALLBACK_PAIRINGS: Pairing[] = [
   },
   {
     id: "fallback-anxiety-1",
+    emotion_category: "anxiety",
     surah: 13,
     ayah_number: 28,
     arabic_text: "أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ",
@@ -76,6 +78,7 @@ const FALLBACK_PAIRINGS: Pairing[] = [
   },
   {
     id: "fallback-sadness-1",
+    emotion_category: "sadness",
     surah: 94,
     ayah_number: 5,
     arabic_text: "فَإِنَّ مَعَ الْعُسْرِ يُسْرًا",
@@ -94,6 +97,7 @@ const FALLBACK_PAIRINGS: Pairing[] = [
   },
   {
     id: "fallback-guilt-1",
+    emotion_category: "guilt",
     surah: 20,
     ayah_number: 2,
     arabic_text: "مَا أَنزَلْنَا عَلَيْكَ ٱلْقُرْءَانَ لِتَشْقَىٰٓ",
@@ -247,7 +251,7 @@ export async function fetchAllApprovedPairings(): Promise<Pairing[]> {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("ayah_pairings")
-      .select(`${PAIRING_COLUMNS}, emotion_category`)
+      .select(PAIRING_COLUMNS)
       .eq("status", "approved")
       .order("created_at", { ascending: true })
       .order("id", { ascending: true })
@@ -279,7 +283,7 @@ export async function fetchPairingsForFeed({
     const supabase = await createClient();
     let query = supabase
       .from("ayah_pairings")
-      .select(`${PAIRING_COLUMNS}, emotion_category`)
+      .select(PAIRING_COLUMNS)
       .eq("status", "approved")
       .order("created_at", { ascending: false })
       .order("id", { ascending: true })
