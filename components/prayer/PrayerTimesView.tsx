@@ -1,12 +1,17 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { MoonCard } from "@/components/prayer/MoonCard";
+import { SkyScene } from "@/components/prayer/SkyScene";
+import { moonAge, moonIllumination, moonPhaseName } from "@/lib/prayer/moon";
 import {
   CALCULATION_METHODS,
   PRAYERS,
   fetchDayTimes,
   fetchQiblaDirection,
+  minutesOf,
   nextPrayer,
   nowInTimezone,
   readPrayerSettings,
@@ -15,8 +20,10 @@ import {
   writePrayerSettings,
   type DayTimes,
   type PlaceResult,
+  type PrayerName,
   type PrayerSettings,
 } from "@/lib/prayer/prayerTimes";
+import { moonProgress, skyPeriod, sunProgress, type SkyPeriod } from "@/lib/prayer/sky";
 
 const selectClass =
   "w-full rounded-md border border-[var(--border)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none ring-[var(--accent-primary)] focus:ring-2";
@@ -25,6 +32,29 @@ function formatCountdown(totalMinutes: number) {
   const h = Math.floor(totalMinutes / 60);
   const m = totalMinutes % 60;
   return h > 0 ? `in ${h} h ${m} min` : `in ${m} min`;
+}
+
+/** How far into a prayer's time its sky is shown when that prayer is tapped. */
+const PREVIEW_OFFSET_MINUTES = 20;
+
+function skyCaption(period: SkyPeriod, day: DayTimes, minutes: number): string {
+  switch (period) {
+    case "fajr":
+      return "Fajr · first light, before sunrise";
+    case "morning":
+      return "Morning · the sun has risen";
+    case "dhuhr":
+      return "Dhuhr · the sun has passed its height";
+    case "asr":
+      return "Asr · the sun is lowering";
+    case "maghrib":
+      return "Maghrib · the sun has set";
+    case "night":
+      if (day.lastThird && minutes >= minutesOf(day.lastThird) && minutes < minutesOf(day.timings.Fajr)) {
+        return "The last third of the night";
+      }
+      return "Isha · night";
+  }
 }
 
 function QiblaDial({ bearing }: { bearing: number }) {
@@ -57,6 +87,7 @@ export function PrayerTimesView() {
   const [locating, setLocating] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
+  const [preview, setPreview] = useState<PrayerName | null>(null);
 
   useEffect(() => {
     queueMicrotask(() => setSettings(readPrayerSettings()));
@@ -121,7 +152,15 @@ export function PrayerTimesView() {
 
   if (!settings) return <p className="text-sm text-[var(--text-secondary)]">Loading...</p>;
 
+  const nowMinutes = day ? minutesOf(nowInTimezone(day.timezone, now)) : 0;
   const upcoming = day ? nextPrayer(day.timings, nowInTimezone(day.timezone, now)) : null;
+  const age = moonAge(now);
+  const southern = (settings.location?.latitude ?? 0) < 0;
+  const skyMinutes = day && preview ? (minutesOf(day.timings[preview]) + PREVIEW_OFFSET_MINUTES) % 1440 : nowMinutes;
+  const period = day ? skyPeriod(day.timings, skyMinutes) : "night";
+  const sun = day ? sunProgress(day.timings, skyMinutes) : null;
+  const moon = day ? moonProgress(day.timings, skyMinutes, age) : null;
+  const caption = day ? skyCaption(period, day, skyMinutes) : "";
 
   return (
     <div className="space-y-6">
@@ -139,6 +178,26 @@ export function PrayerTimesView() {
 
           {day ? (
             <>
+              <figure className="space-y-2">
+                <SkyScene
+                  period={period}
+                  sun={sun}
+                  moon={moon}
+                  moonAge={age}
+                  southern={southern}
+                  label={`${caption}. ${moon === null ? "The moon is below the horizon." : `${moonPhaseName(age)} moon, ${Math.round(moonIllumination(age) * 100)}% lit.`}`}
+                />
+                <figcaption className="flex items-center justify-between gap-3 text-xs text-[var(--text-secondary)]">
+                  <span>{preview ? `${caption} (at ${day.timings[preview]})` : caption}</span>
+                  {preview ? (
+                    <button type="button" onClick={() => setPreview(null)} className="shrink-0 font-semibold text-[var(--accent-primary)]">
+                      Back to now
+                    </button>
+                  ) : (
+                    <span className="shrink-0">Tap a prayer to see its sky</span>
+                  )}
+                </figcaption>
+              </figure>
               <p className="rounded-xl bg-[var(--bg-subtle)] px-4 py-3 text-sm text-[var(--text-primary)]">
                 {upcoming ? (
                   <>
@@ -152,17 +211,35 @@ export function PrayerTimesView() {
               </p>
               <ul className="divide-y divide-[var(--border)]">
                 {PRAYERS.map((name) => (
-                  <li
-                    key={name}
-                    className={`flex items-center justify-between py-2.5 text-sm ${
-                      upcoming?.name === name ? "font-semibold text-[var(--accent-primary)]" : "text-[var(--text-primary)]"
-                    } ${name === "Sunrise" ? "text-[var(--text-secondary)]" : ""}`}
-                  >
-                    <span>{name}</span>
-                    <span className="tabular-nums">{day.timings[name]}</span>
+                  <li key={name}>
+                    <button
+                      type="button"
+                      aria-pressed={preview === name}
+                      onClick={() => setPreview(preview === name ? null : name)}
+                      className={`-mx-2 flex w-[calc(100%+1rem)] items-center justify-between rounded-lg px-2 py-2.5 text-left text-sm transition hover:bg-[var(--bg-subtle)] ${
+                        preview === name ? "bg-[var(--bg-subtle)]" : ""
+                      } ${
+                        upcoming?.name === name
+                          ? "font-semibold text-[var(--accent-primary)]"
+                          : name === "Sunrise"
+                            ? "text-[var(--text-secondary)]"
+                            : "text-[var(--text-primary)]"
+                      }`}
+                    >
+                      <span>{name}</span>
+                      <span className="tabular-nums">{day.timings[name]}</span>
+                    </button>
                   </li>
                 ))}
               </ul>
+              {day.lastThird ? (
+                <p className="text-sm text-[var(--text-secondary)]">
+                  {`The last third of the night begins around ${day.lastThird}, a time when dua is answered. `}
+                  <Link href="/duas/how-to#times" className="font-medium text-[var(--accent-primary)] hover:opacity-80">
+                    How to make dua
+                  </Link>
+                </p>
+              ) : null}
               <p className="text-xs text-[var(--text-secondary)]">{`Times are for ${day.timezone.replace(/_/g, " ")}.`}</p>
             </>
           ) : null}
@@ -217,6 +294,8 @@ export function PrayerTimesView() {
           </p>
         </section>
       )}
+
+      {settings.location && day ? <MoonCard age={age} hijri={day.hijri} southern={southern} /> : null}
 
       {settings.location && qibla !== null ? (
         <section className="card-elevated space-y-3 p-5">

@@ -75,9 +75,44 @@ export function writePrayerSettings(settings: PrayerSettings) {
   }
 }
 
+/** Our spellings of the Islamic months, by number. */
+export const HIJRI_MONTHS = [
+  "Muharram",
+  "Safar",
+  "Rabi' al-Awwal",
+  "Rabi' al-Thani",
+  "Jumada al-Ula",
+  "Jumada al-Akhirah",
+  "Rajab",
+  "Sha'ban",
+  "Ramadan",
+  "Shawwal",
+  "Dhul-Qa'dah",
+  "Dhul-Hijjah",
+] as const;
+
+export interface HijriDate {
+  day: number;
+  /** 1 to 12. */
+  month: number;
+  year: number;
+}
+
 export interface DayTimes {
   timings: Record<PrayerName, string>;
+  /** When the last third of the night begins ("HH:MM"). */
+  lastThird: string | null;
+  /** Aladhan's calculated date, which can differ by a day from the local moon sighting. */
+  hijri: HijriDate | null;
   timezone: string;
+}
+
+function parseHijri(hijri: { day?: string; month?: { number?: number }; year?: string } | undefined): HijriDate | null {
+  const day = Number(hijri?.day);
+  const month = Number(hijri?.month?.number);
+  const year = Number(hijri?.year);
+  if (!Number.isInteger(day) || day < 1 || day > 30 || !Number.isInteger(month) || month < 1 || month > 12 || !year) return null;
+  return { day, month, year };
 }
 
 function ddmmyyyy(date: Date) {
@@ -95,9 +130,20 @@ export async function fetchDayTimes(settings: PrayerSettings, date: Date): Promi
   });
   const response = await fetch(`https://api.aladhan.com/v1/timings/${ddmmyyyy(date)}?${params.toString()}`);
   if (!response.ok) throw new Error(`Prayer times unavailable (${response.status})`);
-  const { data } = (await response.json()) as { data: { timings: Record<string, string>; meta: { timezone: string } } };
+  const { data } = (await response.json()) as {
+    data: {
+      timings: Record<string, string>;
+      date?: { hijri?: { day?: string; month?: { number?: number }; year?: string } };
+      meta: { timezone: string };
+    };
+  };
   const timings = Object.fromEntries(PRAYERS.map((p) => [p, data.timings[p]!.slice(0, 5)])) as Record<PrayerName, string>;
-  return { timings, timezone: data.meta.timezone };
+  return {
+    timings,
+    lastThird: data.timings.Lastthird?.slice(0, 5) ?? null,
+    hijri: parseHijri(data.date?.hijri),
+    timezone: data.meta.timezone,
+  };
 }
 
 export async function fetchQiblaDirection(location: PrayerLocation): Promise<number> {
@@ -132,14 +178,15 @@ export function nowInTimezone(timezone: string, now = new Date()): string {
   return new Intl.DateTimeFormat("en-GB", { timeZone: timezone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(now);
 }
 
-const minutes = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
+/** Minutes since midnight for "HH:MM". */
+export const minutesOf = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
 
 /** The next prayer today (Sunrise excluded), or null after Isha. */
 export function nextPrayer(timings: Record<PrayerName, string>, nowHHMM: string): { name: PrayerName; inMinutes: number } | null {
-  const now = minutes(nowHHMM);
+  const now = minutesOf(nowHHMM);
   for (const name of PRAYERS) {
     if (name === "Sunrise") continue;
-    const at = minutes(timings[name]);
+    const at = minutesOf(timings[name]);
     if (at > now) return { name, inMinutes: at - now };
   }
   return null;
