@@ -36,10 +36,26 @@ export default async function DuasPage({ searchParams }: DuasPageProps) {
       <header className="space-y-2">
         <h1 className="font-playfair text-2xl font-semibold text-[var(--text-primary)]">Duas from the Sunnah</h1>
         <p className="text-sm leading-relaxed text-[var(--text-secondary)]">
-          What the Prophet ﷺ said and taught for the moments that weigh on us, from Hisn al-Muslim (Fortress of the
-          Muslim). Each dua links to the hadith it comes from.
+          What the Prophet ﷺ said and taught for the moments that weigh on us, from <em>Hisn al-Muslim</em> (Fortress
+          of the Muslim) and the duas Ibn al-Qayyim cites in <em>al-Jawab al-Kafi</em>. Each dua links to the hadith it
+          comes from.
         </p>
       </header>
+
+      <Link
+        href="/duas/how-to"
+        className="card-elevated flex items-center justify-between gap-4 p-5 transition hover:border-[var(--accent-primary)]"
+      >
+        <span>
+          <span className="block font-playfair text-lg font-semibold text-[var(--text-primary)]">How to make dua</span>
+          <span className="block text-xs text-[var(--text-secondary)]">
+            How to ask, the times dua is answered, and what holds it back, from Ibn al-Qayyim.
+          </span>
+        </span>
+        <span className="text-sm font-semibold text-[var(--accent-primary)]" aria-hidden>
+          →
+        </span>
+      </Link>
 
       <nav className="flex flex-wrap gap-2" aria-label="Filter by feeling">
         <Link href="/duas" className={chipClass(!feeling)}>
