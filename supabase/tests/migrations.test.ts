@@ -130,6 +130,12 @@ describe("migrations, run in order from scratch", () => {
     );
   });
 
+  it("keeps the fasting person's “I am fasting” apart from the duas for anger (024)", async () => {
+    const { rows } = await db.query<{ situation: string; feelings: string[] }>("SELECT situation, feelings FROM sunnah_duas WHERE id = '186'");
+    expect(rows).toEqual([{ situation: "fasting", feelings: [] }]);
+    expect(await count(db, "SELECT 1 FROM sunnah_duas WHERE 'anger' = ANY(feelings)")).toBe(2);
+  });
+
   it("can re-run 012 onwards without changing anything", async () => {
     for (const file of migrationFiles.filter((f) => f >= "012")) await db.exec(readMigration(file));
     expect(await count(db, "SELECT 1 FROM ayah_pairings")).toBe(132);
