@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { ADHKAR } from "@/lib/content/adhkar";
+import { getCompanionStory } from "@/lib/content/companionStories";
 import { getNameOfAllah } from "@/lib/content/namesOfAllah";
 import { getProphetStory } from "@/lib/content/prophetStories";
 import { situationTitle } from "@/lib/content/sunnahSituations";
@@ -116,6 +117,19 @@ export async function resolveSavedEntries(keys: string[], supabase: SupabaseClie
           };
         }
         case "story": {
+          const companion = getCompanionStory(content.slug);
+          if (companion) {
+            const chapter = companion.chapters[content.chapterIndex];
+            if (!chapter) return null;
+            return {
+              key,
+              group: "stories",
+              eyebrow: `${companion.name} · Chapter ${content.chapterIndex + 1}`,
+              title: chapter.title,
+              body: chapter.body,
+              href: `/companions/${companion.slug}#chapter-${content.chapterIndex + 1}`,
+            };
+          }
           const story = getProphetStory(content.slug);
           const chapter = story?.chapters[content.chapterIndex];
           if (!story || !chapter) return null;

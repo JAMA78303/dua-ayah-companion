@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { ADHKAR, adhkarFor } from "@/lib/content/adhkar";
 import { DUA_GUIDE, GUIDE_AYAH } from "@/lib/content/duaGuide";
 import { DAILY_HADITH, hadithOfTheDay } from "@/lib/content/hadithOfTheDay";
+import { COMPANION_STORIES } from "@/lib/content/companionStories";
 import { NAMES_OF_ALLAH, nameOfTheDay } from "@/lib/content/namesOfAllah";
 import { PROPHET_STORIES } from "@/lib/content/prophetStories";
 import { prophetArabicName } from "@/lib/prophets/displayNames";
@@ -108,5 +109,27 @@ describe("hadith of the day", () => {
     expect(hadithOfTheDay(new Date(2026, 9, 1, 1))).toBe(hadithOfTheDay(new Date(2026, 9, 1, 23)));
     const seen = new Set(Array.from({ length: DAILY_HADITH.length }, (_, i) => hadithOfTheDay(new Date(2026, 0, 1 + i)).url));
     expect(seen.size).toBe(DAILY_HADITH.length);
+  });
+});
+
+describe("stories of the Companions", () => {
+  it("never shares a slug with a prophet's story, since both use story:<slug>:<index>", () => {
+    const prophets = new Set(PROPHET_STORIES.map((s) => s.slug));
+    for (const story of COMPANION_STORIES) expect(prophets.has(story.slug), story.slug).toBe(false);
+    expect(new Set(COMPANION_STORIES.map((s) => s.slug)).size).toBe(COMPANION_STORIES.length);
+  });
+
+  it("cites a source for every chapter, links hadith to sunnah.com and only real ayat", () => {
+    for (const story of COMPANION_STORIES) {
+      expect(story.episodes.length, story.slug).toBeGreaterThan(0);
+      for (const chapter of story.chapters) {
+        expect(chapter.sources.length, chapter.title).toBeGreaterThan(0);
+        for (const source of chapter.sources) {
+          if (source.url) expect(source.url, source.label).toMatch(/^https:\/\/sunnah\.com\/[a-z]+:\d+[a-z]?$/);
+          else expect(source.note, source.label).toBeTruthy();
+        }
+        for (const ref of chapter.ayat ?? []) expect(isValidAyahRef(ref), ref).toBe(true);
+      }
+    }
   });
 });
