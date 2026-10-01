@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { ADHKAR, adhkarFor } from "@/lib/content/adhkar";
 import { DUA_GUIDE, GUIDE_AYAH } from "@/lib/content/duaGuide";
+import { DAILY_HADITH, hadithOfTheDay } from "@/lib/content/hadithOfTheDay";
 import { NAMES_OF_ALLAH, nameOfTheDay } from "@/lib/content/namesOfAllah";
 import { PROPHET_STORIES } from "@/lib/content/prophetStories";
 import { prophetArabicName } from "@/lib/prophets/displayNames";
@@ -94,5 +95,18 @@ describe("how to make dua", () => {
         }
       }
     }
+  });
+});
+
+describe("hadith of the day", () => {
+  it("links every hadith to sunnah.com, each once", () => {
+    for (const hadith of DAILY_HADITH) expect(hadith.url, hadith.source).toMatch(/^https:\/\/sunnah\.com\/[a-z]+:\d+[a-z]?$/);
+    expect(new Set(DAILY_HADITH.map((h) => h.url)).size).toBe(DAILY_HADITH.length);
+  });
+
+  it("gives everyone the same hadith on the same date and goes through them all", () => {
+    expect(hadithOfTheDay(new Date(2026, 9, 1, 1))).toBe(hadithOfTheDay(new Date(2026, 9, 1, 23)));
+    const seen = new Set(Array.from({ length: DAILY_HADITH.length }, (_, i) => hadithOfTheDay(new Date(2026, 0, 1 + i)).url));
+    expect(seen.size).toBe(DAILY_HADITH.length);
   });
 });

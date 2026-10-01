@@ -6,6 +6,7 @@ import { useState } from "react";
 import { CategoryTiles } from "@/components/CategoryTiles";
 import { DailyRecommendationCard } from "@/components/DailyRecommendationCard";
 import { EmotionInput } from "@/components/EmotionInput";
+import { HadithOfTheDayCard } from "@/components/HadithOfTheDayCard";
 import { IOSInstallBanner } from "@/components/IOSInstallBanner";
 import { MosqueSilhouette } from "@/components/MosqueSilhouette";
 import { NameOfTheDayCard } from "@/components/names/NameOfTheDayCard";
@@ -26,6 +27,7 @@ export default function DiscoverPage() {
           <div className="relative z-10 space-y-4">
           <DailyRecommendationCard />
           <NameOfTheDayCard />
+          <HadithOfTheDayCard />
           <Link
             href="/adhkar"
             className="card-elevated flex items-center justify-between gap-4 p-5 transition hover:border-[var(--accent-primary)]"
