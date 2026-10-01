@@ -208,6 +208,13 @@ describe("permissions", () => {
     ).rejects.toThrow(/row-level security/);
   });
 
+  it("anyone can list approved content keys (025), but not reviewers' notes", async () => {
+    await db.exec("INSERT INTO content_reviews (content_key, status, notes) VALUES ('story:bilal:0', 'approved', 'checked') ON CONFLICT DO NOTHING");
+    const keys = await as(db, "anon", null, () => db.query<{ k: string }>("SELECT approved_content_keys() AS k"));
+    expect(keys.rows.map((r) => r.k)).toContain("story:bilal:0");
+    expect(await as(db, "anon", null, () => count(db, "SELECT notes FROM content_reviews"))).toBe(0);
+  });
+
   it("admins see and review everything; the feed sees hidden keys only", async () => {
     expect(await as(db, "authenticated", ADMIN, () => count(db, "SELECT 1 FROM ayah_pairings"))).toBe(132);
     await as(db, "authenticated", ADMIN, () =>

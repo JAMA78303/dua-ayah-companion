@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 
 import { reviewContent, reviewPairing, reviewSunnahDua, type PairingReviewInput, type SunnahDuaReviewInput } from "@/app/actions/review";
+import { COMPANION_STORIES } from "@/lib/content/companionStories";
 import { NAMES_OF_ALLAH } from "@/lib/content/namesOfAllah";
 import { PROPHET_STORIES } from "@/lib/content/prophetStories";
 import { situationTitle } from "@/lib/content/sunnahSituations";
@@ -346,7 +347,7 @@ export function ReviewDashboard({
   const [statusFilter, setStatusFilter] = useState<"all" | ReviewPairing["status"]>("all");
   const byKey = useMemo(() => new Map(reviews.map((r) => [r.content_key, r])), [reviews]);
 
-  const storyKeys = PROPHET_STORIES.flatMap((s) => s.chapters.map((_, i) => `story:${s.slug}:${i}`));
+  const storyKeys = [...PROPHET_STORIES, ...COMPANION_STORIES].flatMap((s) => s.chapters.map((_, i) => `story:${s.slug}:${i}`));
   const summary = (keys: string[]) => {
     const approved = keys.filter((k) => byKey.get(k)?.status === "approved").length;
     const hidden = keys.filter((k) => byKey.get(k)?.status === "hidden").length;
@@ -417,6 +418,31 @@ export function ReviewDashboard({
       {tab === "stories" ? (
         <section className="space-y-4">
           <p className="text-xs text-[var(--text-secondary)]">{summary(storyKeys)}</p>
+          <h3 className="pt-2 text-sm font-semibold text-[var(--text-primary)]">Companions · shown only once approved</h3>
+          {COMPANION_STORIES.map((story) => (
+            <details key={story.slug} className="card-elevated p-4">
+              <summary className="cursor-pointer text-sm font-semibold text-[var(--text-primary)]">
+                {`${story.name} · ${summary(story.chapters.map((_, i) => `story:${story.slug}:${i}`))}`}
+              </summary>
+              <ul>
+                {story.chapters.map((chapter, i) => {
+                  const key = `story:${story.slug}:${i}`;
+                  return (
+                    <ContentReviewRow key={key} contentKey={key} heading={`${i + 1}. ${chapter.title}`} review={byKey.get(key)}>
+                      <p>{chapter.body}</p>
+                      <p className="mt-1 text-xs text-[var(--accent-primary)]">
+                        {[
+                          ...chapter.sources.map((s) => [s.label, s.grade, s.note].filter(Boolean).join(", ")),
+                          ...(chapter.ayat ?? []).map((ref) => verseRefLabel(ref)),
+                        ].join(" · ")}
+                      </p>
+                    </ContentReviewRow>
+                  );
+                })}
+              </ul>
+            </details>
+          ))}
+          <h3 className="pt-2 text-sm font-semibold text-[var(--text-primary)]">Prophets · shown unless hidden</h3>
           {PROPHET_STORIES.map((story) => (
             <details key={story.slug} className="card-elevated p-4">
               <summary className="cursor-pointer text-sm font-semibold text-[var(--text-primary)]">
