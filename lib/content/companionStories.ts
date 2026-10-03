@@ -65,6 +65,11 @@ export const COMPANION_STORIES: CompanionStory[] = [
         ayat: ["96:1-5"],
       },
       {
+        title: "Waraqah's answer",
+        body: "Waraqah was an old man by then, and blind, who had become a Christian and wrote out the Gospel in Hebrew. Khadijah said to him: \"Cousin, listen to your nephew.\" When the Prophet ﷺ told him what he had seen, Waraqah said: \"This is the same angel Allah sent down to Musa. I wish I were young, and alive when your people drive you out.\" The Prophet ﷺ asked, \"Will they drive me out?\" He said: \"No man has ever come with what you have brought without being met with hostility.\"",
+        sources: [bukhari("3")],
+      },
+      {
         title: "The best of women",
         body: "The Prophet ﷺ said that the best of the women of her time was Maryam, daughter of 'Imran, and the best of the women of her time was Khadijah.",
         sources: [bukhari("3432")],
@@ -73,6 +78,11 @@ export const COMPANION_STORIES: CompanionStory[] = [
         title: "Greetings from her Lord",
         body: "Jibril came to the Prophet ﷺ and said: here is Khadijah coming with a dish of food or drink. When she reaches you, give her greetings of peace from her Lord and from me, and give her glad tidings of a house in Paradise made of hollowed pearl, with no noise in it and no tiredness.",
         sources: [bukhari("3820")],
+      },
+      {
+        title: "His only wife while she lived",
+        body: "'A'ishah reported that the Prophet ﷺ did not marry any other woman while Khadijah was alive. For all the years of their marriage, through the first revelation and the hardest years in Makkah, she was his only wife.",
+        sources: [muslim("2436")],
       },
       {
         title: "A love that did not fade",
@@ -96,6 +106,16 @@ export const COMPANION_STORIES: CompanionStory[] = [
         sources: [bukhari("3661")],
       },
       {
+        title: "The protection of Allah",
+        body: "When the persecution grew, Abu Bakr set out to emigrate to Abyssinia. A chief named Ibn ad-Dughunnah met him on the road and said a man like him should never be driven out: \"You earn for those who have nothing, you keep the ties of kinship, you carry the burdens of the weak, you honour your guests and you help people through their trials.\" He brought Abu Bakr back under his protection. Abu Bakr built a small mosque in the courtyard of his house and prayed and recited there, and he could not hold back his tears when he recited. The women and children of the Quraysh gathered to watch, and their leaders took fright. When Ibn ad-Dughunnah told him to stop or lose his protection, Abu Bakr said: \"I give you back your protection, and I am content with the protection of Allah.\"",
+        sources: [bukhari("3905")],
+      },
+      {
+        title: "Preparing the hijrah",
+        body: "When the Prophet ﷺ was given permission to emigrate, Abu Bakr asked to go with him, and had two camels ready. They hid for three nights in a cave on Mount Thawr. His son 'Abdullah spent each night with them and returned to Makkah before dawn, so it looked as if he had slept at home, bringing them every plot he heard of. His freed slave 'Amir ibn Fuhayrah grazed sheep nearby, bringing them milk in the evening and leading the flock over their tracks. His daughter Asma' packed their food and, finding nothing to tie it with, tore her waistband in two, so she was called \"the one with two waistbands\".",
+        sources: [bukhari("3905"), bukhari("3907")],
+      },
+      {
         title: "Two in the cave",
         body: "On the hijrah, the Prophet ﷺ and Abu Bakr hid in the cave of Thawr while the Quraysh searched for them. Abu Bakr said that if any of them looked down at his feet, he would see them. The Prophet ﷺ answered: \"What do you think, Abu Bakr, of two when Allah is their third?\" The Qur'an recalls the moment: \"Do not grieve; indeed Allah is with us.\"",
         sources: [bukhari("3653")],
@@ -107,9 +127,24 @@ export const COMPANION_STORIES: CompanionStory[] = [
         sources: [{ label: "Jami' at-Tirmidhi 3675", url: "https://sunnah.com/tirmidhi:3675", grade: "Hasan (al-Albani)" }],
       },
       {
+        title: "Four good deeds in one day",
+        body: "The Prophet ﷺ asked his Companions: \"Who among you is fasting today?\" Abu Bakr said, \"I am.\" \"Who among you has followed a funeral today?\" Abu Bakr said, \"I have.\" \"Who among you has fed a poor person today?\" Abu Bakr said, \"I have.\" \"Who among you has visited someone who is ill today?\" Abu Bakr said, \"I have.\" The Prophet ﷺ said: \"These do not come together in a person except that he enters Paradise.\"",
+        sources: [muslim("1028")],
+      },
+      {
+        title: "Called from every gate",
+        body: "The Prophet ﷺ said that people would be called into Paradise from the gate of the deeds they were known for: the gate of prayer, of jihad, of charity, of fasting. Abu Bakr asked whether anyone would be called from all of them. The Prophet ﷺ said: \"Yes, and I hope you will be one of them, Abu Bakr.\"",
+        sources: [bukhari("3666")],
+      },
+      {
         title: "The most beloved",
         body: "'Amr ibn al-'As asked the Prophet ﷺ who was most beloved to him. He said 'A'ishah. \"And among the men?\" He said: \"Her father.\" And he said that if he were to take an intimate friend other than his Lord, he would take Abu Bakr, but the bond between them was the brotherhood of Islam.",
         sources: [bukhari("3662"), bukhari("3654")],
+      },
+      {
+        title: "\"Tell Abu Bakr to lead the prayer\"",
+        body: "In his final illness the Prophet ﷺ said: \"Tell Abu Bakr to lead the people in prayer.\" He was told that Abu Bakr was a tender-hearted man who wept, and could not stand in his place, but the Prophet ﷺ repeated it three times. So Abu Bakr led the prayer. When the Prophet ﷺ felt a little better he came out, supported between two men, his feet dragging along the ground. Abu Bakr began to step back, but the Prophet ﷺ signalled to him to stay where he was.",
+        sources: [bukhari("664")],
       },
       {
         title: "The day the Prophet ﷺ died",
@@ -146,6 +181,29 @@ export const COMPANION_STORIES: CompanionStory[] = [
         title: "The first adhan",
         body: "When 'Abdullah ibn Zayd saw the words of the adhan in a dream, the Prophet ﷺ told him it was a true dream and said: teach it to Bilal, for his voice is stronger and more beautiful than yours. So Bilal became the first to call the adhan.",
         sources: [{ label: "Sunan Abi Dawud 499", url: "https://sunnah.com/abudawud:499", grade: "Hasan Sahih (al-Albani)" }],
+      },
+      {
+        title: "The call before dawn",
+        body: "Bilal gave a call while it was still night, and the Prophet ﷺ told the people to keep eating and drinking until Ibn Umm Maktum, who was blind, gave the call for Fajr. In Ramadan, Bilal's voice told Madinah there was still time for suhur.",
+        sources: [bukhari("617")],
+      },
+      {
+        title: "Longing for Makkah",
+        body: "When they first reached Madinah, fever struck Abu Bakr and Bilal. When the fever left Bilal, he would raise his voice with lines of poetry longing for the valleys of Makkah, its grasses and its springs, and he cursed the leaders of the Quraysh who had driven them from their land. The Prophet ﷺ prayed: \"O Allah, make Madinah beloved to us as You made Makkah beloved, or more, bless us in its food, make it healthy for us, and take its fever away.\"",
+        sources: [bukhari("1889")],
+      },
+      {
+        title: "Face to face at Badr",
+        body: "At the battle of Badr, 'Abdur-Rahman ibn 'Awf was leading Umayyah ibn Khalaf away as a captive when Bilal saw him. Bilal cried out to the Ansar: \"Umayyah ibn Khalaf! May I not survive if he survives!\" and they went after him. The early biographies record that Umayyah was the master who had tortured Bilal in Makkah.",
+        sources: [
+          bukhari("2301"),
+          { label: "Ibn Ishaq's Sirah", note: "That Umayyah was the master who tortured Bilal is from the early biographies." },
+        ],
+      },
+      {
+        title: "\"Give us rest with it, Bilal\"",
+        body: "When it was time to pray, the Prophet ﷺ would say: \"Bilal, call the iqamah for the prayer; give us rest with it.\" Prayer was not a burden to be got through, but the rest itself, and Bilal was the one who called them to it.",
+        sources: [{ label: "Sunan Abi Dawud 4985", url: "https://sunnah.com/abudawud:4985", grade: "Sahih (al-Albani)" }],
       },
       {
         title: "Footsteps in Paradise",
