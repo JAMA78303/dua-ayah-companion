@@ -428,7 +428,12 @@ export function ReviewDashboard({
                 {story.chapters.map((chapter, i) => {
                   const key = `story:${story.slug}:${i}`;
                   return (
-                    <ContentReviewRow key={key} contentKey={key} heading={`${i + 1}. ${chapter.title}`} review={byKey.get(key)}>
+                    <ContentReviewRow
+                      key={key}
+                      contentKey={key}
+                      heading={`${i + 1}. ${chapter.title}${"fromBiographies" in chapter && chapter.fromBiographies ? " · from the biographies" : ""}`}
+                      review={byKey.get(key)}
+                    >
                       <p>{chapter.body}</p>
                       <p className="mt-1 text-xs text-[var(--accent-primary)]">
                         {[

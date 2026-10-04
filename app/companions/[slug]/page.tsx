@@ -46,6 +46,10 @@ export default async function CompanionPage({ params }: CompanionPageProps) {
         <h1 className="font-playfair text-2xl font-semibold text-[var(--text-primary)]">{story.name}</h1>
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--accent-primary)]">{story.epithet}</p>
         <p className="mx-auto max-w-prose text-sm italic leading-relaxed text-[var(--text-secondary)]">{story.intro}</p>
+        <p className="mx-auto max-w-prose text-xs leading-relaxed text-[var(--text-secondary)]">
+          Chapters marked &ldquo;From the biographies&rdquo; come from the early histories of Ibn Ishaq and Ibn Sa&apos;d, which
+          historians rely on but which don&apos;t carry the chains of a hadith. The rest come from the hadith collections.
+        </p>
       </header>
 
       <ol className="space-y-5">
@@ -55,6 +59,11 @@ export default async function CompanionPage({ params }: CompanionPageProps) {
               <span className="font-nunito text-xs font-semibold text-[var(--accent-gold)]">{index + 1}</span>
               {chapter.title}
             </h2>
+            {chapter.fromBiographies ? (
+              <p className="inline-block rounded-full bg-[var(--bg-subtle)] px-3 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
+                From the biographies
+              </p>
+            ) : null}
             <p className="text-[15px] leading-7 text-[var(--text-primary)]">{chapter.body}</p>
             <ul className="flex flex-wrap gap-2" aria-label="Sources">
               {chapter.sources.map((source) => (
