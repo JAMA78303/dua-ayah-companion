@@ -2,7 +2,26 @@
 
 import { useEffect, useState } from "react";
 
-import { renderShareCard, type ShareCardContent } from "@/lib/share/renderShareCard";
+import { SHARE_DESIGNS, renderShareCard, type ShareCardContent, type ShareDesign } from "@/lib/share/renderShareCard";
+
+const DESIGN_KEY = "dac-share-design";
+/** Small swatch for each design's button. */
+const SWATCHES: Record<ShareDesign, string> = {
+  plain: "linear-gradient(180deg, var(--card-bg), var(--bg-base))",
+  night: "linear-gradient(180deg, #070b1f, #1f2b5c)",
+  emerald: "linear-gradient(135deg, #0d3b2e, #06261d)",
+  dawn: "linear-gradient(180deg, #fde7d4, #f6c9c4, #d9c6e8)",
+  parchment: "radial-gradient(circle, #fbf3df, #ecdcb7)",
+};
+
+function readDesign(): ShareDesign {
+  try {
+    const saved = window.localStorage.getItem(DESIGN_KEY);
+    return SHARE_DESIGNS.some((d) => d.id === saved) ? (saved as ShareDesign) : "plain";
+  } catch {
+    return "plain";
+  }
+}
 
 interface ShareSheetProps {
   card: ShareCardContent;
@@ -31,6 +50,20 @@ export function ShareSheet({ card, href, title, text, onClose }: ShareSheetProps
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [design, setDesign] = useState<ShareDesign>("plain");
+
+  useEffect(() => {
+    queueMicrotask(() => setDesign(readDesign()));
+  }, []);
+
+  function chooseDesign(next: ShareDesign) {
+    setDesign(next);
+    try {
+      window.localStorage.setItem(DESIGN_KEY, next);
+    } catch {
+      /* the choice just won't be remembered */
+    }
+  }
   const url = typeof window === "undefined" ? href : `${window.location.origin}${href}`;
   // Callers build `card` inline; key the render on its content so re-renders don't redraw the image.
   const cardKey = JSON.stringify(card);
@@ -38,7 +71,10 @@ export function ShareSheet({ card, href, title, text, onClose }: ShareSheetProps
   useEffect(() => {
     let cancelled = false;
     let objectUrl: string | null = null;
-    renderShareCard(JSON.parse(cardKey) as ShareCardContent)
+    queueMicrotask(() => {
+      if (!cancelled) setPreviewUrl(null);
+    });
+    renderShareCard(JSON.parse(cardKey) as ShareCardContent, design)
       .then((blob) => {
         if (cancelled) return;
         objectUrl = URL.createObjectURL(blob);
@@ -52,7 +88,7 @@ export function ShareSheet({ card, href, title, text, onClose }: ShareSheetProps
       cancelled = true;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [cardKey, title]);
+  }, [cardKey, title, design]);
 
   const canShareFile = Boolean(file && typeof navigator !== "undefined" && navigator.canShare?.({ files: [file] }));
   const canShareLink = typeof navigator !== "undefined" && typeof navigator.share === "function";
@@ -88,6 +124,26 @@ export function ShareSheet({ card, href, title, text, onClose }: ShareSheetProps
         <h2 id="share-sheet-title" className="font-playfair text-lg text-[var(--text-primary)]">
           Share
         </h2>
+
+        <div className="flex justify-center gap-2" role="radiogroup" aria-label="Card design">
+          {SHARE_DESIGNS.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              role="radio"
+              aria-checked={design === option.id}
+              onClick={() => chooseDesign(option.id)}
+              className="flex flex-col items-center gap-1 text-[11px] text-[var(--text-secondary)]"
+            >
+              <span
+                className={`size-10 rounded-lg border-2 ${design === option.id ? "border-[var(--accent-primary)]" : "border-[var(--border)]"}`}
+                style={{ background: SWATCHES[option.id] }}
+                aria-hidden
+              />
+              {option.label}
+            </button>
+          ))}
+        </div>
 
         <div className="mx-auto aspect-[4/5] w-full max-w-[260px] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)]">
           {previewUrl ? (
