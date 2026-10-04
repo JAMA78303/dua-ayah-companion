@@ -53,36 +53,41 @@ function QuranIcon() {
   );
 }
 
-function ProphetsIcon() {
+function LibraryIcon() {
   return (
     <NavIcon>
-      <path d="M14 4a5.5 5.5 0 1 0 0 11 6.5 6.5 0 0 1 0-11Z" />
-      <circle cx="17" cy="6" r="1" fill="currentColor" stroke="none" />
+      <path d="M4 19.5V5a1 1 0 0 1 1-1h3v16H5a1 1 0 0 1-1-.5Z" />
+      <path d="M8 4h4v16H8" />
+      <path d="m13.5 5.2 3.8-1.1 3 13.3-3.8 1.1Z" />
     </NavIcon>
   );
 }
 
-function NamesIcon() {
+function YouIcon() {
   return (
     <NavIcon>
-      <rect x="6" y="6" width="12" height="12" rx="1" />
-      <rect x="6" y="6" width="12" height="12" rx="1" transform="rotate(45 12 12)" />
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M5 20a7 7 0 0 1 14 0" />
     </NavIcon>
   );
 }
+
+const LIBRARY_PREFIXES = ["/library", "/prophets", "/prophetic", "/stories", "/companions", "/names", "/duas", "/adhkar"];
+const YOU_PREFIXES = ["/you", "/saved", "/favourites", "/journal", "/my-duas", "/supporter"];
+const startsWithAny = (p: string, prefixes: string[]) => prefixes.some((prefix) => p === prefix || p.startsWith(`${prefix}/`));
 
 const TABS = [
-  { href: "/", label: "Feed", Icon: HomeIcon, match: (p: string) => p === "/" },
+  { href: "/", label: "Feed", Icon: HomeIcon, match: (p: string) => p === "/" || p.startsWith("/feed") },
   {
     href: "/discover",
     label: "Discover",
     Icon: DiscoverIcon,
     match: (p: string) =>
-      p !== "/" && !p.startsWith("/quran") && !p.startsWith("/prophets") && !p.startsWith("/prophetic") && !p.startsWith("/stories") && !p.startsWith("/names"),
+      p !== "/" && !p.startsWith("/feed") && !p.startsWith("/quran") && !startsWithAny(p, LIBRARY_PREFIXES) && !startsWithAny(p, YOU_PREFIXES),
   },
   { href: "/quran", label: "Qur'an", Icon: QuranIcon, match: (p: string) => p.startsWith("/quran") },
-  { href: "/prophets", label: "Prophets", Icon: ProphetsIcon, match: (p: string) => p.startsWith("/prophets") || p.startsWith("/prophetic") || p.startsWith("/stories") },
-  { href: "/names", label: "Names", Icon: NamesIcon, match: (p: string) => p.startsWith("/names") },
+  { href: "/library", label: "Library", Icon: LibraryIcon, match: (p: string) => startsWithAny(p, LIBRARY_PREFIXES) },
+  { href: "/you", label: "You", Icon: YouIcon, match: (p: string) => startsWithAny(p, YOU_PREFIXES) },
 ] as const;
 
 export function BottomNav() {
@@ -94,7 +99,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 h-16 border-t border-[var(--border)] bg-[var(--card-bg)]/95 backdrop-blur-[12px]"
+      className="fixed inset-x-0 bottom-0 z-50 h-16 border-t border-[var(--border)] bg-[var(--bg-base)]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-[12px]"
       aria-label="Main navigation"
     >
       <div className="mx-auto flex h-full max-w-3xl">
@@ -118,7 +123,7 @@ export function BottomNav() {
                 <span className="mb-0.5 size-1.5" aria-hidden />
               )}
               <Icon />
-              <span className="text-xs font-medium">{label}</span>
+              <span className="text-[11px] font-semibold">{label}</span>
             </Link>
           );
         })}

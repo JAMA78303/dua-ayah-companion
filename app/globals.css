@@ -3,6 +3,12 @@
 :root {
   /* AppHeader height; the swipe feed fills the space between it and the bottom nav. */
   --app-header-h: 61px;
+  --text-primary: #18302f;
+  --text-secondary: #697977;
+  --border: #ded8cf;
+  --bg-subtle: #f3eee7;
+  --text-arabic: #18302f;
+  --card-shadow: 0 8px 24px rgba(52, 42, 32, 0.08);
 }
 
 /* Shared tokens — overridden per [data-theme] */
@@ -49,18 +55,19 @@
   --card-bg: #ffffff;
   --accent: #1a8c8c;
   --gold: #c8973a;
-  --text-primary: #2d2d3a;
-  --text-secondary: #6b6b80;
-  --border: rgba(200, 151, 58, 0.15);
+  --text-primary: #18302f;
+  --text-secondary: #697977;
+  --border: #ded8cf;
   --pattern-color: rgba(200, 151, 58, 0.08);
   --pattern-opacity: 0.08;
   --mosque-fill-opacity: 0.06;
   --bg-base: #faf8f5;
-  --bg-subtle: #f0ebe0;
-  --text-arabic: #1c1c2e;
+  --bg-subtle: #f3eee7;
+  --text-arabic: #18302f;
   --accent-primary-hover: #147474;
   --input-bg: #ffffff;
   --on-accent-text: #ffffff;
+  --card-shadow: 0 8px 24px rgba(52, 42, 32, 0.08);
 }
 
 /* Al-Aswad — The Black Kiswah */
@@ -69,21 +76,19 @@
   --card-bg: #16141e;
   --accent: #c8973a;
   --gold: #e8c97a;
-  --text-primary: #f0ede8;
+  --text-primary: #f5f0e8;
   --text-secondary: #9a9080;
-  --border: rgba(200, 151, 58, 0.2);
+  --border: rgba(255, 255, 255, 0.14);
   --pattern-color: rgba(200, 151, 58, 0.06);
   --pattern-opacity: 0.06;
   --mosque-fill-opacity: 0.04;
   --bg-base: #0a0a0f;
   --bg-subtle: #111118;
-  --text-arabic: #f0ede8;
+  --text-arabic: #f5f0e8;
   --accent-primary-hover: #e8c97a;
   --input-bg: #16141e;
   --on-accent-text: #12121f;
-  --card-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.25), 0 8px 24px rgba(0, 0, 0, 0.35),
-    0 1px 0 rgba(200, 151, 58, 0.12) inset;
+  --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
   --gold-glow: 0 0 60px rgba(232, 201, 122, 0.12);
 }
 
@@ -93,21 +98,19 @@
   --card-bg: #280c0c;
   --accent: #c8973a;
   --gold: #e8c97a;
-  --text-primary: #f5e8e8;
+  --text-primary: #f7edea;
   --text-secondary: #b08080;
-  --border: rgba(200, 151, 58, 0.15);
+  --border: rgba(255, 255, 255, 0.14);
   --pattern-color: rgba(200, 151, 58, 0.05);
   --pattern-opacity: 0.05;
   --mosque-fill-opacity: 0.04;
   --bg-base: #140404;
   --bg-subtle: #1e0606;
-  --text-arabic: #f5e8e8;
+  --text-arabic: #f7edea;
   --accent-primary-hover: #e8c97a;
   --input-bg: #280c0c;
   --on-accent-text: #12121f;
-  --card-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.25), 0 8px 24px rgba(0, 0, 0, 0.35),
-    0 1px 0 rgba(200, 151, 58, 0.1) inset;
+  --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
   --gold-glow: 0 0 50px rgba(232, 201, 122, 0.1);
 }
 
@@ -117,21 +120,19 @@
   --card-bg: #0c1e0c;
   --accent: #c8973a;
   --gold: #e8c97a;
-  --text-primary: #e8f0e8;
+  --text-primary: #edf5ea;
   --text-secondary: #7a9a7a;
-  --border: rgba(200, 151, 58, 0.15);
+  --border: rgba(255, 255, 255, 0.14);
   --pattern-color: rgba(200, 151, 58, 0.05);
   --pattern-opacity: 0.05;
   --mosque-fill-opacity: 0.04;
   --bg-base: #060f06;
   --bg-subtle: #081808;
-  --text-arabic: #e8f0e8;
+  --text-arabic: #edf5ea;
   --accent-primary-hover: #e8c97a;
   --input-bg: #0c1e0c;
   --on-accent-text: #12121f;
-  --card-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.25), 0 8px 24px rgba(0, 0, 0, 0.35),
-    0 1px 0 rgba(200, 151, 58, 0.1) inset;
+  --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
   --gold-glow: 0 0 50px rgba(232, 201, 122, 0.1);
 }
 
@@ -141,21 +142,19 @@
   --card-bg: #241800;
   --accent: #e8c97a;
   --gold: #f0d890;
-  --text-primary: #f5edd0;
+  --text-primary: #fff4d6;
   --text-secondary: #b0a060;
-  --border: rgba(232, 201, 122, 0.2);
+  --border: rgba(255, 255, 255, 0.14);
   --pattern-color: rgba(232, 201, 122, 0.06);
   --pattern-opacity: 0.06;
   --mosque-fill-opacity: 0.04;
   --bg-base: #140e00;
   --bg-subtle: #1e1200;
-  --text-arabic: #f5edd0;
+  --text-arabic: #fff4d6;
   --accent-primary-hover: #f0d890;
   --input-bg: #241800;
   --on-accent-text: #1e1200;
-  --card-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.25), 0 8px 24px rgba(0, 0, 0, 0.35),
-    0 1px 0 rgba(232, 201, 122, 0.12) inset;
+  --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
   --gold-glow: 0 0 55px rgba(240, 216, 144, 0.15);
 }
 
@@ -165,18 +164,19 @@
   --card-bg: #ffffff;
   --accent: #8c1a1a;
   --gold: #c8973a;
-  --text-primary: #2d1a1a;
+  --text-primary: #3a2020;
   --text-secondary: #806060;
-  --border: rgba(140, 26, 26, 0.12);
+  --border: #e8d6d6;
   --pattern-color: rgba(140, 26, 26, 0.05);
   --pattern-opacity: 0.05;
   --mosque-fill-opacity: 0.06;
   --bg-base: #fff8f8;
   --bg-subtle: #faf0f0;
-  --text-arabic: #2d1a1a;
+  --text-arabic: #3a2020;
   --accent-primary-hover: #6e1414;
   --input-bg: #ffffff;
   --on-accent-text: #ffffff;
+  --card-shadow: 0 8px 24px rgba(52, 42, 32, 0.08);
 }
 
 @theme inline {
@@ -316,7 +316,7 @@ body {
 
 .card-elevated {
   box-shadow: var(--card-shadow);
-  border-radius: 20px;
+  border-radius: 18px;
   border: 1px solid var(--border);
   background: var(--card-bg);
 }
