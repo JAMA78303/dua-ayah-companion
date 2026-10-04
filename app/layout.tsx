@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Nunito, Playfair_Display, Scheherazade_New } from "next/font/google";
+import { Cormorant_Garamond, Geist_Mono, Nunito_Sans, Scheherazade_New } from "next/font/google";
 import { BottomNav } from "@/components/BottomNav";
 import { AppFooter } from "@/components/layout/AppFooter";
 import { AppHeader } from "@/components/layout/AppHeader";
@@ -8,14 +8,17 @@ import { ReciterProvider } from "@/components/ReciterProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 
-const nunito = Nunito({
+// Body and UI text. The CSS variable keeps its original name so every existing class picks up the new face.
+const nunito = Nunito_Sans({
   variable: "--font-nunito",
   subsets: ["latin"],
 });
 
-const playfair = Playfair_Display({
+// Headings (Cormorant Garamond, from the redesign). The variable name is historical, as above.
+const playfair = Cormorant_Garamond({
   variable: "--font-playfair",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 // Arabic text (Qur'an, duas, Names). Loaded via next/font: a CSS @import can't stay first in the bundled stylesheet.
