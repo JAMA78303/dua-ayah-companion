@@ -3,6 +3,8 @@
 import { FormEvent, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
+import { MessageCircleHeart, Sparkles } from "lucide-react";
+
 import { matchIntent } from "@/lib/matching/intentMatcher";
 import type { EmotionCategory } from "@/types/emotions";
 
@@ -50,27 +52,29 @@ export function EmotionInput({ onNoMatch }: EmotionInputProps) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-3">
+    <form onSubmit={onSubmit} className="space-y-3.5">
       <label htmlFor="emotion-input" className="sr-only">
         How are you feeling right now?
       </label>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
+      <div className="flex min-h-[104px] gap-2.5 rounded-[18px] border border-[var(--border)] bg-[var(--input-bg)] p-4 focus-within:border-[var(--accent-primary)]">
+        <MessageCircleHeart className="mt-0.5 size-5 shrink-0 text-[var(--accent-primary)]" strokeWidth={1.6} aria-hidden />
         <textarea
           id="emotion-input"
           value={value}
           onChange={(event) => setValue(event.target.value)}
-          placeholder="How are you feeling right now?"
+          placeholder="Write what's on your heart…"
           rows={3}
-          className="min-h-[100px] w-full flex-1 resize-y rounded-2xl border-[1.5px] border-[var(--border)] bg-[var(--input-bg)] px-6 py-5 font-nunito text-sm not-italic text-[var(--text-primary)] shadow-[var(--card-shadow)] outline-none placeholder:text-[var(--text-secondary)] placeholder:italic focus:border-[var(--accent-primary)]/50 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-primary)_8%,transparent)]"
+          className="w-full flex-1 resize-none bg-transparent font-nunito text-sm leading-[1.45] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-secondary)]"
         />
-        <button
-          type="submit"
-          disabled={isPending}
-          className="h-fit shrink-0 rounded-2xl bg-[var(--accent-primary)] px-6 py-3 text-sm font-semibold text-[var(--on-accent-text)] shadow-[var(--card-shadow)] transition hover:opacity-90 disabled:opacity-60"
-        >
-          {isPending ? "Matching..." : "Find"}
-        </button>
       </div>
+      <button
+        type="submit"
+        disabled={isPending}
+        className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--gold)] px-4 text-[13px] font-bold text-[#0a0a0f] transition hover:opacity-90 disabled:opacity-60"
+      >
+        <Sparkles className="size-[17px]" strokeWidth={1.6} aria-hidden />
+        {isPending ? "Finding…" : "Find guidance"}
+      </button>
     </form>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { Pause, Play } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { clipProgress, cueClip, reachedClipEnd, settleAtClipStart, type ClipRange } from "@/lib/audio/clipPlayback";
@@ -172,39 +173,38 @@ export function AyahAudioPlayer({
   }
 
   return (
-    <div className="mt-3 space-y-2">
+    <div>
       <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={() => void handlePlay()}
           disabled={loading}
           aria-label={playing ? "Pause recitation" : "Play recitation"}
-          className="flex items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--accent-primary)_35%,transparent)] px-3 py-1.5 text-xs font-medium text-[var(--accent-primary)] transition-colors hover:bg-[color-mix(in_srgb,var(--accent-primary)_8%,transparent)] disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[var(--gold)] text-[#0a0a0f] transition hover:opacity-90 disabled:opacity-50"
         >
-          {loading ? "·····" : playing ? "⏸" : "▶"}
-          {loading ? "Loading" : playing ? "Pause" : "Listen"}
+          {loading ? (
+            <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden />
+          ) : playing ? (
+            <Pause className="size-[19px]" strokeWidth={1.8} aria-hidden />
+          ) : (
+            <Play className="size-[19px] translate-x-px" strokeWidth={1.8} aria-hidden />
+          )}
         </button>
-
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <p className="truncate text-xs font-bold text-[var(--text-primary)]">{reciterName}</p>
+          <div className="h-[3px] w-full overflow-hidden rounded-full bg-[var(--bg-subtle)]">
+            <div className="h-full rounded-full bg-[var(--gold)] transition-all duration-100" style={{ width: `${progress * 100}%` }} />
+          </div>
+        </div>
         <button
           type="button"
           onClick={handleSpeedToggle}
-          className="font-mono text-xs text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+          className="flex min-h-9 shrink-0 items-center rounded-full border border-[var(--border)] bg-[var(--card-bg)] px-3 text-xs font-bold text-[var(--text-primary)]"
           aria-label="Toggle playback speed"
         >
           {speed}×
         </button>
-
-        <span className="flex-1 truncate text-xs italic text-[var(--text-secondary)]">{reciterName}</span>
       </div>
-
-      {(playing || progress > 0) && (
-        <div className="h-0.5 w-full overflow-hidden rounded-full bg-[var(--border)]">
-          <div
-            className="h-full rounded-full bg-[var(--accent-primary)] transition-all duration-100"
-            style={{ width: `${progress * 100}%` }}
-          />
-        </div>
-      )}
 
       <audio
         ref={audioRef}

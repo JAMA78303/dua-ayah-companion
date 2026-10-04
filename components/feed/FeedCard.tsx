@@ -99,44 +99,33 @@ export function FeedCard({ pairing, index, total, isActive }: FeedCardProps) {
       : `Surah ${surahName} · Ayah ${pairing.ayah_number}`;
 
   return (
-    <div
-      ref={cardRef}
-      data-feed-card
-      className="card-elevated animate-card-enter relative flex min-h-0 flex-1 flex-col overflow-hidden"
-      style={{
-        background: toneGradientVar(pairing.tone_tag),
-        boxShadow: "var(--card-shadow)",
-      }}
-    >
-      <div className="feed-geo-veil pointer-events-none absolute inset-0" aria-hidden />
+    <div ref={cardRef} data-feed-card className="animate-card-enter relative flex min-h-0 flex-1 flex-col">
+      {total ? (
+        <p className="pointer-events-none absolute right-1 top-0 z-[2] text-xs text-[var(--text-secondary)]">
+          {index + 1} of {total}
+        </p>
+      ) : null}
 
-      <div className="relative z-[1] flex min-h-0 flex-1 flex-col px-6 pb-5 pt-5 md:px-10">
-        {total ? (
-          <p className="pointer-events-none absolute right-5 top-5 text-xs text-[var(--text-secondary)] md:right-8 md:top-7">
-            {index + 1} of {total}
-          </p>
-        ) : null}
-
-        {/* Scrolls only when a long pairing doesn't fit; the swipe then carries on to the next card. */}
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-auto py-2 text-center">
-          {/* my-auto centres when it fits and top-aligns when it overflows (justify-center would clip the top). */}
-          <div className="my-auto flex flex-col items-center gap-3">
-            <SurahReferencePill>{pillLabel}</SurahReferencePill>
-            {/* The feeling it was chosen for; the tone only sets the card's colour. */}
-            {pairing.emotion_category ? (
-              <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--text-secondary)]">
-                {`For ${pairing.emotion_category}`}
-              </span>
-            ) : null}
+      {/* One full-screen moment per swipe; it scrolls inside only when a long pairing doesn't fit. */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-auto py-2">
+        {/* my-auto centres when it fits and top-aligns when it overflows (justify-center would clip the top). */}
+        <div className="my-auto flex flex-col gap-3">
+          <article className="card-elevated space-y-4 p-[18px]" style={{ background: toneGradientVar(pairing.tone_tag) }}>
+            <div className="flex items-center justify-between gap-3">
+              <SurahReferencePill>{pillLabel}</SurahReferencePill>
+              {pairing.emotion_category ? (
+                <span className="text-[10px] font-bold uppercase tracking-wide text-[var(--accent-primary)]">{`For ${pairing.emotion_category}`}</span>
+              ) : null}
+            </div>
 
             <RecitedArabic
               text={arabicText}
               activeWordIndex={activeWordIndex}
-              className="arabic-display text-[clamp(24px,6vw,34px)] leading-[2] text-[var(--text-arabic)] [text-shadow:0_0_30px_color-mix(in_srgb,var(--gold)_20%,transparent)]"
+              className="arabic-display text-right text-[clamp(26px,7vw,36px)] leading-[1.95] text-[var(--text-arabic)]"
             />
-            <hr className="gold-rule gold-rule-animate w-full shrink-0 border-0" aria-hidden />
+            <p className="font-playfair text-lg leading-[1.5] text-[var(--text-primary)]">{translation}</p>
+            <p className="text-[10px] text-[var(--text-secondary)]">Saheeh International</p>
 
-            <p className="translation-text max-w-prose text-[16px] text-[var(--text-primary)]">{translation}</p>
             {qf?.audio ? (
               <AyahAudioPlayer
                 clip={qf.audio}
@@ -149,40 +138,41 @@ export function FeedCard({ pairing, index, total, isActive }: FeedCardProps) {
               />
             ) : null}
 
-            <div className="w-full max-w-prose pt-2 text-left">
-              <DuaSection
-                dua_text={pairing.dua_text}
-                dua_transliteration={pairing.dua_transliteration}
-                dua_translation={pairing.dua_translation}
-                source_type={sourceType}
-                surah={pairing.surah}
-                ayah_number={pairing.ayah_number}
-                hadith_source={pairing.hadith_source ?? null}
-                duaAudio={null}
-                duaVerseKey={duaVerseKey}
-                reciterName={reciterName}
-                citation={duaOtherAyah ? { label: verseRefLabel(duaOtherAyah), href: verseRefHref(duaOtherAyah) } : null}
-                compact
+            <div className="border-t border-[var(--border)]">
+              <FeedCardActions
+                href={`/result?pairingId=${pairing.id}`}
+                openLabel="Open full"
+                shareTitle={pillLabel}
+                shareText={`${translation} (${pillLabel})`}
+                card={{ eyebrow: pillLabel, arabic: arabicText, body: translation }}
+                save={{ contentKey: pairingKey(pairing.id), surah: pairing.surah, ayahNumber: pairing.ayah_number }}
               />
             </div>
-          </div>
+          </article>
+
+          <section className="card-elevated bg-[color-mix(in_srgb,var(--gold)_6%,var(--card-bg))] p-[18px]">
+            <DuaSection
+              dua_text={pairing.dua_text}
+              dua_transliteration={pairing.dua_transliteration}
+              dua_translation={pairing.dua_translation}
+              source_type={sourceType}
+              surah={pairing.surah}
+              ayah_number={pairing.ayah_number}
+              hadith_source={pairing.hadith_source ?? null}
+              duaAudio={null}
+              duaVerseKey={duaVerseKey}
+              reciterName={reciterName}
+              citation={duaOtherAyah ? { label: verseRefLabel(duaOtherAyah), href: verseRefHref(duaOtherAyah) } : null}
+            />
+          </section>
         </div>
-
-        <FeedCardActions
-          href={`/result?pairingId=${pairing.id}`}
-          openLabel="Full reflection"
-          shareTitle={pillLabel}
-          shareText={`${translation} (${pillLabel})`}
-          card={{ eyebrow: pillLabel, arabic: arabicText, body: translation }}
-          save={{ contentKey: pairingKey(pairing.id), surah: pairing.surah, ayahNumber: pairing.ayah_number }}
-        />
-
-        {index === 0 && scrollHintVisible ? (
-          <div className="feed-scroll-hint-hide pointer-events-none absolute inset-x-0 bottom-20 flex flex-col items-center gap-1 text-xs text-[var(--text-secondary)]">
-            <span>Swipe up ↑</span>
-          </div>
-        ) : null}
       </div>
+
+      {index === 0 && scrollHintVisible ? (
+        <div className="feed-scroll-hint-hide pointer-events-none absolute inset-x-0 bottom-2 flex flex-col items-center gap-1 text-xs text-[var(--text-secondary)]">
+          <span>Swipe up ↑</span>
+        </div>
+      ) : null}
     </div>
   );
 }

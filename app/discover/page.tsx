@@ -1,141 +1,104 @@
 "use client";
 
 import Link from "next/link";
+import { BookOpen, Bookmark, ChevronRight, Compass, HandHeart, NotebookPen, ScrollText, SunMoon } from "lucide-react";
 import { useState } from "react";
 
-import { CategoryTiles } from "@/components/CategoryTiles";
 import { DailyRecommendationCard } from "@/components/DailyRecommendationCard";
+import { FeelingChips } from "@/components/discover/FeelingChips";
 import { EmotionInput } from "@/components/EmotionInput";
 import { HadithOfTheDayCard } from "@/components/HadithOfTheDayCard";
 import { IOSInstallBanner } from "@/components/IOSInstallBanner";
-import { MosqueSilhouette } from "@/components/MosqueSilhouette";
 import { NameOfTheDayCard } from "@/components/names/NameOfTheDayCard";
-import { PropheticDuasSection } from "@/components/PropheticDuasSection";
 import { StreakDisplay } from "@/components/StreakDisplay";
 import { ZeroResultState } from "@/components/ZeroResultState";
 import { SUPPORTER_MISSION_LINE } from "@/lib/copy/supporter";
 
-/** Search by feeling, browse categories, and today's reflection and Name (formerly the Home screen). */
+const PRACTICE = [
+  { href: "/adhkar", title: "Morning & evening adhkar", note: "Daily remembrance", Icon: SunMoon },
+  { href: "/prayer-times", title: "Prayer times & qibla", note: "Based on your location", Icon: Compass },
+  { href: "/duas", title: "Duas from the Sunnah", note: "For worry, fear, anger, loss and more", Icon: HandHeart },
+  { href: "/companions", title: "Stories of the Companions", note: "The first to believe", Icon: BookOpen },
+  { href: "/prophets", title: "Duas from the Prophets", note: "From the Qur'an", Icon: ScrollText },
+];
+
+const PERSONAL = [
+  { href: "/saved", title: "Saved", Icon: Bookmark },
+  { href: "/journal", title: "Journal", Icon: NotebookPen },
+  { href: "/my-duas", title: "My duas", Icon: HandHeart },
+];
+
+/** The emotional entry point: name a feeling, then today's reflection, Name and hadith, and practice. */
 export default function DiscoverPage() {
   const [showZeroResult, setShowZeroResult] = useState(false);
 
   return (
     <>
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-4 py-10 md:px-8">
-        <section className="card-elevated relative space-y-4 overflow-hidden p-5 backdrop-blur-[2px] md:p-6">
-          <MosqueSilhouette />
-          <div className="relative z-10 space-y-4">
-          <DailyRecommendationCard />
-          <NameOfTheDayCard />
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-[18px] px-5 pb-8 pt-4 md:px-8">
+        <header className="space-y-0.5">
+          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--accent-primary)]">A place to begin</p>
+          <h1 className="font-playfair text-[30px] font-semibold text-[var(--text-primary)]">Discover</h1>
+        </header>
+
+        <section className="card-elevated space-y-3.5 bg-[color-mix(in_srgb,var(--gold)_12%,var(--card-bg))] p-5">
+          <h2 className="font-playfair text-[27px] font-semibold leading-[1.15] text-[var(--text-primary)]">How are you feeling right now?</h2>
+          <EmotionInput onNoMatch={() => setShowZeroResult(true)} />
+        </section>
+
+        <FeelingChips />
+        {showZeroResult ? <ZeroResultState /> : null}
+
+        <DailyRecommendationCard />
+
+        <div className="grid grid-cols-2 items-stretch gap-2.5">
+          <NameOfTheDayCard compact />
           <HadithOfTheDayCard />
-          <Link
-            href="/adhkar"
-            className="card-elevated flex items-center justify-between gap-4 p-5 transition hover:border-[var(--accent-primary)]"
-          >
-            <span>
-              <span className="block font-playfair text-lg font-semibold text-[var(--text-primary)]">Morning &amp; evening adhkar</span>
-              <span className="block text-xs text-[var(--text-secondary)]">The daily remembrances, with a counter for each.</span>
-            </span>
-            <span className="text-sm font-semibold text-[var(--accent-primary)]" aria-hidden>
-              →
-            </span>
-          </Link>
-          <Link
-            href="/duas"
-            className="card-elevated flex items-center justify-between gap-4 p-5 transition hover:border-[var(--accent-primary)]"
-          >
-            <span>
-              <span className="block font-playfair text-lg font-semibold text-[var(--text-primary)]">Duas from the Sunnah</span>
-              <span className="block text-xs text-[var(--text-secondary)]">For worry, fear, anger, loss and more, each with its hadith.</span>
-            </span>
-            <span className="text-sm font-semibold text-[var(--accent-primary)]" aria-hidden>
-              →
-            </span>
-          </Link>
-          <Link
-            href="/companions"
-            className="card-elevated flex items-center justify-between gap-4 p-5 transition hover:border-[var(--accent-primary)]"
-          >
-            <span>
-              <span className="block font-playfair text-lg font-semibold text-[var(--text-primary)]">Stories of the Companions</span>
-              <span className="block text-xs text-[var(--text-secondary)]">The first to believe, and what it cost them.</span>
-            </span>
-            <span className="text-sm font-semibold text-[var(--accent-primary)]" aria-hidden>
-              →
-            </span>
-          </Link>
-          <Link
-            href="/prayer-times"
-            className="card-elevated flex items-center justify-between gap-4 p-5 transition hover:border-[var(--accent-primary)]"
-          >
-            <span>
-              <span className="block font-playfair text-lg font-semibold text-[var(--text-primary)]">Prayer times &amp; qibla</span>
-              <span className="block text-xs text-[var(--text-secondary)]">Today&apos;s times and the direction of the Ka&apos;bah.</span>
-            </span>
-            <span className="text-sm font-semibold text-[var(--accent-primary)]" aria-hidden>
-              →
-            </span>
-          </Link>
-          <Link
-            href="/my-duas"
-            className="card-elevated flex items-center justify-between gap-4 p-5 transition hover:border-[var(--accent-primary)]"
-          >
-            <span>
-              <span className="block font-playfair text-lg font-semibold text-[var(--text-primary)]">My duas</span>
-              <span className="block text-xs text-[var(--text-secondary)]">
-                Keep what you&apos;re asking for, and mark each one as it&apos;s answered.
-              </span>
-            </span>
-            <span className="text-sm font-semibold text-[var(--accent-primary)]" aria-hidden>
-              →
-            </span>
-          </Link>
-          <Link
-            href="/journal"
-            className="card-elevated flex items-center justify-between gap-4 p-5 transition hover:border-[var(--accent-primary)]"
-          >
-            <span>
-              <span className="block font-playfair text-lg font-semibold text-[var(--text-primary)]">My journal</span>
-              <span className="block text-xs text-[var(--text-secondary)]">Your reflections on any ayah, in one place.</span>
-            </span>
-            <span className="text-sm font-semibold text-[var(--accent-primary)]" aria-hidden>
-              →
-            </span>
-          </Link>
-          <StreakDisplay />
-          <p className="text-center text-xs italic text-[var(--text-secondary)]">{SUPPORTER_MISSION_LINE}</p>
+        </div>
 
-          <div className="flex flex-col items-center border-t border-[var(--border)] pt-10 text-center">
-            <p dir="rtl" lang="ar" className="font-scheherazade text-xl leading-relaxed text-[var(--accent-primary)]">
-              بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
-            </p>
-            <p className="font-nunito mt-2 text-sm italic text-[var(--text-secondary)]">
-              Your Qur&apos;an. Your moment.
-            </p>
+        <section className="card-elevated space-y-1 p-4">
+          <div className="flex items-center justify-between">
+            <h2 className="font-playfair text-[21px] font-semibold text-[var(--text-primary)]">Practice &amp; library</h2>
+            <Link href="/library" className="text-xs font-bold text-[var(--accent-primary)]">
+              See all
+            </Link>
           </div>
-
-          <EmotionInput
-            onNoMatch={() => {
-              setShowZeroResult(true);
-            }}
-          />
-          {showZeroResult ? <ZeroResultState /> : null}
-          </div>
+          <ul>
+            {PRACTICE.map(({ href, title, note, Icon }) => (
+              <li key={href}>
+                <Link href={href} className="flex min-h-[58px] items-center gap-3 rounded-xl transition hover:bg-[var(--bg-subtle)]">
+                  <span className="flex size-[42px] shrink-0 items-center justify-center rounded-[14px] bg-[color-mix(in_srgb,var(--accent-primary)_12%,transparent)] text-[var(--accent-primary)]">
+                    <Icon className="size-[19px]" strokeWidth={1.6} aria-hidden />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-bold text-[var(--text-primary)]">{title}</span>
+                    <span className="block text-[11px] text-[var(--text-secondary)]">{note}</span>
+                  </span>
+                  <ChevronRight className="size-[17px] text-[var(--text-secondary)]" strokeWidth={1.6} aria-hidden />
+                </Link>
+              </li>
+            ))}
+          </ul>
         </section>
 
-        <section className="space-y-4">
-          <div className="space-y-1 text-center md:text-left">
-            <h2 className="font-playfair text-lg font-semibold text-[var(--text-primary)] md:text-xl">
-              Browse by category
-            </h2>
-            <p className="text-sm text-[var(--text-secondary)]">
-              Choose a lane, or write freely above — both paths stay gentle.
-            </p>
-          </div>
-          <CategoryTiles />
+        <section className="space-y-2">
+          <h2 className="font-playfair text-[21px] font-semibold text-[var(--text-primary)]">Personal</h2>
+          <ul className="grid grid-cols-3 gap-2">
+            {PERSONAL.map(({ href, title, Icon }) => (
+              <li key={href}>
+                <Link
+                  href={href}
+                  className="flex min-h-[78px] flex-col gap-[7px] rounded-[14px] border border-[var(--border)] bg-[var(--card-bg)] p-3 transition hover:border-[var(--accent-primary)]"
+                >
+                  <Icon className="size-[19px] text-[var(--accent-primary)]" strokeWidth={1.6} aria-hidden />
+                  <span className="text-[11px] font-bold text-[var(--text-primary)]">{title}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </section>
 
-        <PropheticDuasSection />
+        <StreakDisplay />
+        <p className="text-center text-xs italic text-[var(--text-secondary)]">{SUPPORTER_MISSION_LINE}</p>
       </main>
       <IOSInstallBanner />
     </>

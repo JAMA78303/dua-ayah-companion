@@ -57,27 +57,23 @@ export function ResonanceSurvey({ pairingId, revealTargetId }: ResonanceSurveyPr
     }
   }
 
-  if (!isVisible) {
-    return (
-      <p className="text-xs text-[var(--text-secondary)]">
-        Feedback will appear after you have read a bit more.
-      </p>
-    );
-  }
+  if (!isVisible) return null;
 
   if (hasSubmitted) {
     return <p className="text-xs text-[var(--accent-primary)]">Thank you for your feedback.</p>;
   }
 
+  const chip =
+    "flex min-h-9 items-center rounded-full border px-3 text-xs font-bold transition disabled:opacity-60";
   return (
-    <div className="space-y-2">
-      <p className="text-sm text-[var(--text-primary)]">Did this resonate with you?</p>
+    <div className="space-y-3">
+      <p className="font-playfair text-[19px] font-semibold text-[var(--text-primary)]">Did this meet what you&apos;re feeling?</p>
       <div className="flex gap-2">
         <button
           type="button"
           onClick={() => answer(true)}
           disabled={isBusy}
-          className="rounded-md bg-[var(--accent-primary)] px-3 py-1.5 text-sm text-white transition hover:opacity-90 disabled:opacity-60"
+          className={`${chip} border-[var(--accent-primary)] bg-[var(--accent-primary)] text-[var(--on-accent-text)]`}
         >
           Yes
         </button>
@@ -85,9 +81,9 @@ export function ResonanceSurvey({ pairingId, revealTargetId }: ResonanceSurveyPr
           type="button"
           onClick={() => answer(false)}
           disabled={isBusy}
-          className="rounded-md border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--text-primary)] transition hover:bg-[var(--bg-subtle)] disabled:opacity-60"
+          className={`${chip} border-[var(--border)] bg-[var(--card-bg)] text-[var(--text-primary)] hover:border-[var(--accent-primary)]`}
         >
-          Not really
+          Not yet
         </button>
       </div>
       {errorText ? <p className="text-xs text-[var(--destructive)]">{errorText}</p> : null}

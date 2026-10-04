@@ -23,7 +23,7 @@ export function FeedCardActions({ href, openLabel, shareTitle, shareText, card, 
   const [shareOpen, setShareOpen] = useState(false);
 
   return (
-    <div className="relative flex shrink-0 items-center justify-between gap-2 pt-4">
+    <div className="relative flex shrink-0 items-center justify-between gap-2 pt-3">
       <div className="flex items-center gap-2">
         {save ? <SaveButton contentKey={save.contentKey} surah={save.surah} ayahNumber={save.ayahNumber} compact /> : null}
         <button

@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { nameOfTheDay, type NameOfAllah } from "@/lib/content/namesOfAllah";
 
 /** Today's name by the viewer's local date — picked after mount so server and client render the same markup. */
-export function NameOfTheDayCard() {
+export function NameOfTheDayCard({ compact = false }: { compact?: boolean }) {
   const [name, setName] = useState<NameOfAllah | null>(null);
 
   useEffect(() => {
@@ -18,6 +18,24 @@ export function NameOfTheDayCard() {
       <section className="card-elevated p-6">
         <p className="text-xs text-[var(--text-secondary)]">Loading today&apos;s name...</p>
       </section>
+    );
+  }
+
+  if (compact) {
+    return (
+      <Link
+        href={`/names/${name.number}`}
+        className="card-elevated flex h-full flex-col gap-3.5 bg-[color-mix(in_srgb,var(--gold)_14%,var(--card-bg))] p-[18px] transition hover:border-[var(--gold)]"
+      >
+        <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--gold)]">{`Name of the day · ${name.number}`}</p>
+        <p dir="rtl" lang="ar" className="font-scheherazade text-[30px] leading-snug text-[var(--text-arabic)]">
+          {name.arabic}
+        </p>
+        <p className="font-playfair text-[19px] font-semibold leading-tight text-[var(--text-primary)]">{`${name.transliteration} · ${name.meaning}`}</p>
+        <span className="mt-auto w-fit rounded-full bg-[color-mix(in_srgb,var(--accent-primary)_12%,transparent)] px-2.5 py-1 text-[10px] font-bold text-[var(--gold)]">
+          {`Qur'an ${name.ref}`}
+        </span>
+      </Link>
     );
   }
 

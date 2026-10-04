@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { NotebookPen } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 
 import { AuthModal } from "@/components/AuthModal";
@@ -121,41 +122,38 @@ export function JournalTextarea({ contentKey, surah, ayahNumber, onSavedChange }
   if (!canPersistJournal) return null;
 
   return (
-    <div className="space-y-2 rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)] p-3">
-      <label htmlFor={fieldId} className="text-sm font-medium text-[var(--text-primary)]">
+    <div className="space-y-3">
+      <label htmlFor={fieldId} className="sr-only">
         {hasSavedEntry ? "Your reflection" : "Add a personal reflection"}
       </label>
-      <textarea
-        id={fieldId}
-        value={content}
-        onChange={(event) => {
-          setContent(event.target.value);
-          if (message === "Saved") setMessage(null);
-        }}
-        maxLength={2000}
-        rows={4}
-        className="w-full rounded-md border border-[var(--border)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none ring-[var(--accent-primary)] focus:ring-2"
-        placeholder="What does this ayah say to you today? Write your thoughts and dua intention..."
-      />
-      <div className="flex items-center justify-between">
-        {content.length > 1800 ? (
-          <p className="text-xs text-[var(--text-secondary)]">{content.length}/2000</p>
-        ) : (
-          <span />
-        )}
-        <button
-          type="button"
-          onClick={() => void handleSave()}
-          disabled={isSaving || content.trim().length === 0}
-          className="rounded-md bg-[var(--accent-primary)] px-3 py-1.5 text-sm text-[var(--on-accent-text)] disabled:opacity-60"
-        >
-          {isSaving ? "Saving..." : hasSavedEntry ? "Update Reflection" : "Save Reflection"}
-        </button>
+      <div className="flex min-h-[104px] gap-2.5 rounded-[18px] border border-[var(--border)] bg-[var(--input-bg)] p-4 focus-within:border-[var(--accent-primary)]">
+        <NotebookPen className="mt-0.5 size-5 shrink-0 text-[var(--accent-primary)]" strokeWidth={1.6} aria-hidden />
+        <textarea
+          id={fieldId}
+          value={content}
+          onChange={(event) => {
+            setContent(event.target.value);
+            if (message === "Saved") setMessage(null);
+          }}
+          maxLength={2000}
+          rows={3}
+          className="w-full flex-1 resize-none bg-transparent text-sm leading-[1.45] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-secondary)]"
+          placeholder="Write a private reflection tied to this ayah…"
+        />
       </div>
+      {content.length > 1800 ? <p className="text-xs text-[var(--text-secondary)]">{content.length}/2000</p> : null}
+      <button
+        type="button"
+        onClick={() => void handleSave()}
+        disabled={isSaving || content.trim().length === 0}
+        className="flex min-h-11 w-full items-center justify-center rounded-full bg-[var(--accent-primary)] px-4 text-[13px] font-bold text-[var(--on-accent-text)] disabled:opacity-60"
+      >
+        {isSaving ? "Saving…" : hasSavedEntry ? "Update reflection" : "Save reflection"}
+      </button>
       {message === "Saved" ? (
         <p className="text-xs text-[var(--text-secondary)]">
           {"Saved to "}
-          <Link href="/journal" className="font-medium text-[var(--accent-primary)] hover:opacity-80">
+          <Link href="/journal" className="font-bold text-[var(--accent-primary)] hover:opacity-80">
             your journal
           </Link>
           .
@@ -163,7 +161,7 @@ export function JournalTextarea({ contentKey, surah, ayahNumber, onSavedChange }
       ) : message ? (
         <p className="text-xs text-[var(--text-secondary)]">{message}</p>
       ) : (
-        <p className="text-xs text-[var(--text-secondary)]">Reflections are kept in your account, on every device.</p>
+        <p className="text-xs text-[var(--text-secondary)]">Private to you, and kept in your account on every device.</p>
       )}
 
       <AuthModal
