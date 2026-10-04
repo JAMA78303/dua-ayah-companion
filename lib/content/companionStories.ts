@@ -303,6 +303,167 @@ export const COMPANION_STORIES: CompanionStory[] = [
     ],
     episodes: [{ title: "Sumayyah (ra): The First Martyr", videoId: "YV0huLXPBz8" }],
   },
+  {
+    slug: "ali",
+    name: "'Ali ibn Abi Talib",
+    arabic: "علي بن أبي طالب",
+    epithet: "Raised in the Prophet's ﷺ house, and the first boy to believe",
+    intro:
+      "The Prophet's ﷺ cousin, raised in his home, the husband of Fatimah and the fourth caliph. Brave in battle and close to the Prophet ﷺ all his life.",
+    chapters: [
+      {
+        title: "The first boy to believe",
+        body: "When the Quraysh were struck by a hard famine, the Prophet ﷺ took his young cousin 'Ali into his own home to ease the burden on his uncle Abu Talib, and 'Ali grew up with him. So when revelation came, he was the first male to believe in him and pray with him. He was ten years old.",
+        sources: [IBN_HISHAM],
+        fromBiographies: true,
+      },
+      {
+        title: "In his bed on the night of the hijrah",
+        body: "On the night the Quraysh gathered at his door to kill him, the Prophet ﷺ told 'Ali: \"Sleep in my bed and wrap yourself in this green cloak of mine. Nothing you dislike will reach you from them.\" 'Ali lay in his place while the Prophet ﷺ left. He stayed behind in Makkah to return the things people had left with the Prophet ﷺ for safekeeping, for even those who rejected him trusted him with their valuables.",
+        sources: [IBN_HISHAM],
+        fromBiographies: true,
+      },
+      {
+        title: "\"Get up, Abu Turab\"",
+        body: "Once, after a disagreement with Fatimah, 'Ali went out and lay down in the mosque. The Prophet ﷺ came and found him asleep, his cloak slipped from his side and covered in dust. He began wiping the dust off him, saying: \"Get up, Abu Turab. Get up, Abu Turab,\" \"father of dust\". It became the name 'Ali loved most.",
+        sources: [bukhari("441")],
+      },
+      {
+        title: "Better than a servant",
+        body: "Fatimah's hands were sore from grinding grain, and when captives came to the Prophet ﷺ she went to ask him for a servant. He came to them at night when they had gone to bed, sat between them, and said: \"Shall I not tell you of something better than what you asked for? When you go to bed, say SubhanAllah thirty-three times, Alhamdulillah thirty-three times and Allahu akbar thirty-four times. That is better for you than a servant.\"",
+        sources: [bukhari("5361")],
+      },
+      {
+        title: "The flag at Khaybar",
+        body: "The Prophet ﷺ said: \"Tomorrow I will give the flag to a man through whom Allah will grant victory.\" Everyone spent the night wondering who it would be, and in the morning each hoped it would be him. He asked: \"Where is 'Ali?\" 'Ali's eyes were sore. When he came, the Prophet ﷺ put his saliva on his eyes and prayed for him, and he was healed as if he had never been in pain, and he was given the flag. The Prophet ﷺ told him to call them to Islam first: \"By Allah, that Allah guides one person through you is better for you than the finest red camels.\"",
+        sources: [bukhari("3701")],
+      },
+      {
+        title: "Like Harun to Musa",
+        body: "When the Prophet ﷺ set out for Tabuk, he left 'Ali in charge in Madinah. 'Ali said: \"Are you leaving me behind with the women and children?\" He answered: \"Are you not pleased to be to me as Harun was to Musa, except that there is no prophet after me?\"",
+        sources: [bukhari("4416"), muslim("2404a")],
+      },
+      {
+        title: "His death",
+        body: "'Ali was killed by 'Abdur-Rahman ibn Muljam. Ibn Sa'd records that 'Ali had turned Ibn Muljam away when he came to pledge allegiance, and said, touching his beard and his head: \"What holds back the most wretched of them? This will be dyed from this.\"",
+        sources: [IBN_SAD],
+        fromBiographies: true,
+      },
+    ],
+    episodes: [
+      { title: "Ali ibn Abi Talib (ra): Courageous & Steadfast", videoId: "In91yLh_WFU" },
+      { title: "The First Family: Ali (ra) and Fatima (ra)", videoId: "RbwnRZ30TVE" },
+      { title: "Ali (ra) and Fatima (ra): From Love to the Pain of Death", videoId: "zSa4kKwo_cs" },
+    ],
+  },
+  {
+    slug: "zayd-ibn-harithah",
+    name: "Zayd ibn Harithah",
+    arabic: "زيد بن حارثة",
+    epithet: "The only Companion named in the Qur'an",
+    intro:
+      "Taken as a boy and sold into slavery, he came into the Prophet's ﷺ household, chose him over his own family, and became the beloved of the Prophet ﷺ.",
+    chapters: [
+      {
+        title: "He chose the Prophet ﷺ over his father",
+        body: "Years after he was taken as a boy, Zayd's father and uncle found him in Makkah and came to buy him back. The Prophet ﷺ let him choose: go with them, or stay. Zayd said: \"I will never choose anyone over you. You are to me as father and mother.\" They asked if he would choose slavery over freedom and his own family. He said: \"I have seen something in this man, and I will never choose anyone over him.\" The Prophet ﷺ took him to the Hijr by the Ka'bah and declared him his son, and his father and uncle left content.",
+        sources: [{ ...IBN_SAD, note: "Ibn Sa'd gives this through Hisham ibn al-Kalbi, a historian rather than a hadith narrator." }],
+        fromBiographies: true,
+      },
+      {
+        title: "\"Call them by their fathers\"",
+        body: "'Abdullah ibn 'Umar said they used to call him nothing but \"Zayd, son of Muhammad\", until the Qur'an was revealed: \"Call them by the names of their fathers; it is more just in the sight of Allah.\" From then on he was Zayd ibn Harithah again.",
+        sources: [bukhari("4782")],
+        ayat: ["33:5"],
+      },
+      {
+        title: "Named in the Qur'an",
+        body: "Zayd is the only Companion of the Prophet ﷺ whom the Qur'an mentions by name: \"So when Zayd had no longer any need for her…\"",
+        sources: [{ label: "The Qur'an", note: "Surah al-Ahzab, 33:37." }],
+        ayat: ["33:37"],
+      },
+      {
+        title: "Beloved of the Prophet ﷺ",
+        body: "The Prophet ﷺ married Zayd to Umm Ayman, who had raised him, and she bore him Usamah. Years later, when some people objected to Usamah being made a commander, the Prophet ﷺ said: \"You objected to his father's command before. By Allah, he was worthy of command, and he was among the people most beloved to me, and this one is among the most beloved to me after him.\"",
+        sources: [muslim("1771a"), bukhari("3730")],
+      },
+      {
+        title: "Mu'tah",
+        body: "Zayd commanded the army sent to Mu'tah. Before any news had come, the Prophet ﷺ told the people in Madinah, his eyes streaming with tears: \"Zayd took the flag and was killed, then Ja'far took it and was killed, then Ibn Rawahah took it and was killed,\" until one of the swords of Allah took the flag and Allah gave them victory.",
+        sources: [bukhari("4262")],
+      },
+    ],
+    episodes: [{ title: "Zayd Ibn Al Haritha (ra): Loved and Liberated", videoId: "uM1YO0D-Hos" }],
+  },
+  {
+    slug: "khabbab",
+    name: "Khabbab ibn al-Aratt",
+    arabic: "خباب بن الأرت",
+    epithet: "Patient through the fire",
+    intro:
+      "A blacksmith in Makkah and one of the earliest Muslims, he had no clan to protect him and suffered some of the worst of the persecution.",
+    chapters: [
+      {
+        title: "The debt he was owed",
+        body: "Khabbab was a blacksmith, and al-'As ibn Wa'il owed him money. When he went to collect it, al-'As said: \"I won't pay you until you disbelieve in Muhammad.\" Khabbab said: \"I will not disbelieve until Allah makes you die and raises you again.\" Al-'As mocked: \"Then leave me until I die and am raised; I'll be given wealth and children then, and I'll pay you.\" Allah revealed: \"Then, have you seen he who disbelieved in Our verses and said, 'I will surely be given wealth and children'?\"",
+        sources: [bukhari("2091")],
+        ayat: ["19:77-80"],
+      },
+      {
+        title: "\"But you are hasty\"",
+        body: "Khabbab and others came to the Prophet ﷺ as he rested in the shade of the Ka'bah, his cloak for a pillow, and asked him to pray for Allah's help against what they were suffering. He said: \"Among those before you, a man would be put in a pit dug for him and sawn in two, or his flesh combed from his bones with iron combs, and it would not turn him from his religion. By Allah, Allah will complete this matter until a rider travels from San'a to Hadramawt fearing none but Allah, and the wolf for his sheep. But you are hasty.\"",
+        sources: [bukhari("3612")],
+      },
+      {
+        title: "Their reward with Allah",
+        body: "Khabbab said: we emigrated with the Prophet ﷺ seeking the face of Allah, and our reward rests with Allah. Some of us died without taking any of it in this world, like Mus'ab ibn 'Umayr. He was killed at Uhud and all we had to shroud him in was a cloak: if we covered his head his feet showed, and if we covered his feet his head showed. The Prophet ﷺ told us to cover his head and put grass over his feet. And some of us have seen our fruit ripen and are gathering it.",
+        sources: [bukhari("1276")],
+      },
+      {
+        title: "His last days",
+        body: "In his final illness, having been cauterised seven times on his stomach, Khabbab said: \"If the Prophet ﷺ had not forbidden us to pray for death, I would pray for it. The Companions of Muhammad ﷺ passed on and this world took nothing from them, while we have been given so much of it that we find no place for it but the earth.\"",
+        sources: [bukhari("6430")],
+      },
+    ],
+    episodes: [{ title: "Khabbab Ibn Al Aratt (ra): Under Burning Hot Coals", videoId: "G4M8XJ13LS0" }],
+  },
+  {
+    slug: "umm-ayman",
+    name: "Umm Ayman (Barakah)",
+    arabic: "أم أيمن",
+    epithet: "The woman who raised him",
+    intro:
+      "An Abyssinian woman who cared for the Prophet ﷺ from his birth. He freed her, honoured her all his life, and the Companions visited her after he was gone.",
+    chapters: [
+      {
+        title: "She raised him",
+        body: "Umm Ayman was an Abyssinian maid of the Prophet's ﷺ father 'Abdullah. When Aminah gave birth to the Prophet ﷺ after his father had died, Umm Ayman cared for him until he was grown. He freed her, and later married her to Zayd ibn Harithah.",
+        sources: [muslim("1771a")],
+      },
+      {
+        title: "Barakah, mother of Usamah",
+        body: "Her name was Barakah. She married Zayd ibn Harithah and bore him Usamah, who grew up knowing nothing but Islam, and whom the Prophet ﷺ loved dearly.",
+        sources: [IBN_SAD],
+        fromBiographies: true,
+      },
+      {
+        title: "Like a mother to him",
+        body: "Anas went with the Prophet ﷺ to visit Umm Ayman. She offered him a drink, and whether he was fasting or simply didn't want it, he did not take it, and she began scolding him and grumbling at him, as a mother would.",
+        sources: [muslim("2453")],
+      },
+      {
+        title: "\"By the One besides whom there is no god\"",
+        body: "The Prophet ﷺ had given Umm Ayman some date palms that the Ansar had lent him. When the time came to return them, she wrapped her garment around Anas's neck and said: \"No, by the One besides whom there is no god, he will not give them to you, for he gave them to me.\" The Prophet ﷺ kept offering her more in their place until he had given her about ten times as much.",
+        sources: [bukhari("4120"), muslim("1771b")],
+      },
+      {
+        title: "\"The revelation has stopped\"",
+        body: "After the Prophet ﷺ died, Abu Bakr said to 'Umar: \"Let us visit Umm Ayman, as the Messenger of Allah ﷺ used to.\" When they reached her she wept. They said: \"What makes you weep? What is with Allah is better for His Messenger.\" She said: \"I do not weep because I don't know that. I weep because the revelation from heaven has stopped.\" And they began to weep with her.",
+        sources: [muslim("2454")],
+      },
+    ],
+    episodes: [{ title: "Umm Ayman (ra): The Woman Who Never Stopped Caring", videoId: "QrrIdK5AjgI" }],
+  },
 ];
 
 export function getCompanionStory(slug: string): CompanionStory | undefined {
