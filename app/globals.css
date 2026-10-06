@@ -314,11 +314,14 @@ body {
   animation: card-enter 300ms ease-out both;
 }
 
-.card-elevated {
-  box-shadow: var(--card-shadow);
-  border-radius: 18px;
-  border: 1px solid var(--border);
-  background: var(--card-bg);
+/* In the components layer so a card's own utility classes (a tinted background, say) can override it. */
+@layer components {
+  .card-elevated {
+    box-shadow: var(--card-shadow);
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+  }
 }
 
 /* Onboarding screen 1 — NurSalam atmospheric splash */

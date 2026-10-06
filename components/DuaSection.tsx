@@ -34,7 +34,7 @@ function ArabicDuaText({ text, compact }: { text: string; compact?: boolean }) {
       dir="rtl"
       lang="ar"
       className={`font-scheherazade w-full text-right leading-[2] text-[var(--text-arabic)] ${
-        compact ? "text-[20px] md:text-[22px]" : "text-[24px]"
+        compact ? "text-[20px] md:text-[22px]" : "text-[30px] leading-[1.8]"
       }`}
     >
       {text}
@@ -56,9 +56,15 @@ export function DuaSection({
   const showAudio = source_type === "quranic" && Boolean(duaAudio && duaVerseKey);
 
   return (
-    <section className={compact ? "space-y-2" : "space-y-2"}>
-      <h2 className="text-xs font-medium uppercase tracking-wide text-[var(--text-secondary)]">
-        A Related Supplication
+    <section className="space-y-3">
+      <h2
+        className={
+          compact
+            ? "text-[10px] font-bold uppercase tracking-wide text-[var(--text-secondary)]"
+            : "font-playfair text-lg font-semibold text-[var(--text-primary)]"
+        }
+      >
+        {compact ? "A related supplication" : "Say this back"}
       </h2>
 
       <ArabicDuaText text={dua_text} compact={compact} />

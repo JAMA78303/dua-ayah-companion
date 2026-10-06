@@ -9,6 +9,7 @@ import { MemoriseSheet } from "@/components/memorise/MemoriseSheet";
 import { PropheticStorySection } from "@/components/PropheticStorySection";
 import { ResonanceSurvey } from "@/components/ResonanceSurvey";
 import { SaveButton } from "@/components/SaveButton";
+import { ShareSheet } from "@/components/share/ShareSheet";
 import { SurahReferencePill } from "@/components/SurahReferencePill";
 import { getSurahName } from "@/lib/quran/surahNames";
 import { duaFromOtherAyah, verseRefHref, verseRefLabel } from "@/lib/quran/verseRef";
@@ -20,6 +21,7 @@ import type { QfWord } from "@/lib/quranFoundation/fetchAyah";
 import { toneGradientVar, type ToneTag } from "@/lib/theme/toneGradient";
 import type { EmotionCategory } from "@/types/emotions";
 import Link from "next/link";
+import { ArrowUpRight, Brain, ExternalLink, Share2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 interface AyahCardProps {
@@ -164,6 +166,8 @@ export function AyahCard({
   const [isPlaying, setIsPlaying] = useState(false);
   const [relatedDua, setRelatedDua] = useState<RelatedDua | null>(null);
   const [memoriseOpen, setMemoriseOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [tafsirOpen, setTafsirOpen] = useState(false);
   const reflectionAnchorId = `reflection-prompts-${pairingId}`;
   const quranComUrl = `https://quran.com/${surah}/${ayahNumber}`;
   const surahName = getSurahName(surah);
@@ -268,68 +272,85 @@ export function AyahCard({
       ? `From the Sunnah · ${hadithSource?.trim() || "Hadith"}`
       : `Surah ${surahName} · Ayah ${ayahNumber}`;
 
+  const shareTitle = `${surahName} ${surah}:${ayahNumber}`;
+  const saveKey = isUuid(pairingId) ? pairingKey(pairingId) : ayahKey(surah, ayahNumber);
+  const sectionTitle = "font-playfair text-[21px] font-semibold text-[var(--text-primary)]";
+
   return (
-    <article
-      className="card-elevated animate-card-enter space-y-6 overflow-hidden"
-      style={{
-        background: toneGradientVar(toneTag),
-        boxShadow: "var(--card-shadow)",
-      }}
-    >
-      <header className="px-5 pt-5 md:px-8 md:pt-6">
-        {feeling ? (
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--accent-primary)]">{`For ${feeling}`}</p>
-        ) : null}
-      </header>
-
-      <div className="px-5 pb-2 pt-2 md:px-8">
-        <div className="flex justify-center">
-          <SurahReferencePill>{pillLabel}</SurahReferencePill>
-        </div>
-        <div className="min-w-0 pt-8 text-right">
-          <ArabicAyahText text={arabicText} words={qfWords} activeWordIndex={isPlaying ? activeWordIndex : null} />
-        </div>
-        <hr className="gold-rule gold-rule-animate" aria-hidden />
-        <p className="translation-text mx-auto max-w-prose text-center text-lg text-[var(--text-primary)] md:text-xl">
-          {translation}
-        </p>
-      </div>
-
-      <div className="space-y-6 px-5 pb-8 md:px-8">
-      {ayahTransliteration ? (
-        <p className="text-center text-sm italic text-[var(--text-secondary)]">{ayahTransliteration}</p>
+    <div className="animate-card-enter flex flex-col gap-4">
+      {feeling ? (
+        <header className="space-y-0.5">
+          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--accent-primary)]">Guidance for what you feel</p>
+          <h1 className="font-playfair text-[30px] font-semibold capitalize text-[var(--text-primary)]">{`For ${feeling}`}</h1>
+        </header>
       ) : null}
 
-      <AyahAudioPlayer
-        clip={playerClip}
-        verseKey={`${surah}:${ayahNumber}`}
-        reciterName={reciterName}
-        shouldPause={pauseAudio}
-        onTimeUpdate={updateWordHighlight}
-        onPlayingChange={(playing) => {
-          setIsPlaying(playing);
-          if (!playing) setActiveWordIndex(null);
-        }}
-      />
+      <article className="card-elevated space-y-[18px] p-[22px]" style={{ background: toneGradientVar(toneTag) }}>
+        <div className="flex items-start justify-between gap-3">
+          <SurahReferencePill>{pillLabel}</SurahReferencePill>
+          {feeling ? <span className="text-[10px] font-bold uppercase text-[var(--accent-primary)]">{feeling}</span> : null}
+        </div>
+        <div className="min-w-0 text-right">
+          <ArabicAyahText text={arabicText} words={qfWords} activeWordIndex={isPlaying ? activeWordIndex : null} />
+        </div>
+        <p className="font-playfair text-lg leading-[1.5] text-[var(--text-primary)]">{translation}</p>
+        <p className="text-[10px] text-[var(--text-secondary)]">Saheeh International</p>
+        {ayahTransliteration ? <p className="text-xs italic leading-[1.55] text-[var(--text-secondary)]">{ayahTransliteration}</p> : null}
+        <div className="flex items-center justify-between border-t border-[var(--border)] pt-3 text-[11px] font-bold text-[var(--text-secondary)]">
+          <SaveButton contentKey={saveKey} surah={surah} ayahNumber={ayahNumber} compact />
+          <button type="button" onClick={() => setShareOpen(true)} className="flex min-h-11 items-center gap-1.5 px-2 hover:text-[var(--text-primary)]">
+            <Share2 className="size-4" strokeWidth={1.6} aria-hidden />
+            Share
+          </button>
+          <Link href={`/quran/${surah}#verse-${surah}-${ayahNumber}`} className="flex min-h-11 items-center gap-1.5 px-2 hover:text-[var(--text-primary)]">
+            <ArrowUpRight className="size-4" strokeWidth={1.6} aria-hidden />
+            Open full
+          </Link>
+        </div>
+      </article>
+      {shareOpen ? (
+        <ShareSheet
+          card={{ eyebrow: shareTitle, arabic: arabicText, body: translation, footnote: "Saheeh International" }}
+          href={`/result?verseKey=${surah}:${ayahNumber}`}
+          title={shareTitle}
+          text={translation}
+          onClose={() => setShareOpen(false)}
+        />
+      ) : null}
 
-      <p className="text-xs text-[var(--text-secondary)]">
+      <section className="card-elevated p-3.5">
+        <AyahAudioPlayer
+          clip={playerClip}
+          verseKey={`${surah}:${ayahNumber}`}
+          reciterName={reciterName}
+          shouldPause={pauseAudio}
+          onTimeUpdate={updateWordHighlight}
+          onPlayingChange={(playing) => {
+            setIsPlaying(playing);
+            if (!playing) setActiveWordIndex(null);
+          }}
+        />
+      </section>
+
+      <div className="flex gap-2">
         <a
           href={quranComUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="font-medium text-[var(--accent-primary)] hover:text-[var(--accent-primary-hover)]"
+          className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[color-mix(in_srgb,var(--accent-primary)_14%,transparent)] px-4 text-[13px] font-bold text-[var(--text-primary)]"
         >
-          Open on Quran.com
+          <ExternalLink className="size-[17px]" strokeWidth={1.6} aria-hidden />
+          Quran.com
         </a>
-        <span aria-hidden> · </span>
         <button
           type="button"
           onClick={() => setMemoriseOpen(true)}
-          className="font-medium text-[var(--accent-primary)] hover:text-[var(--accent-primary-hover)]"
+          className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-[var(--gold)] px-4 text-[13px] font-bold text-[#0a0a0f]"
         >
-          Memorise this ayah
+          <Brain className="size-[17px]" strokeWidth={1.6} aria-hidden />
+          Memorise
         </button>
-      </p>
+      </div>
       {memoriseOpen ? (
         <MemoriseSheet
           title={`${surahName} ${surah}:${ayahNumber}`}
@@ -339,109 +360,96 @@ export function AyahCard({
         />
       ) : null}
 
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold text-[var(--text-primary)]">Tafsir Summary</h2>
-        <p className="text-sm leading-6 text-[var(--text-secondary)]">{tafsirSummary}</p>
-        {qfTafsirLong?.trim() ? (
-          <details className="rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)] p-3">
-            <summary className="cursor-pointer text-sm font-medium text-[var(--accent-primary)]">
-              Deeper tafsir
-            </summary>
-            <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[var(--text-secondary)]">
-              {qfTafsirLong}
-            </p>
-          </details>
+      <section className="card-elevated space-y-3.5 p-[18px]">
+        <div className="flex items-center justify-between">
+          <h2 className={sectionTitle}>A little context</h2>
+          {qfTafsirLong?.trim() ? (
+            <button type="button" onClick={() => setTafsirOpen((open) => !open)} className="text-xs font-bold text-[var(--accent-primary)]" aria-expanded={tafsirOpen}>
+              {tafsirOpen ? "Show less" : "Read more"}
+            </button>
+          ) : null}
+        </div>
+        <p className="text-[13px] leading-[1.6] text-[var(--text-primary)]">{tafsirSummary}</p>
+        {tafsirOpen && qfTafsirLong?.trim() ? (
+          <>
+            <p className="whitespace-pre-wrap text-xs leading-[1.6] text-[var(--text-secondary)]">{qfTafsirLong}</p>
+            <span className="inline-block rounded-full bg-[var(--bg-subtle)] px-2.5 py-1 text-[10px] font-bold text-[var(--text-secondary)]">Tafsir Ibn Kathir · abridged</span>
+          </>
         ) : null}
       </section>
 
-      <section id={reflectionAnchorId} className="space-y-2">
-        <h2 className="text-sm font-semibold text-[var(--text-primary)]">Reflection Prompts</h2>
-        <ul className="space-y-2">
-          {reflectionPrompts.map((prompt) => (
-            <li
-              key={prompt}
-              className="rounded-md border-l-4 border-[var(--accent-gold)] bg-[var(--bg-subtle)] px-3 py-2 text-sm text-[var(--text-secondary)]"
-            >
-              {prompt}
+      <section id={reflectionAnchorId} className="card-elevated space-y-3.5 p-[18px]">
+        <h2 className={sectionTitle}>Sit with this</h2>
+        <ol className="space-y-3">
+          {reflectionPrompts.map((prompt, index) => (
+            <li key={prompt} className="flex gap-2.5">
+              <span className="font-playfair text-lg leading-none text-[var(--gold)]">{String(index + 1).padStart(2, "0")}</span>
+              <span className="text-[13px] leading-[1.5] text-[var(--text-primary)]">{prompt}</span>
             </li>
           ))}
-        </ul>
+        </ol>
       </section>
 
       {propheticStory?.trim() && prophetName ? (
-        <PropheticStorySection
-          prophetName={prophetName}
-          story={propheticStory}
-          defaultExpanded={expandPropheticStory}
-        />
+        <section className="card-elevated p-[18px]">
+          <PropheticStorySection prophetName={prophetName} story={propheticStory} defaultExpanded={expandPropheticStory} />
+        </section>
       ) : null}
 
       {supplicationMatchesAyah && relatedDua ? (
-        <section className="space-y-2">
-          <h2 className="text-sm font-semibold text-[var(--text-primary)]">A Related Supplication</h2>
-          <Link
-            href={`/result?pairingId=${relatedDua.id}`}
-            className="block rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)] p-3 transition hover:border-[var(--accent-primary)]"
-          >
-            <p className="text-[var(--text-primary)]">{relatedDua.dua_text}</p>
+        <section className="card-elevated space-y-3 bg-[color-mix(in_srgb,var(--gold)_6%,var(--card-bg))] p-5">
+          <h2 className="font-playfair text-lg font-semibold text-[var(--text-primary)]">A related supplication</h2>
+          <Link href={`/result?pairingId=${relatedDua.id}`} className="block space-y-2">
+            <p dir="rtl" lang="ar" className="font-scheherazade text-right text-[28px] leading-[1.8] text-[var(--text-arabic)]">
+              {relatedDua.dua_text}
+            </p>
             {relatedDua.dua_transliteration?.trim() ? (
-              <p
-                className="mb-1 mt-2 text-sm font-light leading-relaxed tracking-wide text-[var(--text-secondary)]"
-                dir="ltr"
-                lang="en"
-              >
+              <p className="text-xs leading-relaxed text-[var(--text-secondary)]" dir="ltr" lang="en">
                 {relatedDua.dua_transliteration.trim()}
               </p>
             ) : null}
             <p className="text-sm leading-relaxed text-[var(--text-primary)]">{relatedDua.dua_translation}</p>
-            <p className="mt-2 text-xs font-medium text-[var(--accent-primary)]">
+            <p className="text-xs font-bold text-[var(--accent-primary)]">
               {duaFromOtherAyah(relatedDua.dua_verse_key, relatedDua.surah, relatedDua.ayah_number)
                 ? `From ${verseRefLabel(relatedDua.dua_verse_key!)} — open reflection`
-                : `Surah ${relatedDua.surah} (${getSurahName(relatedDua.surah)}), Ayah ${relatedDua.ayah_number} — open reflection`}
+                : `${getSurahName(relatedDua.surah)} ${relatedDua.surah}:${relatedDua.ayah_number} — open reflection`}
             </p>
           </Link>
         </section>
       ) : null}
       {supplicationMatchesAyah && !relatedDua ? (
-        <section className="space-y-2">
-          <h2 className="text-sm font-semibold text-[var(--text-primary)]">A Related Supplication</h2>
+        <section className="card-elevated p-5">
           <p className="text-sm text-[var(--text-secondary)]">
             This ayah is itself a Qur&apos;anic supplication. We&apos;re finding a different related dua.
           </p>
         </section>
       ) : null}
       {!supplicationMatchesAyah ? (
-        <DuaSection
-          dua_text={duaText}
-          dua_transliteration={duaTransliteration ?? null}
-          dua_translation={duaTranslation}
-          source_type={sourceType}
-          surah={surah}
-          ayah_number={ayahNumber}
-          hadith_source={hadithSource ?? null}
-          duaAudio={duaClip}
-          duaVerseKey={duaVerseKey}
-          reciterName={reciterName}
-          citation={duaCitation}
-        />
+        <section className="card-elevated bg-[color-mix(in_srgb,var(--gold)_6%,var(--card-bg))] p-5">
+          <DuaSection
+            dua_text={duaText}
+            dua_transliteration={duaTransliteration ?? null}
+            dua_translation={duaTranslation}
+            source_type={sourceType}
+            surah={surah}
+            ayah_number={ayahNumber}
+            hadith_source={hadithSource ?? null}
+            duaAudio={duaClip}
+            duaVerseKey={duaVerseKey}
+            reciterName={reciterName}
+            citation={duaCitation}
+          />
+        </section>
       ) : null}
 
-      <section className="space-y-3 border-t border-[var(--border)] pt-4">
-        <div className="flex items-center gap-2">
-          <SaveButton
-            contentKey={isUuid(pairingId) ? pairingKey(pairingId) : ayahKey(surah, ayahNumber)}
-            surah={surah}
-            ayahNumber={ayahNumber}
-          />
-        </div>
+      <section className="card-elevated space-y-3.5 p-[18px]">
         <ResonanceSurvey pairingId={pairingId} revealTargetId={reflectionAnchorId} />
         <JournalTextarea
-          contentKey={journalContentKey ?? (isUuid(pairingId) ? pairingKey(pairingId) : ayahKey(surah, ayahNumber))}
+          contentKey={journalContentKey ?? saveKey}
           surah={surah}
           ayahNumber={ayahNumber}
         />
       </section>
-      </div>
-    </article>
+    </div>
   );
 }

@@ -1,19 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { Feather } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { SurahReferencePill } from "@/components/SurahReferencePill";
-import { getSurahName } from "@/lib/quran/surahNames";
+import { verseRefLabel } from "@/lib/quran/verseRef";
 
 interface DailyPairing {
   id: string;
   surah: number;
   ayah_number: number;
-  arabic_text?: string | null;
   translation: string;
+  reflection_prompts?: string[] | null;
 }
 
+/** Today's reflection: a question to sit with, drawn from the day's ayah, opening that ayah. */
 export function DailyRecommendationCard() {
   const [pairing, setPairing] = useState<DailyPairing | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,68 +26,33 @@ export function DailyRecommendationCard() {
         const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
         const response = await fetch(`/api/daily?date=${localDate}`);
         if (!response.ok) return;
-        const json = (await response.json()) as DailyPairing | null;
-        setPairing(json);
+        setPairing((await response.json()) as DailyPairing | null);
       } finally {
         setIsLoading(false);
       }
     }
-
     void run();
   }, []);
 
   if (isLoading) {
     return (
-      <section className="card-elevated p-6">
+      <section className="card-elevated p-[18px]">
         <p className="text-xs text-[var(--text-secondary)]">Loading today&apos;s reflection...</p>
       </section>
     );
   }
+  if (!pairing) return null;
 
-  if (!pairing) {
-    return null;
-  }
-
-  const surahName = getSurahName(pairing.surah);
-  const dateLabel = new Intl.DateTimeFormat(undefined, {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  }).format(new Date());
+  const prompt = pairing.reflection_prompts?.find((p) => p.trim()) ?? pairing.translation;
 
   return (
-    <Link
-      href={`/result?pairingId=${pairing.id}`}
-      className="card-elevated block bg-[linear-gradient(135deg,color-mix(in_srgb,var(--accent-primary)_8%,var(--card-bg))_0%,color-mix(in_srgb,var(--gold)_6%,var(--card-bg))_100%)] p-6 transition-opacity hover:opacity-[0.97]"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-xs font-medium tracking-wide text-[var(--gold)]">✦ Today&apos;s Reflection</p>
-        <time className="text-xs text-[var(--text-secondary)]" dateTime={new Date().toISOString().slice(0, 10)}>
-          {dateLabel}
-        </time>
+    <Link href={`/result?pairingId=${pairing.id}`} className="card-elevated block space-y-3.5 p-[18px] transition hover:border-[var(--accent-primary)]">
+      <div className="flex items-start justify-between">
+        <span className="rounded-full bg-[var(--bg-subtle)] px-2.5 py-1 text-[10px] font-bold text-[var(--text-secondary)]">Today&apos;s reflection</span>
+        <Feather className="size-[18px] text-[var(--accent-primary)]" strokeWidth={1.6} aria-hidden />
       </div>
-
-      <div className="mt-5 flex justify-center">
-        <SurahReferencePill>
-          Surah {surahName} · Ayah {pairing.ayah_number}
-        </SurahReferencePill>
-      </div>
-
-      {pairing.arabic_text?.trim() ? (
-        <p
-          dir="rtl"
-          lang="ar"
-          className="font-scheherazade mt-4 line-clamp-1 text-xl leading-relaxed text-[var(--text-arabic)]"
-        >
-          {pairing.arabic_text}
-        </p>
-      ) : null}
-
-      <p className="font-playfair mt-3 line-clamp-2 text-sm italic leading-relaxed text-[var(--text-secondary)]">
-        {pairing.translation}
-      </p>
-
-      <p className="mt-5 text-sm font-medium text-[var(--accent-primary)]">Begin your reflection →</p>
+      <p className="font-playfair text-[21px] leading-[1.4] text-[var(--text-primary)]">{prompt}</p>
+      <p className="text-[11px] text-[var(--text-secondary)]">{`Inspired by ${verseRefLabel(`${pairing.surah}:${pairing.ayah_number}`)}`}</p>
     </Link>
   );
 }
