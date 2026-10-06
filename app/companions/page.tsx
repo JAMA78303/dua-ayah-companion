@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ChevronRight, Landmark } from "lucide-react";
+
+import { BiographiesToggle } from "@/components/layout/BiographiesToggle";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 import { fetchApprovedContentKeys } from "@/lib/content/approvedContent";
 import { COMPANION_STORIES, FIRSTS_PLAYLIST_URL } from "@/lib/content/companionStories";
@@ -18,35 +22,36 @@ export default async function CompanionsPage() {
   })).filter(({ ready }) => ready > 0);
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-8 md:px-8">
-      <header className="space-y-2 text-center md:text-left">
-        <h1 className="font-playfair text-3xl font-semibold text-[var(--text-primary)]">Stories of the Companions</h1>
-        <p className="text-sm italic text-[var(--text-secondary)]">The first to believe, and what it cost them.</p>
-        <p className="text-xs text-[var(--text-secondary)]">
-          Told from authentic hadith and the early biographies, with every source cited. For the full stories, listen to{" "}
-          <a href={FIRSTS_PLAYLIST_URL} target="_blank" rel="noopener noreferrer" className="font-medium text-[var(--accent-primary)] hover:opacity-80">
-            The Firsts by Dr. Omar Suleiman
-          </a>
-          .
-        </p>
-      </header>
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-5 py-6 md:px-8">
+      <PageHeader eyebrow="Lives that teach" title="Biographies" back={{ href: "/library", label: "Library" }} />
+      <BiographiesToggle active="companions" />
+      <p className="text-xs leading-relaxed text-[var(--text-secondary)]">
+        The first to believe, and what it cost them. Told from authentic hadith and the early biographies, with every source
+        cited. For the full stories, listen to{" "}
+        <a href={FIRSTS_PLAYLIST_URL} target="_blank" rel="noopener noreferrer" className="font-bold text-[var(--accent-primary)] hover:opacity-80">
+          The Firsts by Dr. Omar Suleiman
+        </a>
+        .
+      </p>
 
       {stories.length === 0 ? (
         <p className="text-sm text-[var(--text-secondary)]">These stories are being reviewed and will appear here soon, in sha Allah.</p>
       ) : (
-        <ol className="grid grid-cols-2 gap-3">
+        <ol className="card-elevated divide-y divide-[var(--border)]">
           {stories.map(({ story, ready }) => (
             <li key={story.slug}>
-              <Link
-                href={`/companions/${story.slug}`}
-                className="card-elevated flex h-full flex-col rounded-2xl bg-gradient-to-br from-[var(--card-bg)] to-[var(--bg-subtle)] p-5 transition hover:border-[var(--accent-primary)]"
-              >
-                <span dir="rtl" lang="ar" className="font-scheherazade text-xl text-[var(--text-arabic)]">
+              <Link href={`/companions/${story.slug}`} className="flex min-h-[68px] items-center gap-3 px-4 py-3 transition hover:bg-[var(--bg-subtle)]">
+                <span className="flex size-[42px] shrink-0 items-center justify-center rounded-[14px] bg-[color-mix(in_srgb,var(--accent-primary)_12%,transparent)] text-[var(--accent-primary)]">
+                  <Landmark className="size-[19px]" strokeWidth={1.6} aria-hidden />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-bold text-[var(--text-primary)]">{story.name}</span>
+                  <span className="block text-[11px] text-[var(--text-secondary)]">{`${story.epithet} · ${ready} ${ready === 1 ? "chapter" : "chapters"}`}</span>
+                </span>
+                <span dir="rtl" lang="ar" className="font-scheherazade hidden shrink-0 text-lg text-[var(--text-arabic)] sm:block">
                   {story.arabic}
                 </span>
-                <span className="mt-2 font-nunito text-sm font-semibold text-[var(--text-primary)]">{story.name}</span>
-                <span className="mt-1 text-xs italic text-[var(--text-secondary)]">{story.epithet}</span>
-                <span className="mt-2 text-xs text-[var(--accent-primary)]">{`${ready} ${ready === 1 ? "chapter" : "chapters"}`}</span>
+                <ChevronRight className="size-4 text-[var(--text-secondary)]" strokeWidth={1.6} aria-hidden />
               </Link>
             </li>
           ))}
