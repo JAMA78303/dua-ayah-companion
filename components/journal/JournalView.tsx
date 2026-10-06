@@ -25,7 +25,8 @@ export function JournalView({ entries, olderHiddenCount, isPremium }: JournalVie
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-4 py-10 md:px-8">
       <header className="space-y-1">
-        <h1 className="font-playfair text-2xl font-semibold text-[var(--text-primary)]">My journal</h1>
+        <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--accent-primary)]">Private reflections</p>
+        <h1 className="font-playfair text-[32px] font-semibold leading-tight text-[var(--text-primary)]">Journal</h1>
         <p className="text-sm text-[var(--text-secondary)]">
           {isPremium
             ? "Your reflections on the ayat, newest first."

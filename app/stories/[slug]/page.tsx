@@ -51,7 +51,7 @@ export default async function StoryPage({ params }: StoryPageProps) {
   const label = prophetEnglishLabel(story.name);
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-8 md:px-8">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-5 py-6 md:px-8">
       <Link href="/stories" className="text-sm font-medium text-[var(--accent-primary)] hover:opacity-80">
         ← Stories of the Prophets
       </Link>
@@ -60,15 +60,15 @@ export default async function StoryPage({ params }: StoryPageProps) {
         <p dir="rtl" lang="ar" className="font-scheherazade text-4xl text-[var(--text-arabic)]">
           {prophetArabicName(story.name)}
         </p>
-        <h1 className="font-playfair text-2xl font-semibold text-[var(--text-primary)]">{label}</h1>
+        <h1 className="font-playfair text-[32px] font-semibold leading-tight text-[var(--text-primary)]">{label}</h1>
         <p className="mx-auto max-w-prose text-sm italic leading-relaxed text-[var(--text-secondary)]">{story.intro}</p>
       </header>
 
       <ol className="space-y-5">
         {story.chapters.map((chapter, chapterIndex) => (
           <li key={chapter.title} id={`chapter-${chapterIndex + 1}`} className="card-elevated scroll-mt-24 space-y-3 p-5 md:p-6">
-            <h2 className="flex items-baseline gap-3 font-playfair text-lg font-semibold text-[var(--text-primary)]">
-              <span className="font-nunito text-xs font-semibold text-[var(--accent-gold)]">{chapterIndex + 1}</span>
+            <h2 className="flex flex-col gap-1 font-playfair text-[22px] font-semibold leading-tight text-[var(--text-primary)]">
+              <span className="font-nunito text-[10px] font-bold uppercase tracking-wide text-[var(--gold)]">{`Chapter ${String(chapterIndex + 1).padStart(2, "0")}`}</span>
               {chapter.title}
             </h2>
             <p className="text-[15px] leading-7 text-[var(--text-primary)]">{chapter.body}</p>

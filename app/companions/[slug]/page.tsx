@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Headphones } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { SaveButton } from "@/components/SaveButton";
@@ -34,7 +35,7 @@ export default async function CompanionPage({ params }: CompanionPageProps) {
   if (chapters.length === 0) notFound();
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-8 md:px-8">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-5 py-6 md:px-8">
       <Link href="/companions" className="text-sm font-medium text-[var(--accent-primary)] hover:opacity-80">
         ← Stories of the Companions
       </Link>
@@ -43,7 +44,7 @@ export default async function CompanionPage({ params }: CompanionPageProps) {
         <p dir="rtl" lang="ar" className="font-scheherazade text-4xl text-[var(--text-arabic)]">
           {story.arabic}
         </p>
-        <h1 className="font-playfair text-2xl font-semibold text-[var(--text-primary)]">{story.name}</h1>
+        <h1 className="font-playfair text-[32px] font-semibold leading-tight text-[var(--text-primary)]">{story.name}</h1>
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--accent-primary)]">{story.epithet}</p>
         <p className="mx-auto max-w-prose text-sm italic leading-relaxed text-[var(--text-secondary)]">{story.intro}</p>
         <p className="mx-auto max-w-prose text-xs leading-relaxed text-[var(--text-secondary)]">
@@ -55,8 +56,8 @@ export default async function CompanionPage({ params }: CompanionPageProps) {
       <ol className="space-y-5">
         {chapters.map(({ chapter, index }) => (
           <li key={chapter.title} id={`chapter-${index + 1}`} className="card-elevated scroll-mt-24 space-y-3 p-5 md:p-6">
-            <h2 className="flex items-baseline gap-3 font-playfair text-lg font-semibold text-[var(--text-primary)]">
-              <span className="font-nunito text-xs font-semibold text-[var(--accent-gold)]">{index + 1}</span>
+            <h2 className="flex flex-col gap-1 font-playfair text-[22px] font-semibold leading-tight text-[var(--text-primary)]">
+              <span className="font-nunito text-[10px] font-bold uppercase tracking-wide text-[var(--gold)]">{`Chapter ${String(index + 1).padStart(2, "0")}`}</span>
               {chapter.title}
             </h2>
             {chapter.fromBiographies ? (
@@ -94,23 +95,20 @@ export default async function CompanionPage({ params }: CompanionPageProps) {
         ))}
       </ol>
 
-      <section className="card-elevated space-y-2 p-5">
-        <h2 className="text-sm font-semibold text-[var(--text-primary)]">Listen to the full story</h2>
-        <ul className="space-y-1">
-          {story.episodes.map((episode) => (
-            <li key={episode.videoId}>
-              <a
-                href={`https://www.youtube.com/watch?v=${episode.videoId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm font-medium text-[var(--accent-primary)] hover:opacity-80"
-              >
-                {`${episode.title} →`}
-              </a>
-            </li>
-          ))}
-        </ul>
-        <p className="text-xs text-[var(--text-secondary)]">The Firsts, by Dr. Omar Suleiman (Yaqeen Institute), on YouTube.</p>
+      <section className="space-y-2">
+        {story.episodes.map((episode) => (
+          <a
+            key={episode.videoId}
+            href={`https://www.youtube.com/watch?v=${episode.videoId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex min-h-11 items-center justify-center gap-2 rounded-full bg-[var(--gold)] px-4 py-2 text-center text-[13px] font-bold text-[#0a0a0f]"
+          >
+            <Headphones className="size-[17px] shrink-0" strokeWidth={1.6} aria-hidden />
+            {story.episodes.length === 1 ? "Listen to the full story" : episode.title.split(" | ")[0]}
+          </a>
+        ))}
+        <p className="text-center text-xs text-[var(--text-secondary)]">The Firsts, by Dr. Omar Suleiman (Yaqeen Institute), on YouTube.</p>
       </section>
     </main>
   );
