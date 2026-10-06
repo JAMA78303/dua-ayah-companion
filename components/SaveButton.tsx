@@ -1,5 +1,6 @@
 "use client";
 
+import { Bookmark } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AuthModal } from "@/components/AuthModal";
@@ -21,9 +22,11 @@ interface SaveButtonProps {
   ayahNumber?: number;
   /** Cards and lists: just the button, no helper text. */
   compact?: boolean;
+  /** A bare bookmark icon, for rows of icon actions. */
+  icon?: boolean;
 }
 
-export function SaveButton({ contentKey, surah, ayahNumber, compact = false }: SaveButtonProps) {
+export function SaveButton({ contentKey, surah, ayahNumber, compact = false, icon = false }: SaveButtonProps) {
   const [isSaved, setIsSaved] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
@@ -109,6 +112,18 @@ export function SaveButton({ contentKey, surah, ayahNumber, compact = false }: S
 
   return (
     <>
+      {icon ? (
+        <button
+          type="button"
+          onClick={() => void performToggle()}
+          disabled={isBusy}
+          aria-pressed={isSaved}
+          aria-label={isSaved ? "Saved" : "Save"}
+          className="flex size-9 items-center justify-center rounded-full text-[var(--text-secondary)] transition hover:bg-[var(--bg-subtle)] hover:text-[var(--accent-primary)] disabled:opacity-50 aria-pressed:text-[var(--accent-primary)]"
+        >
+          <Bookmark className="size-[18px]" strokeWidth={1.6} fill={isSaved ? "currentColor" : "none"} aria-hidden />
+        </button>
+      ) : (
       <button
         type="button"
         onClick={() => void performToggle()}
@@ -122,7 +137,8 @@ export function SaveButton({ contentKey, surah, ayahNumber, compact = false }: S
       >
         {isSaved ? "♥ Saved" : "♡ Save"}
       </button>
-      {compact ? null : (
+      )}
+      {compact || icon ? null : (
         <p className="text-xs text-[var(--text-secondary)]">
           Signed-in saves sync to your account; this device keeps a local copy for offline browsing.
         </p>

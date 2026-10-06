@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CloudSun, LocateFixed, MapPin, Moon, MoonStar, Search, ShieldCheck, Sun, Sunrise, Sunset, type LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { MoonCard } from "@/components/prayer/MoonCard";
@@ -26,7 +27,7 @@ import {
 import { moonProgress, prayerMoment, previewMinutes, skyPeriod, sunProgress, type PrayerMoment } from "@/lib/prayer/sky";
 
 const selectClass =
-  "w-full rounded-md border border-[var(--border)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none ring-[var(--accent-primary)] focus:ring-2";
+  "w-full rounded-[12px] border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2.5 text-sm text-[var(--text-primary)] outline-none ring-[var(--accent-primary)] focus:ring-2";
 
 function formatCountdown(totalMinutes: number) {
   const h = Math.floor(totalMinutes / 60);
@@ -50,21 +51,48 @@ const MOMENT_CAPTIONS: Record<PrayerMoment, string> = {
   LastThird: "The last third of the night",
 };
 
+const MOMENT_TITLES: Record<PrayerMoment, string> = {
+  Fajr: "At Fajr",
+  Sunrise: "At sunrise",
+  Duha: "The Duha prayer",
+  Dhuhr: "At Dhuhr",
+  Asr: "At Asr",
+  Maghrib: "At Maghrib",
+  Isha: "At Isha",
+  LastThird: "In the last third of the night",
+};
+
+const ROW_ICONS: Record<ListedMoment, LucideIcon> = {
+  Fajr: Sunrise,
+  Sunrise: Sunrise,
+  Duha: Sun,
+  Dhuhr: Sun,
+  Asr: CloudSun,
+  Maghrib: Sunset,
+  Isha: MoonStar,
+};
+
 function PrayerHadithCard({ moment }: { moment: PrayerMoment }) {
   return (
-    <div className="space-y-3 rounded-xl border border-[var(--border)] px-4 py-3">
+    <section className="space-y-3 rounded-[18px] border border-[color-mix(in_srgb,var(--gold)_35%,transparent)] bg-[color-mix(in_srgb,var(--gold)_12%,var(--card-bg))] p-4">
+      <h2 className="font-playfair text-xl font-semibold text-[var(--text-primary)]">{MOMENT_TITLES[moment]}</h2>
       {PRAYER_HADITH[moment].map((hadith) => (
-        <blockquote key={hadith.source} className="space-y-1">
-          <p className="text-sm leading-relaxed text-[var(--text-primary)]">{hadith.text}</p>
+        <blockquote key={hadith.source} className="space-y-2">
+          <p className="font-playfair text-[17px] leading-relaxed text-[var(--text-primary)]">{`“${hadith.text}”`}</p>
           <footer className="text-xs text-[var(--text-secondary)]">
-            <a href={hadith.url} target="_blank" rel="noopener noreferrer" className="font-medium text-[var(--accent-primary)] hover:opacity-80">
+            <a
+              href={hadith.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-full bg-[var(--card-bg)] px-2.5 py-1 font-bold text-[var(--accent-primary)] hover:opacity-80"
+            >
               {hadith.source}
             </a>
             {hadith.grade ? ` · ${hadith.grade}` : null}
           </footer>
         </blockquote>
       ))}
-    </div>
+    </section>
   );
 }
 
@@ -161,7 +189,7 @@ export function PrayerTimesView() {
     }
   }
 
-  if (!settings) return <p className="text-sm text-[var(--text-secondary)]">Loading...</p>;
+  if (!settings) return <p className="text-sm text-[var(--text-secondary)]">Loading…</p>;
 
   const nowMinutes = day ? minutesOf(nowInTimezone(day.timezone, now)) : 0;
   const upcoming = day ? nextPrayer(day.timings, nowInTimezone(day.timezone, now)) : null;
@@ -176,23 +204,54 @@ export function PrayerTimesView() {
   const duha = day ? duhaWindow(day.timings) : null;
   const rowTime = (row: ListedMoment) => (row === "Duha" ? `${duha!.start}–${duha!.end}` : day!.timings[row]);
 
-  return (
-    <div className="space-y-6">
-      {settings.location ? (
-        <section className="card-elevated space-y-4 p-5">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-sm font-semibold text-[var(--text-primary)]">{settings.location.label}</p>
-            <button type="button" onClick={() => update({ ...settings, location: null })} className="text-xs text-[var(--accent-primary)]">
-              Change
-            </button>
-          </div>
+  const place = settings.location?.label.split(",")[0] ?? "";
 
-          {status === "loading" && !day ? <p className="text-sm text-[var(--text-secondary)]">Loading today&apos;s times...</p> : null}
+  return (
+    <div className="space-y-4">
+      <header className="flex items-start justify-between gap-3">
+        <div className="min-w-0 space-y-1">
+          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--accent-primary)]">
+            {settings.location ? "Prayer times" : "Location needed"}
+          </p>
+          <h1 className="truncate font-playfair text-[32px] font-semibold leading-tight text-[var(--text-primary)]">
+            {settings.location ? place : "Prayer times"}
+          </h1>
+        </div>
+        {settings.location ? (
+          <button
+            type="button"
+            onClick={() => update({ ...settings, location: null })}
+            className="mt-3 inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--card-bg)] px-3 text-xs font-bold text-[var(--text-primary)]"
+          >
+            <MapPin className="size-3.5" strokeWidth={1.8} aria-hidden />
+            Change
+          </button>
+        ) : null}
+      </header>
+
+      {settings.location ? (
+        <>
+          {status === "loading" && !day ? <p className="text-sm text-[var(--text-secondary)]">Loading today&apos;s times…</p> : null}
           {status === "error" ? <p className="text-sm text-[var(--text-secondary)]">Prayer times couldn&apos;t load. Check your connection and try again.</p> : null}
 
           {day ? (
             <>
-              <figure className="space-y-2">
+              <div className="space-y-0.5">
+                {upcoming ? (
+                  <>
+                    <p className="text-xs text-[var(--text-secondary)]">{`${upcoming.name} in`}</p>
+                    <p className="font-playfair text-[38px] font-semibold leading-none tabular-nums text-[var(--text-primary)]">
+                      {formatCountdown(upcoming.inMinutes).replace(/^in /, "")}
+                    </p>
+                    <p className="pt-1 text-xs font-bold text-[var(--gold)]">{`Today · ${day.timings[upcoming.name]}`}</p>
+                  </>
+                ) : (
+                  // Tomorrow's Fajr is within a minute or two of today's.
+                  <p className="text-sm text-[var(--text-primary)]">{`Isha has passed. Fajr tomorrow is around ${day.timings.Fajr}.`}</p>
+                )}
+              </div>
+
+              <figure className="card-elevated space-y-2 overflow-hidden p-2">
                 <SkyScene
                   period={period}
                   sun={sun}
@@ -201,10 +260,10 @@ export function PrayerTimesView() {
                   southern={southern}
                   label={`${caption}. ${moon === null ? "The moon is below the horizon." : `${moonPhaseName(age)} moon, ${Math.round(moonIllumination(age) * 100)}% lit.`}`}
                 />
-                <figcaption className="flex items-center justify-between gap-3 text-xs text-[var(--text-secondary)]">
+                <figcaption className="flex items-center justify-between gap-3 px-2 pb-1 text-xs text-[var(--text-secondary)]">
                   <span>{preview ? `${caption} (at ${preview === "Duha" ? duha!.best : day.timings[preview]})` : caption}</span>
                   {preview ? (
-                    <button type="button" onClick={() => setPreview(null)} className="shrink-0 font-semibold text-[var(--accent-primary)]">
+                    <button type="button" onClick={() => setPreview(null)} className="shrink-0 font-bold text-[var(--accent-primary)]">
                       Back to now
                     </button>
                   ) : (
@@ -212,98 +271,106 @@ export function PrayerTimesView() {
                   )}
                 </figcaption>
               </figure>
-              <PrayerHadithCard moment={moment} />
-              <p className="rounded-xl bg-[var(--bg-subtle)] px-4 py-3 text-sm text-[var(--text-primary)]">
-                {upcoming ? (
-                  <>
-                    <span className="font-semibold">{upcoming.name}</span>
-                    {` ${formatCountdown(upcoming.inMinutes)}`}
-                  </>
-                ) : (
-                  // Tomorrow's Fajr is within a minute or two of today's.
-                  `Isha has passed. Fajr tomorrow is around ${day.timings.Fajr}.`
-                )}
-              </p>
-              <ul className="divide-y divide-[var(--border)]">
-                {ROWS.map((name) => (
-                  <li key={name}>
-                    <button
-                      type="button"
-                      aria-pressed={preview === name}
-                      onClick={() => setPreview(preview === name ? null : name)}
-                      className={`-mx-2 flex w-[calc(100%+1rem)] items-center justify-between rounded-lg px-2 py-2.5 text-left text-sm transition hover:bg-[var(--bg-subtle)] ${
-                        preview === name ? "bg-[var(--bg-subtle)]" : ""
-                      } ${
-                        upcoming?.name === name
-                          ? "font-semibold text-[var(--accent-primary)]"
-                          : name === "Sunrise" || name === "Duha"
-                            ? "text-[var(--text-secondary)]"
-                            : "text-[var(--text-primary)]"
-                      }`}
-                    >
-                      <span>
-                        {name}
-                        {name === "Duha" ? <span className="ml-2 text-xs">voluntary</span> : null}
-                      </span>
-                      <span className="tabular-nums">{rowTime(name)}</span>
-                    </button>
-                  </li>
-                ))}
+
+              <ul className="card-elevated space-y-0.5 p-2">
+                {ROWS.map((name) => {
+                  const Icon = ROW_ICONS[name];
+                  const next = upcoming?.name === name;
+                  return (
+                    <li key={name}>
+                      <button
+                        type="button"
+                        aria-pressed={preview === name}
+                        onClick={() => setPreview(preview === name ? null : name)}
+                        className={`flex min-h-12 w-full items-center gap-3 rounded-[12px] px-3 text-left text-sm transition hover:bg-[var(--bg-subtle)] ${
+                          next
+                            ? "bg-[color-mix(in_srgb,var(--accent-primary)_14%,transparent)] font-bold text-[var(--accent-primary)]"
+                            : preview === name
+                              ? "bg-[var(--bg-subtle)]"
+                              : ""
+                        } ${!next && (name === "Sunrise" || name === "Duha") ? "text-[var(--text-secondary)]" : !next ? "text-[var(--text-primary)]" : ""}`}
+                      >
+                        <Icon className="size-[18px] shrink-0 opacity-70" strokeWidth={1.6} aria-hidden />
+                        <span className="flex-1">
+                          {name}
+                          {name === "Duha" ? <span className="ml-2 text-[11px] font-normal">voluntary</span> : null}
+                        </span>
+                        <span className="font-bold tabular-nums">{rowTime(name)}</span>
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
               {duha ? (
-                <p className="text-sm text-[var(--text-secondary)]">
+                <p className="px-1 text-xs leading-relaxed text-[var(--text-secondary)]">
                   {`Duha is prayed once the sun is up until shortly before Dhuhr, best around ${duha.best} when the sun is hot. The times shown are approximate.`}
                 </p>
               ) : null}
+
               {day.lastThird ? (
-                <p className="text-sm text-[var(--text-secondary)]">
-                  {`The last third of the night begins around ${day.lastThird}, a time when dua is answered. `}
-                  <Link href="/duas/how-to#times" className="font-medium text-[var(--accent-primary)] hover:opacity-80">
-                    How to make dua
-                  </Link>
-                </p>
+                <section className="card-elevated flex items-start justify-between gap-3 p-4">
+                  <div className="space-y-1">
+                    <h2 className="font-playfair text-xl font-semibold text-[var(--text-primary)]">Last third of the night</h2>
+                    <p className="text-xs text-[var(--text-secondary)]">
+                      {`Begins around ${day.lastThird}, a time when dua is answered. `}
+                      <Link href="/duas/how-to#times" className="font-bold text-[var(--accent-primary)] hover:opacity-80">
+                        How to make dua
+                      </Link>
+                    </p>
+                  </div>
+                  <Moon className="size-6 shrink-0 text-[var(--gold)]" strokeWidth={1.6} aria-hidden />
+                </section>
               ) : null}
-              <p className="text-xs text-[var(--text-secondary)]">{`Times are for ${day.timezone.replace(/_/g, " ")}.`}</p>
+
+              <PrayerHadithCard moment={moment} />
+              <p className="px-1 text-xs text-[var(--text-secondary)]">{`Times are for ${day.timezone.replace(/_/g, " ")}. Your local mosque's timetable always takes priority.`}</p>
             </>
           ) : null}
-        </section>
+        </>
       ) : (
-        <section className="card-elevated space-y-4 p-5">
-          <p className="text-sm text-[var(--text-primary)]">Set your location to see today&apos;s prayer times and the qibla.</p>
+        <>
+          <section className="card-elevated space-y-3 p-5">
+            <span className="flex size-11 items-center justify-center rounded-[14px] bg-[color-mix(in_srgb,var(--accent-primary)_12%,transparent)] text-[var(--accent-primary)]">
+              <MapPin className="size-5" strokeWidth={1.6} aria-hidden />
+            </span>
+            <h2 className="font-playfair text-[22px] font-semibold text-[var(--text-primary)]">Find prayer times near you</h2>
+            <p className="text-sm text-[var(--text-secondary)]">Use your location once, or search for a city. Companion never tracks where you go.</p>
+          </section>
           <button
             type="button"
             onClick={useMyLocation}
             disabled={locating}
-            className="w-full rounded-full bg-[var(--accent-primary)] py-2.5 text-sm font-semibold text-[var(--on-accent-text)] disabled:opacity-60"
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--accent-primary)] text-sm font-bold text-[var(--on-accent-text)] disabled:opacity-60"
           >
-            {locating ? "Finding you..." : "Use my location"}
+            <LocateFixed className="size-[18px]" strokeWidth={1.8} aria-hidden />
+            {locating ? "Finding you…" : "Use current location"}
           </button>
           <form
             onSubmit={(e) => {
               e.preventDefault();
               void search();
             }}
-            className="flex gap-2"
           >
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Or search for a city"
-              aria-label="Search for a city"
-              className={selectClass}
-            />
-            <button type="submit" className="shrink-0 rounded-full border border-[var(--border)] px-4 text-sm text-[var(--text-primary)]">
-              Search
-            </button>
+            <label className="flex min-h-12 items-center gap-2.5 rounded-[18px] border border-[var(--border)] bg-[var(--input-bg)] px-4 focus-within:border-[var(--accent-primary)]">
+              <Search className="size-[18px] shrink-0 text-[var(--accent-primary)]" strokeWidth={1.6} aria-hidden />
+              <span className="sr-only">Search for a city</span>
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search city or town"
+                enterKeyHint="search"
+                className="w-full bg-transparent text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-secondary)]"
+              />
+            </label>
           </form>
           {results?.length ? (
-            <ul className="space-y-1">
+            <ul className="card-elevated p-1.5">
               {results.map((place) => (
                 <li key={`${place.label}-${place.latitude}`}>
                   <button
                     type="button"
                     onClick={() => update({ ...settings, location: roundedLocation(place.latitude, place.longitude, place.label) })}
-                    className="w-full rounded-md px-3 py-2 text-left text-sm text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
+                    className="w-full rounded-[12px] px-3 py-2.5 text-left text-sm text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
                   >
                     {place.label}
                   </button>
@@ -312,23 +379,29 @@ export function PrayerTimesView() {
             </ul>
           ) : null}
           {message ? <p className="text-xs text-[var(--text-secondary)]">{message}</p> : null}
-          <p className="text-xs text-[var(--text-secondary)]">
-            Your location stays on this device (rounded to about 1 km) and is only sent to Aladhan to calculate the times.
-          </p>
-        </section>
+          <section className="space-y-1 rounded-[18px] border border-[color-mix(in_srgb,var(--gold)_35%,transparent)] bg-[color-mix(in_srgb,var(--gold)_12%,var(--card-bg))] p-4">
+            <p className="flex items-center gap-2 text-sm font-bold text-[var(--text-primary)]">
+              <ShieldCheck className="size-4 text-[var(--gold)]" strokeWidth={1.8} aria-hidden />
+              Location stays private
+            </p>
+            <p className="text-xs text-[var(--text-secondary)]">
+              Kept on this device, rounded to about 1 km, and only sent to Aladhan to calculate the times.
+            </p>
+          </section>
+        </>
       )}
 
       {settings.location && day ? <MoonCard age={age} hijri={day.hijri} southern={southern} /> : null}
 
       {settings.location && qibla !== null ? (
         <section className="card-elevated space-y-3 p-5">
-          <h2 className="font-playfair text-lg font-semibold text-[var(--text-primary)]">Qibla</h2>
+          <h2 className="font-playfair text-xl font-semibold text-[var(--text-primary)]">Qibla</h2>
           <QiblaDial bearing={qibla} />
         </section>
       ) : null}
 
       <section className="card-elevated space-y-3 p-5">
-        <h2 className="font-playfair text-lg font-semibold text-[var(--text-primary)]">Calculation</h2>
+        <h2 className="font-playfair text-xl font-semibold text-[var(--text-primary)]">Calculation method</h2>
         <label className="block space-y-1 text-xs text-[var(--text-secondary)]">
           Method (use your local mosque&apos;s, if you know it)
           <select value={settings.method} onChange={(e) => update({ ...settings, method: Number(e.target.value) })} className={selectClass}>

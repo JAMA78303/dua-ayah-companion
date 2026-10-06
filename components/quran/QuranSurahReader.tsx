@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { Pause, Play } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { PageHeader } from "@/components/layout/PageHeader";
 import { ReciterSelector } from "@/components/ReciterSelector";
 import { useReciter } from "@/components/ReciterProvider";
 import { QuranVerseBlock } from "@/components/quran/QuranVerseBlock";
@@ -90,7 +92,8 @@ export function QuranSurahReader({ surahNumber, chapterMeta }: QuranSurahReaderP
   }, []);
 
   const englishName = chapterMeta?.nameSimple ?? getSurahName(surahNumber);
-  const arabicName = chapterMeta?.nameArabic ?? englishName;
+  const arabicName = chapterMeta?.nameArabic || englishName;
+  const firstVerseKey = verses[0]?.verseKey ?? null;
   const verseCount = chapterMeta?.versesCount;
 
   const loadAudio = useCallback(
@@ -358,7 +361,15 @@ export function QuranSurahReader({ surahNumber, chapterMeta }: QuranSurahReaderP
   }
 
   if (loading) {
-    return <p className="text-sm text-[var(--text-secondary)]">Loading verses...</p>;
+    return (
+      <section className="card-elevated space-y-3 p-5">
+        <span className="flex size-11 items-center justify-center rounded-[14px] bg-[color-mix(in_srgb,var(--accent-primary)_12%,transparent)]">
+          <span className="size-4 animate-spin rounded-full border-2 border-[var(--accent-primary)] border-t-transparent" aria-hidden />
+        </span>
+        <p className="font-playfair text-xl font-semibold text-[var(--text-primary)]">Loading verses</p>
+        <p className="text-xs text-[var(--text-secondary)]">Preparing the Arabic, translation and recitation…</p>
+      </section>
+    );
   }
 
   if (error) {
@@ -373,7 +384,7 @@ export function QuranSurahReader({ surahNumber, chapterMeta }: QuranSurahReaderP
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <audio
         ref={audioRef}
         preload="none"
@@ -405,48 +416,75 @@ export function QuranSurahReader({ surahNumber, chapterMeta }: QuranSurahReaderP
         }}
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Link href="/quran" className="text-sm font-medium text-[var(--accent-primary)] hover:opacity-80">
-          ← All surahs
-        </Link>
-        <div className="flex flex-wrap items-center justify-end gap-3">
-          <button
-            type="button"
-            onClick={toggleContinuousPlay}
-            aria-pressed={continuousPlay}
-            className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-              continuousPlay
-                ? "border-[var(--accent-primary)] bg-[var(--accent-primary)]/12 text-[var(--accent-primary)]"
-                : "border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent-primary)]/40"
-            }`}
-          >
-            {continuousPlay ? "Continuous on" : "Continuous off"}
-          </button>
-          <ReciterSelector compact />
+      <PageHeader
+        eyebrow={[chapterMeta?.translatedName, verseCount ? `${verseCount} ayat` : null].filter(Boolean).join(" · ") || "Surah"}
+        title={englishName}
+        back={{ href: "/quran", label: "Qur'an" }}
+      >
+        {arabicName !== englishName ? (
+          <p dir="rtl" lang="ar" className="font-scheherazade text-right text-2xl text-[var(--text-arabic)]">
+            {arabicName}
+          </p>
+        ) : null}
+      </PageHeader>
+
+      <section className="card-elevated flex items-center gap-3 p-3.5">
+        <button
+          type="button"
+          onClick={() => (playing ? pausePlayback() : firstVerseKey ? void playVerse(activeVerseKey ?? firstVerseKey) : undefined)}
+          disabled={!firstVerseKey || !clips[activeVerseKey ?? firstVerseKey] || loadingAudio}
+          aria-label={playing ? "Pause recitation" : "Play recitation"}
+          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[var(--gold)] text-[#0a0a0f] transition hover:opacity-90 disabled:opacity-50"
+        >
+          {loadingAudio ? (
+            <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden />
+          ) : playing ? (
+            <Pause className="size-[19px]" strokeWidth={1.8} aria-hidden />
+          ) : (
+            <Play className="size-[19px] translate-x-px" strokeWidth={1.8} aria-hidden />
+          )}
+        </button>
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <p className="truncate text-xs font-bold text-[var(--text-primary)]">
+            {activeVerseKey ? `${reciterName} · ${activeVerseKey}` : reciterName}
+          </p>
+          <div className="h-[3px] w-full overflow-hidden rounded-full bg-[var(--bg-subtle)]">
+            <div className="h-full rounded-full bg-[var(--gold)] transition-all duration-100" style={{ width: `${progress}%` }} />
+          </div>
         </div>
+        <button
+          type="button"
+          onClick={handleSpeedToggle}
+          className="flex min-h-9 shrink-0 items-center rounded-full border border-[var(--border)] bg-[var(--card-bg)] px-3 text-xs font-bold text-[var(--text-primary)]"
+          aria-label="Toggle playback speed"
+        >
+          {speed}×
+        </button>
+      </section>
+
+      <div className="flex items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={toggleContinuousPlay}
+          aria-pressed={continuousPlay}
+          className={`inline-flex min-h-9 items-center rounded-full px-4 text-xs font-bold transition ${
+            continuousPlay
+              ? "bg-[var(--accent-primary)] text-[var(--on-accent-text)]"
+              : "border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent-primary)]"
+          }`}
+        >
+          {continuousPlay ? "Continuous playback on" : "Continuous playback"}
+        </button>
+        <ReciterSelector compact />
       </div>
 
-      <header className="space-y-1 text-center">
-        <p dir="rtl" lang="ar" className="font-scheherazade text-3xl text-[var(--text-arabic)]">
-          {arabicName}
-        </p>
-        <h1 className="font-playfair text-xl font-semibold text-[var(--text-primary)]">{englishName}</h1>
-        {verseCount ? (
-          <p className="text-sm text-[var(--text-secondary)]">{verseCount} verses</p>
-        ) : null}
-      </header>
-
       {surahNumber !== 9 ? (
-        <p
-          dir="rtl"
-          lang="ar"
-          className="font-scheherazade text-center text-xl text-[var(--accent-primary)]"
-        >
+        <p dir="rtl" lang="ar" className="font-scheherazade py-1 text-center text-2xl text-[var(--accent-primary)]">
           {BISMILLAH}
         </p>
       ) : null}
 
-      <section className="card-elevated px-4 py-2">
+      <section className="space-y-3">
         {verses.map((verse) => {
           const isActive = activeVerseKey === verse.verseKey;
           return (
@@ -478,9 +516,9 @@ export function QuranSurahReader({ surahNumber, chapterMeta }: QuranSurahReaderP
           type="button"
           onClick={() => void loadMore()}
           disabled={loadingMore}
-          className="w-full rounded-xl border border-[var(--border)] bg-[var(--card-bg)] py-3 text-sm font-medium text-[var(--accent-primary)] shadow-[var(--card-shadow)] disabled:opacity-60"
+          className="flex min-h-11 w-full items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--accent-primary)_14%,transparent)] text-[13px] font-bold text-[var(--text-primary)] disabled:opacity-60"
         >
-          {loadingMore ? "Loading..." : "Load more verses"}
+          {loadingMore ? "Loading…" : "Load more ayat"}
         </button>
       ) : null}
     </div>

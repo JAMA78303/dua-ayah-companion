@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ChevronRight, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import type { QfChapter } from "@/lib/quranFoundation/chapters";
@@ -39,13 +40,14 @@ export function QuranSurahList() {
     return chapters.filter(
       (c) =>
         c.nameSimple.toLowerCase().includes(q) ||
+        c.translatedName.toLowerCase().includes(q) ||
         c.nameArabic.includes(query.trim()) ||
         String(c.id).includes(q),
     );
   }, [chapters, query]);
 
   if (loading) {
-    return <p className="text-sm text-[var(--text-secondary)]">Loading surahs...</p>;
+    return <p className="text-sm text-[var(--text-secondary)]">Loading surahs…</p>;
   }
 
   if (error) {
@@ -53,7 +55,7 @@ export function QuranSurahList() {
       <section className="card-elevated p-6 text-center">
         <p className="text-sm text-[var(--text-secondary)]">{error}</p>
         <p className="mt-2 text-xs text-[var(--text-secondary)]">
-          Your Home tab and reflections are still available.
+          Your feed and reflections are still available.
         </p>
       </section>
     );
@@ -61,57 +63,47 @@ export function QuranSurahList() {
 
   return (
     <div className="space-y-4">
-      <label className="sr-only" htmlFor="surah-search">
-        Search surahs
+      <label className="flex min-h-12 items-center gap-2.5 rounded-[18px] border border-[var(--border)] bg-[var(--input-bg)] px-4 focus-within:border-[var(--accent-primary)]">
+        <Search className="size-[18px] shrink-0 text-[var(--accent-primary)]" strokeWidth={1.6} aria-hidden />
+        <span className="sr-only">Search surahs</span>
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search by name, meaning or number"
+          className="w-full bg-transparent text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-secondary)]"
+        />
       </label>
-      <input
-        id="surah-search"
-        type="search"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search by English or Arabic name..."
-        className="w-full rounded-2xl border-[1.5px] border-[var(--border)] bg-[var(--input-bg)] px-5 py-4 font-nunito text-sm text-[var(--text-primary)] shadow-[var(--card-shadow)] outline-none placeholder:text-[var(--text-secondary)] placeholder:italic focus:border-[var(--accent-primary)]/50"
-      />
 
-      <ul className="divide-y divide-[var(--border)] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] shadow-[var(--card-shadow)]">
-        {filtered.map((chapter) => {
-          const meccan = chapter.revelationPlace.toLowerCase().includes("makkah");
-          return (
-            <li key={chapter.id}>
-              <Link
-                href={`/quran/${chapter.id}`}
-                className="flex items-center gap-3 px-4 py-3 transition hover:bg-[var(--bg-subtle)]"
-              >
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--accent-primary)]/15 text-xs font-semibold text-[var(--accent-primary)]">
-                  {chapter.id}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span
-                    dir="rtl"
-                    lang="ar"
-                    className="font-scheherazade block text-lg leading-snug text-[var(--text-arabic)]"
-                  >
-                    {chapter.nameArabic || chapter.nameSimple}
+      {filtered.length === 0 ? (
+        <p className="text-sm text-[var(--text-secondary)]">No surah matches that search.</p>
+      ) : (
+        <ul className="card-elevated divide-y divide-[var(--border)] overflow-hidden p-0">
+          {filtered.map((chapter) => {
+            const place = chapter.revelationPlace.toLowerCase().includes("makkah") ? "Makkah" : "Madinah";
+            const meta = [chapter.translatedName, `${chapter.versesCount} ayat`, place].filter(Boolean).join(" · ");
+            return (
+              <li key={chapter.id}>
+                <Link href={`/quran/${chapter.id}`} className="flex min-h-[64px] items-center gap-3 px-4 py-2.5 transition hover:bg-[var(--bg-subtle)]">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--accent-primary)_12%,transparent)] text-xs font-bold text-[var(--accent-primary)]">
+                    {chapter.id}
                   </span>
-                  <span className="block text-xs text-[var(--text-secondary)]">{chapter.nameSimple}</span>
-                </span>
-                <span className="flex shrink-0 flex-col items-end gap-1">
-                  <span className="text-xs text-[var(--text-secondary)]">{chapter.versesCount} ayahs</span>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                      meccan
-                        ? "bg-[color-mix(in_srgb,var(--accent-primary)_12%,var(--card-bg))] text-[var(--accent-primary)]"
-                        : "bg-[color-mix(in_srgb,var(--gold)_18%,var(--card-bg))] text-[var(--gold)]"
-                    }`}
-                  >
-                    {meccan ? "Meccan" : "Medinan"}
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-playfair text-lg font-semibold leading-tight text-[var(--text-primary)]">{chapter.nameSimple}</span>
+                    <span className="block text-[11px] leading-snug text-[var(--text-secondary)]">{meta}</span>
                   </span>
-                </span>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
+                  {chapter.nameArabic ? (
+                    <span dir="rtl" lang="ar" className="font-scheherazade shrink-0 text-lg text-[var(--text-arabic)]">
+                      {chapter.nameArabic}
+                    </span>
+                  ) : null}
+                  <ChevronRight className="size-[17px] shrink-0 text-[var(--text-secondary)]" strokeWidth={1.6} aria-hidden />
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

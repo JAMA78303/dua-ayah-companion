@@ -5,6 +5,7 @@ import { AyahCard } from "@/components/AyahCard";
 import { fetchPairingsForFigure } from "@/lib/content/fetchPairings";
 import { getStoryByProphetName } from "@/lib/content/prophetStories";
 import { fetchAyahFromQF } from "@/lib/quranFoundation/fetchAyah";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { prophetArabicName, prophetEnglishLabel } from "@/lib/prophets/displayNames";
 
 export default async function ProphetDetailPage({
@@ -38,30 +39,24 @@ export default async function ProphetDetailPage({
   const story = isProphet ? getStoryByProphetName(figureName) : undefined;
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-8 md:px-8">
-      <Link href="/prophets" className="text-sm font-medium text-[var(--accent-primary)] hover:opacity-80">
-        ← The Prophets
-      </Link>
-
-      <header className="space-y-2 text-center">
-        <p dir="rtl" lang="ar" className="font-scheherazade text-4xl text-[var(--text-arabic)]">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-5 py-6 md:px-8">
+      <PageHeader
+        eyebrow={`${pairings.length} ${pairings.length === 1 ? "dua" : "duas"} in the Qur'an`}
+        title={prophetEnglishLabel(figureName, isProphet)}
+        back={{ href: "/prophets", label: "Duas of the Prophets" }}
+      >
+        <p dir="rtl" lang="ar" className="font-scheherazade text-right text-3xl text-[var(--text-arabic)]">
           {prophetArabicName(figureName)}
-        </p>
-        <h1 className="font-playfair text-2xl font-semibold text-[var(--text-primary)]">
-          {prophetEnglishLabel(figureName, isProphet)}
-        </h1>
-        <p className="text-sm text-[var(--text-secondary)]">
-          {`${pairings.length} ${pairings.length === 1 ? "dua" : "duas"} preserved in the Qur'an`}
         </p>
         {story ? (
           <Link
             href={`/stories/${story.slug}`}
-            className="inline-block text-sm font-medium text-[var(--accent-primary)] hover:opacity-80"
+            className="inline-flex min-h-9 items-center rounded-full bg-[color-mix(in_srgb,var(--accent-primary)_14%,transparent)] px-4 text-xs font-bold text-[var(--text-primary)]"
           >
-            {`Read the story of ${prophetEnglishLabel(figureName)} →`}
+            {`Read the story of ${prophetEnglishLabel(figureName)}`}
           </Link>
         ) : null}
-      </header>
+      </PageHeader>
 
       {enriched.map(({ pairing, arabicText, translation, qfTafsirLong, qfAudio, qfWords }) => (
         <AyahCard

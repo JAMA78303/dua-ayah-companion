@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { AdhkarSession } from "@/components/adhkar/AdhkarSession";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 export const metadata: Metadata = {
   title: "Morning & evening adhkar · Dua & Ayah Companion",
@@ -16,18 +17,13 @@ export default async function AdhkarPage({ searchParams }: AdhkarPageProps) {
   const initialTime = time === "morning" || time === "evening" ? time : undefined;
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-8 md:px-8">
-      <header className="space-y-2">
-        <h1 className="font-playfair text-3xl font-semibold text-[var(--text-primary)]">Morning &amp; evening adhkar</h1>
+    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-5 px-5 py-6 md:px-8">
+      <PageHeader eyebrow="Daily remembrance" title="Adhkar" back={{ href: "/library", label: "Library" }}>
         <p className="text-sm text-[var(--text-secondary)]">
-          The remembrances the Prophet ﷺ taught for the start and end of the day. Tap each one as you say it; your
-          progress is kept on this device for today.
+          What the Prophet ﷺ taught for the start and end of the day. Tap each one as you say it; today&apos;s progress
+          stays on this device. From <em>Hisn al-Muslim</em>, with the Qur&apos;anic ones from the Qur&apos;an text.
         </p>
-        <p className="text-xs text-[var(--text-secondary)]">
-          From <em>Hisn al-Muslim</em>
-          {" (Fortress of the Muslim), where each is referenced, with the Qur'anic ones from the Qur'an text."}
-        </p>
-      </header>
+      </PageHeader>
 
       <AdhkarSession initialTime={initialTime} />
     </main>

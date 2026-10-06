@@ -2,19 +2,17 @@ import Link from "next/link";
 
 import { ProphetFigureCard } from "@/components/prophets/ProphetFigureCard";
 import { fetchProphetsOfAllah, fetchRighteousFigures } from "@/lib/content/fetchProphetFigures";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { PROPHET_STORIES } from "@/lib/content/prophetStories";
 
 export default async function ProphetsPage() {
   const [prophets, righteous] = await Promise.all([fetchProphetsOfAllah(), fetchRighteousFigures()]);
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-4 py-8 md:px-8">
-      <header className="space-y-2 text-center md:text-left">
-        <h1 className="font-playfair text-3xl font-semibold text-[var(--text-primary)]">The Prophets</h1>
-        <p className="text-sm italic text-[var(--text-secondary)]">
-          Their words. Their moments. Their duas.
-        </p>
-      </header>
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-5 py-6 md:px-8">
+      <PageHeader eyebrow="From the Qur'an" title="Duas of the Prophets" back={{ href: "/library", label: "Library" }}>
+        <p className="text-sm text-[var(--text-secondary)]">Their words. Their moments. Their duas.</p>
+      </PageHeader>
 
       <Link
         href="/stories"
@@ -32,7 +30,7 @@ export default async function ProphetsPage() {
       </Link>
 
       <section className="space-y-4">
-        <h2 className="font-playfair text-lg font-semibold text-[var(--text-primary)]">Prophets of Allah</h2>
+        <h2 className="font-playfair text-[22px] font-semibold text-[var(--text-primary)]">Prophets of Allah</h2>
         {prophets.length === 0 ? (
           <p className="text-sm text-[var(--text-secondary)]">No prophetic duas are available yet.</p>
         ) : (
@@ -47,7 +45,7 @@ export default async function ProphetsPage() {
       {righteous.length > 0 ? (
         <section className="space-y-4">
           <div className="space-y-1">
-            <h2 className="font-playfair text-lg font-semibold text-[var(--text-primary)]">
+            <h2 className="font-playfair text-[22px] font-semibold text-[var(--text-primary)]">
               Companions &amp; Righteous Figures
             </h2>
             <p className="text-sm italic text-[var(--text-secondary)]">

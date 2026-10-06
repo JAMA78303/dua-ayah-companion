@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { NotebookPen, Pause, Sparkles, Volume2 } from "lucide-react";
 import { useState } from "react";
 
-import { AyahListenControls } from "@/components/AyahListenControls";
 import { JournalTextarea } from "@/components/JournalTextarea";
 import { useRecitedWord } from "@/components/quran/recitationStore";
 import { RecitedArabic } from "@/components/RecitedArabic";
@@ -40,75 +40,75 @@ export function QuranVerseBlock({ verse, surahNumber, playback, hasReflection, o
   const contentKey = ayahKey(surahNumber, verse.verseNumber);
   const [journalOpen, setJournalOpen] = useState(false);
 
+  const iconButton =
+    "flex size-9 items-center justify-center rounded-full text-[var(--text-secondary)] transition hover:bg-[var(--bg-subtle)] hover:text-[var(--accent-primary)] disabled:opacity-40";
+
   return (
     <article
       id={`verse-${verse.verseKey.replace(":", "-")}`}
       data-active={isReciting}
-      className="recited-ayah -mx-2 scroll-mt-24 rounded-2xl border-b border-[var(--border)] px-2 py-6 last:border-b-0"
+      className="recited-ayah card-elevated scroll-mt-24 space-y-3 p-4"
     >
-      <div className="flex gap-3">
-        <span className="mt-1 flex size-7 shrink-0 items-center justify-center rounded-full bg-[var(--accent-primary)]/15 text-xs font-semibold text-[var(--accent-primary)]">
-          {verse.verseNumber}
+      <div className="flex items-center justify-between gap-2">
+        <span className="rounded-full bg-[color-mix(in_srgb,var(--gold)_16%,transparent)] px-2.5 py-1 text-[10px] font-bold text-[var(--gold)]">
+          {verse.verseKey}
         </span>
-        <div className="min-w-0 flex-1">
-          <RecitedArabic
-            text={verse.textUthmani}
-            activeWordIndex={isReciting ? recitedWord : null}
-            className="font-scheherazade text-right text-[28px] leading-[2] text-[var(--text-arabic)]"
-          />
-          {verse.translation ? (
-            <p className="mt-2 text-left text-sm leading-relaxed text-[var(--text-secondary)]">
-              {verse.translation}
-            </p>
-          ) : null}
-
-          <AyahListenControls
-            canPlay={playback.canPlay}
-            isPlaying={playback.isPlaying}
-            loading={playback.loading}
-            progress={playback.progress}
-            speed={playback.speed}
-            reciterName={playback.reciterName}
-            onPlay={playback.onPlay}
-            onPause={playback.onPause}
-            onSpeedToggle={playback.onSpeedToggle}
-          />
-
-          <div className="mt-3 flex flex-wrap items-center gap-3 text-xs">
-            <SaveButton contentKey={contentKey} surah={surahNumber} ayahNumber={verse.verseNumber} compact />
+        <div className="flex items-center">
+          {playback.canPlay ? (
             <button
               type="button"
-              aria-expanded={journalOpen}
-              onClick={() => setJournalOpen((open) => !open)}
-              className={`rounded-full px-3 py-1 font-semibold transition ${
-                hasReflection
-                  ? "bg-[var(--accent-primary)]/12 text-[var(--accent-primary)] hover:bg-[var(--accent-primary)]/20"
-                  : "border border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent-primary)]"
-              }`}
+              onClick={playback.isPlaying ? playback.onPause : playback.onPlay}
+              disabled={playback.loading}
+              aria-label={playback.isPlaying ? "Pause recitation" : "Play recitation"}
+              className={`${iconButton} ${playback.isPlaying ? "text-[var(--accent-primary)]" : ""}`}
             >
-              {hasReflection ? "✎ Your reflection" : "✎ Journal"}
+              {playback.loading ? (
+                <span className="size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden />
+              ) : playback.isPlaying ? (
+                <Pause className="size-[18px]" strokeWidth={1.6} aria-hidden />
+              ) : (
+                <Volume2 className="size-[18px]" strokeWidth={1.6} aria-hidden />
+              )}
             </button>
-            <Link
-              href={reflectHref}
-              className="rounded-full bg-[var(--accent-primary)]/12 px-3 py-1 font-semibold text-[var(--accent-primary)] transition hover:bg-[var(--accent-primary)]/20"
-            >
-              ✦ Reflect
-            </Link>
-          </div>
-          {journalOpen ? (
-            <div className="mt-3">
-              <JournalTextarea
-                contentKey={contentKey}
-                surah={surahNumber}
-                ayahNumber={verse.verseNumber}
-                onSavedChange={(saved) => {
-                  if (saved) onReflected(contentKey);
-                }}
-              />
-            </div>
           ) : null}
+          <SaveButton contentKey={contentKey} surah={surahNumber} ayahNumber={verse.verseNumber} icon />
+          <button
+            type="button"
+            aria-expanded={journalOpen}
+            aria-label={hasReflection ? "Your reflection" : "Journal on this ayah"}
+            onClick={() => setJournalOpen((open) => !open)}
+            className={`${iconButton} ${hasReflection ? "text-[var(--accent-primary)]" : ""}`}
+          >
+            <NotebookPen className="size-[18px]" strokeWidth={1.6} aria-hidden />
+          </button>
+          <Link href={reflectHref} aria-label="Reflect on this ayah" className={iconButton}>
+            <Sparkles className="size-[18px]" strokeWidth={1.6} aria-hidden />
+          </Link>
         </div>
       </div>
+
+      <RecitedArabic
+        text={verse.textUthmani}
+        activeWordIndex={isReciting ? recitedWord : null}
+        className="font-scheherazade text-right text-[30px] leading-[2] text-[var(--text-arabic)]"
+      />
+      {verse.translation ? (
+        <p className="text-left text-sm leading-relaxed text-[var(--text-primary)]">{verse.translation}</p>
+      ) : null}
+
+      {journalOpen ? (
+        <div className="rounded-[14px] bg-[var(--bg-subtle)] p-3">
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--gold)]">Your reflection · private</p>
+          <JournalTextarea
+            contentKey={contentKey}
+            surah={surahNumber}
+            ayahNumber={verse.verseNumber}
+            onSavedChange={(saved) => {
+              if (saved) onReflected(contentKey);
+            }}
+          />
+        </div>
+      ) : null}
     </article>
   );
 }
