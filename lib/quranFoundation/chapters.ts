@@ -4,6 +4,8 @@ export interface QfChapter {
   id: number;
   nameArabic: string;
   nameSimple: string;
+  /** The name's English meaning, e.g. "The Cave". */
+  translatedName: string;
   versesCount: number;
   revelationPlace: "makkah" | "madinah" | string;
 }
@@ -20,6 +22,8 @@ function normalizeChapter(raw: Record<string, unknown>): QfChapter | null {
   const nameArabic =
     pickString(raw.name_arabic) ?? pickString(raw.name_arabic_v2) ?? pickString(raw.name_arabic_long) ?? "";
   const nameSimple = pickString(raw.name_simple) ?? pickString(raw.name_complex) ?? `Surah ${id}`;
+  const translated = raw.translated_name as { name?: unknown } | undefined;
+  const translatedName = pickString(translated?.name) ?? "";
   const versesCount =
     typeof raw.verses_count === "number" ? raw.verses_count : Number(raw.verses_count ?? 0);
   const revelationPlace = (pickString(raw.revelation_place) ?? "makkah").toLowerCase();
@@ -28,6 +32,7 @@ function normalizeChapter(raw: Record<string, unknown>): QfChapter | null {
     id,
     nameArabic,
     nameSimple,
+    translatedName,
     versesCount: Number.isFinite(versesCount) ? versesCount : 0,
     revelationPlace,
   };

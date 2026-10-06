@@ -406,7 +406,7 @@ body {
 }
 
 .recited-ayah[data-active="true"] {
-  background-color: color-mix(in srgb, var(--gold) 7%, transparent);
+  background-color: color-mix(in srgb, var(--gold) 7%, var(--card-bg));
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--gold) 30%, transparent),
     0 0 32px color-mix(in srgb, var(--gold) 16%, transparent);

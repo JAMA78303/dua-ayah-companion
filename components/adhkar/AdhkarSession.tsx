@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Check, CircleCheck, Sunrise, Sunset } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { SaveButton } from "@/components/SaveButton";
@@ -30,11 +31,20 @@ function DhikrCard({
 
   return (
     <li id={dhikr.id} className={`card-elevated scroll-mt-24 space-y-3 p-5 transition ${done ? "opacity-70" : ""}`}>
-      <div className="flex items-start justify-between gap-3">
-        {dhikr.title ? <p className="font-playfair text-base font-semibold text-[var(--text-primary)]">{dhikr.title}</p> : <span />}
-        <SaveButton contentKey={adhkarKey(dhikr.id)} compact />
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+          {dhikr.title ? (
+            <span className="rounded-full bg-[var(--bg-subtle)] px-2.5 py-1 text-[10px] font-bold text-[var(--text-secondary)]">{dhikr.title}</span>
+          ) : null}
+          {dhikr.repeat > 1 ? (
+            <span className="rounded-full bg-[color-mix(in_srgb,var(--accent-primary)_14%,transparent)] px-2.5 py-1 text-[10px] font-bold text-[var(--accent-primary)]">
+              {`${dhikr.repeat}×`}
+            </span>
+          ) : null}
+        </div>
+        <SaveButton contentKey={adhkarKey(dhikr.id)} icon />
       </div>
-      <p dir="rtl" lang="ar" className="font-scheherazade text-right text-2xl leading-[2.1] text-[var(--text-arabic)]">
+      <p dir="rtl" lang="ar" className="font-scheherazade text-right text-[28px] leading-[2] text-[var(--text-arabic)]">
         {arabic}
       </p>
       {translit ? <p className="text-sm italic leading-relaxed text-[var(--text-secondary)]">{translit}</p> : null}
@@ -65,13 +75,23 @@ function DhikrCard({
         onClick={onCount}
         disabled={done}
         aria-label={done ? "Completed" : `Count, ${count} of ${dhikr.repeat}`}
-        className={`w-full rounded-2xl py-3 text-sm font-semibold transition active:scale-[0.98] ${
+        className={`flex w-full flex-col items-center gap-1 rounded-[16px] py-4 transition active:scale-[0.98] ${
           done
             ? "bg-[var(--bg-subtle)] text-[var(--accent-primary)]"
-            : "bg-[var(--accent-primary)] text-[var(--on-accent-text)]"
+            : "bg-[color-mix(in_srgb,var(--accent-primary)_14%,transparent)] text-[var(--accent-primary)]"
         }`}
       >
-        {done ? "✓ Done" : dhikr.repeat === 1 ? "Tap when said" : `Tap to count · ${count} of ${dhikr.repeat}`}
+        {done ? (
+          <span className="flex items-center gap-1.5 text-sm font-bold">
+            <Check className="size-4" strokeWidth={2} aria-hidden />
+            Done
+          </span>
+        ) : (
+          <>
+            <span className="font-playfair text-[30px] font-semibold leading-none tabular-nums">{`${count} / ${dhikr.repeat}`}</span>
+            <span className="text-[11px] font-bold">{dhikr.repeat === 1 ? "Tap when said" : "Tap to count"}</span>
+          </>
+        )}
       </button>
     </li>
   );
@@ -94,7 +114,7 @@ export function AdhkarSession({ initialTime }: { initialTime?: AdhkarTime }) {
   }, [time]);
 
   if (!time) {
-    return <p className="text-sm text-[var(--text-secondary)]">Loading...</p>;
+    return <p className="text-sm text-[var(--text-secondary)]">Loading…</p>;
   }
 
   const list = adhkarFor(time);
@@ -113,42 +133,60 @@ export function AdhkarSession({ initialTime }: { initialTime?: AdhkarTime }) {
     writeAdhkarProgress(time, {});
   }
 
+  const percent = Math.round((done / total) * 100);
+  const label = time === "morning" ? "Morning" : "Evening";
+
   return (
-    <div className="space-y-5">
-      <div className="flex gap-2" role="tablist">
-        {(["morning", "evening"] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            role="tab"
-            aria-selected={time === t}
-            onClick={() => setTime(t)}
-            className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
-              time === t
-                ? "border-[var(--accent-primary)] bg-[var(--accent-primary)] text-[var(--on-accent-text)]"
-                : "border-[var(--border)] text-[var(--text-secondary)]"
-            }`}
-          >
-            {t === "morning" ? "Morning" : "Evening"}
-          </button>
-        ))}
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-2" role="tablist">
+        {(["morning", "evening"] as const).map((t) => {
+          const Icon = t === "morning" ? Sunrise : Sunset;
+          return (
+            <button
+              key={t}
+              type="button"
+              role="tab"
+              aria-selected={time === t}
+              onClick={() => setTime(t)}
+              className={`flex min-h-11 items-center justify-center gap-2 rounded-full text-sm font-bold transition ${
+                time === t
+                  ? "bg-[var(--accent-primary)] text-[var(--on-accent-text)]"
+                  : "bg-[color-mix(in_srgb,var(--accent-primary)_12%,transparent)] text-[var(--text-primary)]"
+              }`}
+            >
+              <Icon className="size-4" strokeWidth={1.8} aria-hidden />
+              {t === "morning" ? "Morning" : "Evening"}
+            </button>
+          );
+        })}
       </div>
 
-      <div className="sticky top-[calc(var(--app-header-h)+0.5rem)] z-20 space-y-2 rounded-2xl border border-[var(--border)] bg-[var(--card-bg)]/95 p-4 backdrop-blur">
-        <div className="flex items-center justify-between text-sm">
-          <span className="font-medium text-[var(--text-primary)]">
-            {complete ? `${time === "morning" ? "Morning" : "Evening"} adhkar complete. May Allah accept.` : `${done} of ${total} done`}
+      <div className="sticky top-[calc(var(--app-header-h)+0.5rem)] z-20 space-y-2 rounded-[16px] bg-[color-mix(in_srgb,var(--bg-subtle)_92%,transparent)] px-3 py-2.5 backdrop-blur">
+        <div className="flex items-center justify-between text-xs">
+          <span className="font-bold text-[var(--text-primary)]">{`Today · ${done} of ${total}`}</span>
+          <span className="flex items-center gap-3">
+            {done > 0 ? (
+              <button type="button" onClick={reset} className="text-[var(--text-secondary)] hover:text-[var(--accent-primary)]">
+                Reset
+              </button>
+            ) : null}
+            <span className="font-bold text-[var(--accent-primary)]">{`${percent}%`}</span>
           </span>
-          {done > 0 ? (
-            <button type="button" onClick={reset} className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)]">
-              Reset
-            </button>
-          ) : null}
         </div>
         <div className="h-1.5 overflow-hidden rounded-full bg-[var(--border)]">
-          <div className="h-full rounded-full bg-[var(--accent-primary)] transition-all" style={{ width: `${(done / total) * 100}%` }} />
+          <div className="h-full rounded-full bg-[var(--accent-primary)] transition-all" style={{ width: `${percent}%` }} />
         </div>
       </div>
+
+      {complete ? (
+        <section className="card-elevated space-y-3 p-5">
+          <span className="flex size-11 items-center justify-center rounded-[14px] bg-[color-mix(in_srgb,var(--accent-primary)_12%,transparent)] text-[var(--accent-primary)]">
+            <CircleCheck className="size-5" strokeWidth={1.6} aria-hidden />
+          </span>
+          <h2 className="font-playfair text-[22px] font-semibold text-[var(--text-primary)]">{`${label} adhkar complete`}</h2>
+          <p className="text-sm text-[var(--text-secondary)]">{`${total} remembrances · May Allah accept it from you.`}</p>
+        </section>
+      ) : null}
 
       <ol className="space-y-4">
         {list.map((dhikr) => (

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 
+import { PageHeader } from "@/components/layout/PageHeader";
 import { DUA_GUIDE, GUIDE_AYAH, type GuideRef } from "@/lib/content/duaGuide";
 import { verseRefHref, verseRefLabel } from "@/lib/quran/verseRef";
 
@@ -39,20 +41,16 @@ function Ref({ reference }: { reference: GuideRef }) {
 
 export default function HowToMakeDuaPage() {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-8 md:px-8">
-      <header className="space-y-2">
-        <Link href="/duas" className="text-xs font-semibold text-[var(--accent-primary)] hover:opacity-80">
-          ← Duas from the Sunnah
-        </Link>
-        <h1 className="font-playfair text-2xl font-semibold text-[var(--text-primary)]">How to make dua</h1>
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-5 py-6 md:px-8">
+      <PageHeader eyebrow="A practical guide" title="How to make dua" back={{ href: "/duas", label: "Sunnah duas" }}>
         <p className="text-sm leading-relaxed text-[var(--text-secondary)]">
           Ibn al-Qayyim&apos;s teaching on dua from <em>al-Jawab al-Kafi</em> (in English,{" "}
           <em>Spiritual Disease and Its Cure</em>), in our own words. Each hadith links to sunnah.com; gradings outside
           al-Bukhari and Muslim are al-Albani&apos;s.
         </p>
-      </header>
+      </PageHeader>
 
-      <figure className="card-elevated space-y-3 p-6 text-center">
+      <figure className="rounded-[18px] border border-[color-mix(in_srgb,var(--gold)_35%,transparent)] bg-[color-mix(in_srgb,var(--gold)_12%,var(--card-bg))] space-y-3 p-5 text-center">
         <p dir="rtl" lang="ar" className="font-scheherazade text-2xl leading-[2.1] text-[var(--text-arabic)]">
           {GUIDE_AYAH.arabic}
         </p>
@@ -69,7 +67,7 @@ export default function HowToMakeDuaPage() {
           <a
             key={section.id}
             href={`#${section.id}`}
-            className="rounded-full border border-[var(--border)] bg-[var(--bg-subtle)] px-3 py-1 text-xs font-medium text-[var(--text-primary)] transition hover:border-[var(--accent-primary)]"
+            className="inline-flex min-h-9 items-center rounded-full border border-[var(--border)] bg-[var(--card-bg)] px-3.5 text-xs font-bold text-[var(--text-primary)] transition hover:border-[var(--accent-primary)]"
           >
             {section.title}
           </a>
@@ -81,7 +79,7 @@ export default function HowToMakeDuaPage() {
         return (
           <section key={section.id} id={section.id} aria-labelledby={`${section.id}-title`} className="scroll-mt-24 space-y-4">
             <div className="space-y-1">
-              <h2 id={`${section.id}-title`} className="font-playfair text-lg font-semibold text-[var(--text-primary)]">
+              <h2 id={`${section.id}-title`} className="font-playfair text-[22px] font-semibold text-[var(--text-primary)]">
                 {section.title}
               </h2>
               {section.intro ? <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{section.intro}</p> : null}
@@ -90,15 +88,12 @@ export default function HowToMakeDuaPage() {
               {section.points.map((point, index) => (
                 <li key={point.title} className="card-elevated flex gap-4 p-5">
                   {section.ordered ? (
-                    <span
-                      aria-hidden
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--bg-subtle)] text-xs font-semibold text-[var(--accent-primary)]"
-                    >
-                      {index + 1}
+                    <span aria-hidden className="w-6 shrink-0 pt-0.5 font-playfair text-lg text-[var(--gold)]">
+                      {String(index + 1).padStart(2, "0")}
                     </span>
                   ) : null}
                   <div className="min-w-0 space-y-2">
-                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)]">{point.title}</h3>
+                    <h3 className="font-playfair text-lg font-semibold leading-snug text-[var(--text-primary)]">{point.title}</h3>
                     <p className="text-sm leading-relaxed text-[var(--text-primary)]">{point.body}</p>
                     {point.refs.length > 0 ? (
                       <ul className="flex flex-col gap-1 text-xs text-[var(--text-secondary)]">
@@ -124,12 +119,10 @@ export default function HowToMakeDuaPage() {
         className="card-elevated flex items-center justify-between gap-4 p-5 transition hover:border-[var(--accent-primary)]"
       >
         <span>
-          <span className="block font-playfair text-lg font-semibold text-[var(--text-primary)]">Duas from the Sunnah</span>
+          <span className="block font-playfair text-lg font-semibold text-[var(--text-primary)]">Sunnah duas</span>
           <span className="block text-xs text-[var(--text-secondary)]">For worry, fear, anger, loss and more, each with its hadith.</span>
         </span>
-        <span className="text-sm font-semibold text-[var(--accent-primary)]" aria-hidden>
-          →
-        </span>
+        <ChevronRight className="size-[17px] shrink-0 text-[var(--text-secondary)]" strokeWidth={1.6} aria-hidden />
       </Link>
     </main>
   );
