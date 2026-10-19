@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -43,6 +44,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemeId>(DEFAULT_THEME);
   const [isSupporter, setIsSupporter] = useState(false);
   const [ready, setReady] = useState(false);
+  const pickedDuringInitRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -70,12 +72,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       }
 
       if (!cancelled) {
-        if (!canUseTheme(next, supporter)) {
-          next = DEFAULT_THEME;
+        // A theme picked while the account was loading wins over the one read at start-up.
+        if (!pickedDuringInitRef.current) {
+          if (!canUseTheme(next, supporter)) {
+            next = DEFAULT_THEME;
+          }
+          setThemeState(next);
+          applyThemeToDocument(next);
+          persistThemeLocally(next);
         }
-        setThemeState(next);
-        applyThemeToDocument(next);
-        persistThemeLocally(next);
         setReady(true);
       }
     }
@@ -92,6 +97,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         return false;
       }
 
+      pickedDuringInitRef.current = true;
       setThemeState(next);
       applyThemeToDocument(next);
       persistThemeLocally(next);

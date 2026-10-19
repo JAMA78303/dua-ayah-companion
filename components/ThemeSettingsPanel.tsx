@@ -38,7 +38,7 @@ export function ThemeSettingsPanel({ open, onClose }: ThemeSettingsPanelProps) {
           Kiswah themes
         </h2>
         <p className="mt-1 text-sm text-[var(--text-secondary)]">
-          Six historical Kiswah colours — hold a swatch to read its story. Al-Abyad and Al-Aswad are
+          Six historical Kiswah colours — tap or hold a swatch to read its story. Al-Abyad and Al-Aswad are
           free; Supporters unlock all six.
         </p>
         <div className="mt-5">

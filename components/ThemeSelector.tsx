@@ -34,7 +34,7 @@ export function ThemeSelector() {
   );
 
   async function onSelect(next: ThemeId) {
-    setTooltipId(null);
+    setTooltipId(next);
     if (!canUseTheme(next, isSupporter)) {
       setUpgradeOpen(true);
       return;
@@ -53,19 +53,9 @@ export function ThemeSelector() {
           const meta = KISWAH_THEME_META[id];
           const locked = !canUseTheme(id, isSupporter);
           const selected = theme === id;
-          const showTooltip = tooltipId === id;
 
           return (
             <div key={id} className="relative flex w-[5.25rem] shrink-0 flex-col items-center gap-1.5">
-              {showTooltip ? (
-                <div
-                  role="tooltip"
-                  className="absolute bottom-full z-20 mb-2 max-w-[11rem] rounded-lg border border-[var(--border)] bg-[var(--card-bg)] px-2.5 py-2 text-center text-[10px] leading-snug text-[var(--text-secondary)] shadow-[var(--card-shadow)]"
-                >
-                  {meta.historicalNote}
-                </div>
-              ) : null}
-
               <button
                 type="button"
                 role="option"
@@ -74,10 +64,7 @@ export function ThemeSelector() {
                 onClick={() => void onSelect(id)}
                 onPointerDown={() => startHold(id)}
                 onPointerUp={clearHoldTimer}
-                onPointerLeave={() => {
-                  clearHoldTimer();
-                  setTooltipId(null);
-                }}
+                onPointerLeave={clearHoldTimer}
                 onPointerCancel={clearHoldTimer}
                 onContextMenu={(e) => e.preventDefault()}
                 className={`relative size-12 rounded-full transition-transform duration-150 active:scale-95 ${
@@ -114,13 +101,15 @@ export function ThemeSelector() {
         })}
       </div>
 
-      <section className="mx-auto mt-6 max-w-[300px] space-y-2 text-center">
+      {/* The held swatch's story shows here: the swatch row scrolls sideways, which clips anything drawn above it. */}
+      <section className="mx-auto mt-6 min-h-[7rem] max-w-[300px] space-y-2 text-center" aria-live="polite">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--gold)]">
-          The Kiswah throughout history
+          {tooltipId ? KISWAH_THEME_META[tooltipId].nameEnglish : "The Kiswah throughout history"}
         </h3>
         <p className="text-xs leading-relaxed text-[var(--text-secondary)]">
-          The Kiswah — the cloth that covers the Ka&apos;bah — has changed colour many times across
-          Islamic history. Each theme in this app reflects one of those historical coverings.
+          {tooltipId
+            ? KISWAH_THEME_META[tooltipId].historicalNote
+            : "The Kiswah — the cloth that covers the Ka'bah — has changed colour many times across Islamic history. Each theme in this app reflects one of those historical coverings."}
         </p>
       </section>
 
