@@ -72,27 +72,28 @@ export function SettingsSheet({ open, onClose }: SettingsSheetProps) {
         onClick={onClose}
       />
       <div
-        className="relative z-[1] flex max-h-[70vh] flex-col overflow-y-auto rounded-t-[20px] bg-[var(--card-bg)] px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3"
+        className="relative z-[1] flex max-h-[85vh] flex-col overflow-y-auto rounded-t-[20px] bg-[var(--card-bg)] px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3"
         role="dialog"
         aria-modal="true"
         aria-labelledby="settings-sheet-title"
       >
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[var(--border)]" aria-hidden />
 
-        <h2 id="settings-sheet-title" className="font-playfair text-lg text-[var(--text-primary)]">
+        <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--accent-primary)]">Reading, reminders &amp; account</p>
+        <h2 id="settings-sheet-title" className="font-playfair text-[30px] font-semibold leading-tight text-[var(--text-primary)]">
           Settings
         </h2>
 
-        <section className="mt-6 space-y-3">
-          <h3 className="text-sm font-semibold text-[var(--text-primary)]">Audio &amp; Recitation</h3>
+        <section className="mt-4 space-y-3 rounded-[18px] border border-[var(--border)] bg-[var(--bg-subtle)] p-4">
+          <h3 className="font-playfair text-xl font-semibold text-[var(--text-primary)]">Reciter</h3>
           <p className="text-xs text-[var(--text-secondary)]">Currently: {reciterName}</p>
           <ReciterSelector />
         </section>
 
         <RemindersSettings />
 
-        <section className="mt-6 space-y-3 border-t border-[var(--border)] pt-5">
-          <h3 className="text-sm font-semibold text-[var(--text-primary)]">Account</h3>
+        <section className="mt-4 space-y-3 rounded-[18px] border border-[var(--border)] bg-[var(--bg-subtle)] p-4">
+          <h3 className="font-playfair text-xl font-semibold text-[var(--text-primary)]">Account</h3>
           {account.status === "loading" ? (
             <p className="text-xs text-[var(--text-secondary)]">Checking sign-in…</p>
           ) : account.status === "signed-in" ? (
@@ -105,12 +106,12 @@ export function SettingsSheet({ open, onClose }: SettingsSheetProps) {
                   type="button"
                   onClick={() => void handleSignOut()}
                   disabled={signingOut}
-                  className="shrink-0 rounded-md border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--text-primary)] transition hover:bg-[var(--bg-subtle)] disabled:opacity-60"
+                  className="inline-flex min-h-9 shrink-0 items-center rounded-full border border-[var(--border)] bg-[var(--card-bg)] px-4 text-xs font-bold text-[var(--text-primary)] transition hover:border-[var(--accent-primary)] disabled:opacity-60"
                 >
                   {signingOut ? "Signing out…" : "Sign out"}
                 </button>
               </div>
-              <Link href="/supporter" onClick={onClose} className="block text-sm font-medium text-[var(--accent-primary)]">
+              <Link href="/supporter" onClick={onClose} className="block text-sm font-bold text-[var(--accent-primary)]">
                 {account.isSupporter ? "Your Supporter subscription →" : "Become a Supporter →"}
               </Link>
               {account.isAdmin ? (
@@ -125,7 +126,7 @@ export function SettingsSheet({ open, onClose }: SettingsSheetProps) {
               <Link
                 href="/login"
                 onClick={onClose}
-                className="shrink-0 rounded-md bg-[var(--accent-primary)] px-3 py-1.5 text-sm font-semibold text-[var(--on-accent-text)]"
+                className="inline-flex min-h-9 shrink-0 items-center rounded-full bg-[var(--accent-primary)] px-4 text-xs font-bold text-[var(--on-accent-text)]"
               >
                 Sign in
               </Link>

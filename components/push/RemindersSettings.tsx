@@ -178,8 +178,8 @@ export function RemindersSettings() {
   }
 
   return (
-    <section className="mt-6 space-y-3 border-t border-[var(--border)] pt-5">
-      <h3 className="text-sm font-semibold text-[var(--text-primary)]">Adhkar reminders</h3>
+    <section className="mt-4 space-y-3 rounded-[18px] border border-[var(--border)] bg-[var(--bg-subtle)] p-4">
+      <h3 className="font-playfair text-xl font-semibold text-[var(--text-primary)]">Adhkar reminders</h3>
 
       {state.status === "checking" ? (
         <p className="text-xs text-[var(--text-secondary)]">Checking…</p>

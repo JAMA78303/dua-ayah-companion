@@ -39,7 +39,7 @@ export function GoogleSignInButton({ nextPath = "/" }: GoogleSignInButtonProps) 
       type="button"
       onClick={() => void handleClick()}
       disabled={busy}
-      className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:opacity-70"
+      className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[color-mix(in_srgb,var(--accent-primary)_12%,var(--card-bg))] px-4 text-sm font-bold text-[var(--text-primary)] transition hover:border-[var(--accent-primary)] disabled:opacity-70"
     >
       <span className="inline-flex h-5 w-5 shrink-0" aria-hidden>
         <svg viewBox="0 0 24 24" className="h-5 w-5">
@@ -61,7 +61,7 @@ export function GoogleSignInButton({ nextPath = "/" }: GoogleSignInButtonProps) 
           />
         </svg>
       </span>
-      {busy ? "Redirecting..." : "Continue with Google"}
+      {busy ? "Redirecting…" : "Continue with Google"}
     </button>
   );
 }

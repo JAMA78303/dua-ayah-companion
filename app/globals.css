@@ -324,30 +324,6 @@ body {
   }
 }
 
-/* Onboarding screen 1 — NurSalam atmospheric splash */
-.onboarding-splash {
-  background: linear-gradient(180deg, #0d3d3d 0%, #1a8c8c 40%, #0d2e2e 100%);
-}
-
-.onboarding-splash-pill {
-  background: rgba(255, 255, 255, 0.1);
-  color: #faf0e4;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.onboarding-splash-text {
-  color: #faf8f5;
-}
-
-.onboarding-splash-muted {
-  color: rgba(250, 248, 245, 0.75);
-}
-
-.onboarding-splash-btn {
-  background: #c8973a;
-  color: #1c1c2e;
-}
-
 /* Feed-only geometric veil */
 .feed-geo-veil {
   opacity: var(--pattern-feed-opacity);
