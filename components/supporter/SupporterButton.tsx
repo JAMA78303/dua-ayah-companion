@@ -41,14 +41,14 @@ export function SupporterButton({ action, label, variant = "primary" }: Supporte
         disabled={busy}
         className={
           variant === "primary"
-            ? "w-full rounded-lg bg-[var(--accent-primary)] py-3 text-sm font-semibold text-[var(--on-accent-text)] transition hover:opacity-90 disabled:opacity-60"
-            : "w-full rounded-lg border border-[var(--border)] py-2.5 text-sm text-[var(--text-primary)] transition hover:bg-[var(--bg-subtle)] disabled:opacity-60"
+            ? "flex min-h-12 w-full items-center justify-center rounded-full bg-[#e3c172] text-sm font-bold text-[#14110a] transition hover:opacity-90 disabled:opacity-60"
+            : "flex min-h-12 w-full items-center justify-center rounded-full border border-white/15 bg-white/[0.06] text-sm font-bold text-white transition hover:bg-white/10 disabled:opacity-60"
         }
       >
         {busy ? "Opening Stripe…" : label}
       </button>
       {error ? (
-        <p className="text-center text-xs text-red-700" role="alert">
+        <p className="text-center text-xs text-[#f3b4ab]" role="alert">
           {error}
         </p>
       ) : null}

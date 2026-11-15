@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
+import { LockKeyhole, Mail } from "lucide-react";
+
+import { AuthDivider, AuthError, AuthField, AuthHeading, AuthNote, AuthPrivacyLine, authPrimaryButton } from "@/components/auth/AuthParts";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { createClient } from "@/lib/supabase/client";
 
@@ -52,78 +55,50 @@ export function LoginClient({ next, reason }: LoginClientProps) {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 py-10">
-      <div>
-        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Sign in</h1>
-        <p className="mt-1 text-sm text-[var(--text-secondary)]">Welcome back to Dua &amp; Ayah Companion.</p>
-      </div>
+    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-5 pb-8 pt-10">
+      <AuthHeading title="Welcome back">Return to your saved guidance, reflections and personal duas.</AuthHeading>
 
-      {reasonMessage ? (
-        <p className="rounded-md border border-[var(--border)] bg-[var(--bg-subtle)] px-3 py-2 text-sm text-[var(--text-secondary)]">
-          {reasonMessage}
-        </p>
-      ) : null}
+      {reasonMessage ? <AuthNote>{reasonMessage}</AuthNote> : null}
 
-      <GoogleSignInButton nextPath={next} />
-
-      <div className="relative py-2 text-center text-xs text-[var(--text-secondary)]">
-        <span className="relative z-10 bg-[var(--bg-base)] px-2">or continue with email</span>
-        <span className="absolute inset-x-0 top-1/2 z-0 h-px -translate-y-1/2 bg-[var(--border)]" aria-hidden />
-      </div>
-
-      <form onSubmit={(ev) => void onSubmit(ev)} className="space-y-4">
-        {error ? (
-          <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900" role="alert">
-            {error}
-          </p>
-        ) : null}
-        <div className="space-y-1">
-          <label htmlFor="email" className="text-sm font-medium text-[var(--text-primary)]">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(ev) => setEmail(ev.target.value)}
-            className="w-full rounded-md border border-[var(--border)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none ring-[var(--accent-primary)] focus:ring-2"
-          />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="password" className="text-sm font-medium text-[var(--text-primary)]">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(ev) => setPassword(ev.target.value)}
-            className="w-full rounded-md border border-[var(--border)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none ring-[var(--accent-primary)] focus:ring-2"
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={busy}
-          className="w-full rounded-lg bg-[var(--accent-primary)] py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
-        >
+      <form onSubmit={(ev) => void onSubmit(ev)} className="space-y-3">
+        {error ? <AuthError>{error}</AuthError> : null}
+        <AuthField
+          id="email"
+          label="Email address"
+          Icon={Mail}
+          type="email"
+          autoComplete="email"
+          required
+          value={email}
+          onChange={(ev) => setEmail(ev.target.value)}
+        />
+        <AuthField
+          id="password"
+          label="Password"
+          Icon={LockKeyhole}
+          type="password"
+          autoComplete="current-password"
+          required
+          value={password}
+          onChange={(ev) => setPassword(ev.target.value)}
+        />
+        <button type="submit" disabled={busy} className={authPrimaryButton}>
           {busy ? "Signing in…" : "Sign in"}
         </button>
       </form>
 
-      <p className="text-center text-sm text-[var(--text-secondary)]">
-        No account?{" "}
-        <Link href={`/signup?next=${encodeURIComponent(next)}`} className="font-medium text-[var(--accent-primary)]">
-          Create one
-        </Link>
-      </p>
+      <AuthDivider />
+      <GoogleSignInButton nextPath={next} />
 
-      <Link href="/" className="text-center text-sm text-[var(--text-secondary)] hover:text-[var(--accent-primary)]">
-        Back to home
-      </Link>
+      <div className="mt-auto space-y-3 pt-6">
+        <p className="text-center text-sm text-[var(--text-secondary)]">
+          {"New to Companion? "}
+          <Link href={`/signup?next=${encodeURIComponent(next)}`} className="font-bold text-[var(--accent-primary)]">
+            Create an account
+          </Link>
+        </p>
+        <AuthPrivacyLine />
+      </div>
     </main>
   );
 }

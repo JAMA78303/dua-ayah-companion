@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Sparkles } from "lucide-react";
 import { useEffect } from "react";
 
 interface UpgradeModalProps {
@@ -40,26 +41,28 @@ export function UpgradeModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="upgrade-cap-title"
-        className="rounded-t-2xl border border-[var(--accent-gold)]/40 bg-[var(--bg-card)] p-6 shadow-2xl"
+        className="space-y-4 rounded-t-[24px] bg-[radial-gradient(ellipse_at_50%_0%,#1d3532_0%,#0c1514_60%,#07090a_100%)] px-5 pb-6 pt-3 text-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 id="upgrade-cap-title" className="font-playfair text-xl font-semibold text-[var(--text-primary)]">
-          {title}
-        </h2>
-        <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">{description}</p>
-        <div className="mt-6 flex flex-col gap-3">
+        <span className="mx-auto block h-1 w-10 rounded-full bg-white/20" aria-hidden />
+        <span className="flex size-11 items-center justify-center rounded-full bg-[#e3c172] text-[#14110a]">
+          <Sparkles className="size-5" strokeWidth={1.6} aria-hidden />
+        </span>
+        <div className="space-y-1.5">
+          <h2 id="upgrade-cap-title" className="font-playfair text-[26px] font-semibold leading-tight">
+            {title}
+          </h2>
+          <p className="text-sm leading-relaxed text-white/70">{description}</p>
+        </div>
+        <div className="flex flex-col gap-2">
           <Link
             href="/supporter"
             onClick={onClose}
-            className="block w-full rounded-lg bg-[var(--accent-primary)] py-3 text-center text-sm font-semibold text-white"
+            className="flex min-h-12 w-full items-center justify-center rounded-full bg-[#e3c172] text-sm font-bold text-[#14110a]"
           >
             Become a Supporter
           </Link>
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-full rounded-lg border border-[var(--border)] py-2.5 text-sm text-[var(--text-primary)]"
-          >
+          <button type="button" onClick={onClose} className="min-h-11 w-full text-sm font-bold text-white">
             Maybe later
           </button>
         </div>
